@@ -1,0 +1,209 @@
+---
+title: Getting Started
+page-title: Getting Started with Browserless Testing | Vaadin
+description: Maven dependencies and a minimal test class for browserless tests in plain Java, Spring Boot, Quarkus, and Java EE/CDI projects.
+meta-description: Add the Vaadin browserless test dependencies for plain Java, Spring Boot, Quarkus, or Java EE/CDI, and start from a minimal test class skeleton.
+order: 5
+---
+
+include::{articles}/_vaadin-version.adoc[]
+
+= Getting Started with Browserless Testing
+
+This page lists the test dependencies for each supported application framework, and a minimal test class that the snippets on the following pages build on.
+
+
+== Dependencies
+
+With the Vaadin Bill-of-Materials (BOM) imported in a Maven project, add the dependencies for your framework with a `test` scope.
+The BOM defines the versions of the Vaadin artifacts.
+
+[.example]
+--
+[source,xml]
+----
+<source-info group="Plain Java"></source-info>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-junit6</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+[source,xml]
+----
+<source-info group="Spring Boot"></source-info>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-spring</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
+
+<!-- Optional: Spring Security test annotations, such as @WithMockUser -->
+<dependency>
+    <groupId>org.springframework.security</groupId>
+    <artifactId>spring-security-test</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+[source,xml]
+----
+<source-info group="Quarkus"></source-info>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-junit6</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-quarkus</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-junit</artifactId>
+    <scope>test</scope>
+</dependency>
+
+<!-- Optional: Quarkus Security test annotation @TestSecurity -->
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-test-security</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+[source,xml,subs="+attributes"]
+----
+<source-info group="Java EE/CDI"></source-info>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-junit6</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.jboss.weld</groupId>
+    <artifactId>weld-junit5</artifactId>
+    <version>{weld-junit-version}</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.junit.jupiter</groupId>
+    <artifactId>junit-jupiter</artifactId>
+    <scope>test</scope>
+</dependency>
+
+<!-- In <dependencyManagement>, unless your parent POM already manages JUnit -->
+<dependency>
+    <groupId>org.junit</groupId>
+    <artifactId>junit-bom</artifactId>
+    <version>{junit-version}</version>
+    <type>pom</type>
+    <scope>import</scope>
+</dependency>
+----
+--
+
+A Java EE/CDI project also needs <<{articles}/flow/integrations/cdi#add-dependencies,Vaadin CDI>> and the provided Jakarta EE APIs, which the application already has.
+
+The optional security dependencies provide the test annotations that set the user of the <<spring-security#,Spring>> and <<quarkus#security-integration,Quarkus>> base classes.
+A secured application context needs only the application's own Spring Security or Quarkus Security.
+
+
+== Minimal Test Class
+
+A test class extends the base class of its framework.
+Before each test method, the Plain Java, Spring Boot, and Quarkus base classes create the Vaadin environment with one user and one window, and open the root view; after the test method, they clean the environment up.
+The test calls the testing methods, such as [methodname]`navigate()`, on itself.
+
+[.example]
+--
+[source,java]
+----
+<source-info group="Plain Java"></source-info>
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.BrowserlessTest;
+
+class MyViewTest extends BrowserlessTest {
+
+    @Test
+    void myTest() {
+        MyView view = navigate(MyView.class);
+        // Find components and simulate user actions
+    }
+}
+----
+[source,java]
+----
+<source-info group="Spring Boot"></source-info>
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import com.vaadin.browserless.SpringBrowserlessTest;
+
+@SpringBootTest
+class MyViewTest extends SpringBrowserlessTest {
+
+    @Test
+    void myTest() {
+        MyView view = navigate(MyView.class);
+        // Find components and simulate user actions
+    }
+}
+----
+[source,java]
+----
+<source-info group="Quarkus"></source-info>
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.quarkus.QuarkusBrowserlessTest;
+import io.quarkus.test.junit.QuarkusTest;
+
+@QuarkusTest
+class MyViewTest extends QuarkusBrowserlessTest {
+
+    @Test
+    void myTest() {
+        MyView view = navigate(MyView.class);
+        // Find components and simulate user actions
+    }
+}
+----
+[source,java]
+----
+<source-info group="Java EE/CDI"></source-info>
+import org.junit.jupiter.api.Test;
+
+class MyViewTest extends AbstractCdiViewTest {
+
+    @Test
+    void myTest() {
+        MyView view = navigate(MyView.class);
+        // Find components and simulate user actions
+    }
+}
+----
+--
+
+These base classes scan the whole classpath for routes, unless the test class has a <<test-environment#route-scanning,`@ViewPackages`>> annotation.
+
+A Java EE/CDI test extends [classname]`AbstractCdiViewTest`, an application-owned subclass of [classname]`BrowserlessTest` that starts the Vaadin environment with Weld and [classname]`CdiVaadinServlet`, and registers the routes that the tests use instead of scanning for them.
+See <<cdi#test-base-class,CDI Test Integration>> for that class.
+
+
+=== Locators
+
+The optional [interfacename]`Locators` interface provides additional convenience methods: typed <<locators#,locator>> entry points, such as [methodname]`findButton()` and [methodname]`findTextField()`.
+To use them in a test that extends a base class, implement the interface in the test class, as described in <<locators#opting-in,Opting in for `BrowserlessTest`>>.
+
+
+== Using the Snippets on the Following Pages
+
+Most snippets on the following pages call the testing methods on `window`, a window of an <<multi-user#,application context>>.
+In a test that extends a base class, call the same methods on the test class itself: `window.navigate()` becomes `navigate()`, and `window.findButton()` becomes `findButton()` when the test class implements [interfacename]`Locators`.
+
+Snippets that create users and windows from `app` need an application context, which a test sets up when it needs several users or windows, or more control over the Vaadin environment; see <<multi-user#setting-up-an-application-context,Setting Up an Application Context>>.
+
+
+[discussion-id]`4D59DA39-8F41-49F4-B25D-09074A06FA3A`

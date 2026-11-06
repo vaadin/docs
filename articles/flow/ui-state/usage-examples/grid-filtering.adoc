@@ -1,13 +1,13 @@
 ---
 title: In-Memory Grid Filtering
-description: Use signals to implement reactive client-side filtering for a in-memory data grid, where the displayed items update automatically as filter criteria change.
+description: Use signals to implement reactive filtering for an in-memory data grid, where the displayed items update automatically as filter criteria change.
 order: 20
 ---
 
 
 = Grid Filtering with Signals
 
-This guide shows how to implement reactive client-side filtering for a data grid using signals. The grid automatically updates whenever users change any filter criteria - category, search term, or stock status, without manual coordination between components.
+This guide shows how to implement reactive in-memory filtering for a data grid using signals. The grid automatically updates whenever users change any filter criteria - category, search term, or stock status, without manual coordination between components.
 
 
 == The Use Case
@@ -73,7 +73,7 @@ Signal<List<Product>> filteredProductsSignal = Signal.computed(() -> {
     boolean inStockOnly = inStockOnlySignal.get();
 
     return allProducts.stream()
-        .filter(p -> category.equals("All")
+        .filter(p -> category == null || category.equals("All")
             || p.category().equals(category))
         .filter(p -> searchTerm.isEmpty()
             || p.name().toLowerCase().contains(searchTerm)
@@ -83,7 +83,7 @@ Signal<List<Product>> filteredProductsSignal = Signal.computed(() -> {
 });
 ----
 
-This computed signal automatically recalculates whenever any of the three filter signals change. The filtering logic is centralized in one place, making it easy to understand and maintain. The signal reads all three filter values using `get()` and applies them sequentially using stream operations.
+This computed signal automatically recalculates whenever any of the three filter signals change. The filtering logic is centralized in one place, making it easy to understand and maintain. The signal reads all three filter values using `get()` and applies them sequentially using stream operations. A cleared category selection (`null`) is treated the same as `All`.
 
 
 === Binding the Grid to Filtered Data
@@ -107,7 +107,7 @@ The [methodname]`Signal.effect()` method creates a component effect that runs wh
 
 *Signals for filter state*:: Use [classname]`ValueSignal` to track each independent filter criterion. This makes the filter state explicit and reactive.
 
-*Two-way binding with [methodname]`bindValue()`*:: Connect filter components to signals using the pattern `component.bindValue(signal, signal::set)`. The first parameter is the signal (read using `signal.get()`), and the second is the write callback that is supposed to update the signal when the user changes the component, this callback can have a conditional logic that write the value if it's valid, or does nothing otherwise.
+*Two-way binding with [methodname]`bindValue()`*:: Connect filter components to signals using the pattern `component.bindValue(signal, signal::set)`. The first parameter is the signal (read using `signal.get()`), and the second is the write callback that is supposed to update the signal when the user changes the component, this callback can have conditional logic that writes the value if it's valid, or does nothing otherwise.
 
 *Computed signals for derived data*:: Create a computed signal that reads all filter signals using `signal.get()` and produces the filtered dataset. This centralizes filtering logic and makes dependencies clear.
 
@@ -120,7 +120,7 @@ This pattern is ideal when:
 
 - You have multiple filters that need to work together
 - Filtering logic is moderately complex or involves multiple conditions
-- You want client-side filtering for responsive interaction
+- You want in-memory filtering for responsive interaction
 - The dataset is small enough to filter in memory (typically under 10,000 items)
 
 For larger datasets, consider server-side filtering with lazy loading. For single, simple filters, a direct event listener approach might be sufficient.

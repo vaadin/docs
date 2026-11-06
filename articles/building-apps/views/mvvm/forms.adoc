@@ -1,0 +1,142 @@
+---
+title: Edit Data without Binder
+page-title: How to build forms with a ViewModel and signals in Vaadin
+description: Learn how to bind the fields of a form to a ViewModel, and validate the input with derived signals.
+meta-description: Build forms with a ViewModel in Vaadin. Bind each field to a signal and a command, validate the input with derived signals, and show the errors on the fields.
+order: 40
+---
+
+
+= Edit Data without Binder
+:toclevels: 2
+
+A view with a ViewModel binds its fields to the ViewModel's signals, not with [classname]`Binder`. This guide shows how the ViewModel takes over the work that [classname]`Binder` does in a plain form: holding the values, validating them, and converting them.
+
+.Part of a Series
+[TIP]
+This is part 4 of the *Structure Views with MVVM* series. It builds on the ViewModel from <<write-viewmodel#,Write a ViewModel>> and the view from <<bind-view#,Bind the View>>.
+
+
+== Why Not Binder
+
+[classname]`Binder` keeps the values and the validity of a form to itself. The rules of the ViewModel, such as when *Save* or *Next* is enabled, or what the total of an order is, can't build on them. [classname]`Binder` also binds one fixed bean, not a list of rows. A field is bound either with [methodname]`bindValue()` or with [classname]`Binder`, never with both. Therefore, in a view with a ViewModel, every field binds to the ViewModel's signals.
+
+[classname]`Binder` remains the right tool for a plain form that loads one entity and saves it. See <<{articles}/building-apps/forms-data/add-form#,Add a Form>> for how to build one.
+
+
+== Hold the Draft in a Signal
+
+The values that the user is editing are a record in a [classname]`ValueSignal`, called the draft. Each field binds to a signal mapped from the draft, and to a command that updates the draft:
+
+[source,java]
+----
+// In the ViewModel
+Signal<String> title() {
+    return draft.map(d -> d == null ? "" : d.title());
+}
+
+void setTitle(String title) {
+    draft.update(d -> d.withTitle(title));
+}
+----
+
+[source,java]
+----
+// In the view
+title.bindValue(viewModel.title(), viewModel::setTitle);
+----
+
+Comparing the draft with the record as it was opened tells whether the user has changed anything. In the ticket triage example, the `dirty` signal does exactly that.
+
+
+== Validate with Derived Signals
+
+Each validation rule is a derived signal that holds the error message, or `null` when the value is valid. A signal that combines the rules decides whether the user can save:
+
+[source,java]
+----
+private final Signal<String> titleError = draft.map(
+        d -> d != null && d.title().isBlank() ? "Title is required" : null);
+private final Signal<Boolean> canSave = Signal
+        .computed(() -> dirty.get() && titleError.get() == null);
+----
+
+The view shows the error on the field with [methodname]`bindError()` from the [classname]`SignalBindings` class in <<bind-view#bind-grids-and-error-messages,Bind Grids & Error Messages>>:
+
+[source,java]
+----
+title.bindValue(viewModel.title(), viewModel::setTitle);
+bindError(title, viewModel.titleError());
+----
+
+A rule about one row of a list works the same way. The ViewModel hands out a derived signal for the row, such as `quantityError(line)`; see <<lists#edit-a-list-entry-by-entry,Edit a List Entry by Entry>>.
+
+Test the rules in the <<test-viewmodel#,ViewModel tests>>, like any other rule of the view.
+
+
+== Replace the Constraint Checks
+
+To show your own error message on a field, [methodname]`bindError()` turns on manual validation for the field. That turns off the field's built-in checks, such as required, minimum and maximum, and pattern. Write those checks as rules in the ViewModel too. If a field must have a value, show the required indicator with [methodname]`setRequiredIndicatorVisible(true)`, and write a rule that reports a missing value.
+
+
+== Convert Values
+
+Use typed fields, such as [classname]`IntegerField`, [classname]`BigDecimalField`, [classname]`DatePicker`, and `ComboBox<T>`, so that the values reach the ViewModel already converted. The command converts what's left, such as a product code typed as text, and an error signal reports input that the command can't convert.
+
+A typed field passes `null` to the command when the user clears it, or types something that the field can't parse. Store the `null` in the draft, and let a rule report it. If the command refused the value instead, the field would show the old value again, and the user's input would be lost.
+
+
+== Show Errors After the First Save
+
+A derived error shows as soon as the draft breaks the rule, even on a new, empty form. To hold the errors back until the user first tries to save, keep a `submitted` signal that [methodname]`save()` sets, and return `null` from each error signal while it's `false`:
+
+[source,java]
+----
+private final ValueSignal<Boolean> submitted = new ValueSignal<>(false);
+private final Signal<String> titleError = Signal.computed(() -> {
+    Ticket d = draft.get();
+    boolean show = submitted.get();
+    return show && d != null && d.title().isBlank() ? "Title is required"
+            : null;
+});
+
+boolean save() {
+    submitted.set(true);
+    if (!canSave.peek()) {
+        return false;
+    }
+    // Save the draft, and set submitted to false for the next ticket
+}
+----
+
+The computed signal reads both signals before it checks either of them, so that it depends on both. See <<{articles}/flow/ui-state/effects-computed#read-signals-unconditionally,Read Signals Unconditionally>>.
+
+*Save* stays enabled until the first save, so that the user can try to save and see what's missing.
+
+
+== Change the Options of a Select or Combo Box
+
+A [classname]`Select` clears its value whenever its items change, even when the selected item is still among them (https://github.com/vaadin/flow-components/issues/10576[flow-components#10576]). A [classname]`ComboBox` clears its value when [methodname]`setItems()` replaces its items. Either way, the clearing reaches the bound command as `null`.
+
+This matters when the options come from a signal of the ViewModel that changes while the value is bound. For example, the ViewModel may load the agents that can handle a ticket each time the user opens another ticket. If the draft already holds the new ticket when the options change, its assignee is cleared.
+
+To avoid this, have the ViewModel empty the draft before it changes the options, and make the field commands do nothing while there is no draft. The clearing is then ignored, and setting the draft afterwards puts the value back:
+
+[source,java]
+----
+private void show(Ticket ticket) {
+    draft.set(null); // The field commands ignore the clearing
+    agents.set(agentService.findAgentsFor(ticket));
+    draft.set(ticket);
+}
+
+void setAssignee(String assignee) {
+    if (draft.peek() != null) {
+        draft.update(d -> d.withAssignee(assignee));
+    }
+}
+----
+
+When the options don't change while the view is open, set them once when you create the field.
+
+Next, <<lists#,show lists and grids>>.

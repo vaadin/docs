@@ -15,7 +15,7 @@ import com.vaadin.flow.router.Route;
 @Route
 */ // hidden-source-line
 // @formatter:on hidden-source-line
-public final class MainView extends Main {
+final class MainView extends Main {
     MainView() {
         var duration = new DurationField();
         duration.setLabel("Duration");

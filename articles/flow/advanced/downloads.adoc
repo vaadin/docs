@@ -17,6 +17,7 @@ This API supports various download scenarios, from simple file downloads to comp
 This documentation covers the main features of the `DownloadHandler` API, including:
 
 * <<#common,Common download scenarios>>
+* <<#onclick,Starting a download from a component click>>
 * <<#new-tab,Opening content in a new tab>>
 * <<#custom,Creating custom download handlers>>
 * <<#progress,Download progress tracking>>
@@ -67,6 +68,8 @@ This method is particularly useful for:
 * Generating dynamic content
 * Streaming large files
 
+[since:com.vaadin:vaadin@V25.4]#By default, the returned handler doesn't answer byte range requests, which media players use to seek and which Safari requires before it plays audio or video at all. Call [methodname]`enableRangeRequests()` to opt in, but only when the callback returns the same content, with a known content length, on every call — see <<#byte-ranges,Byte Range Requests>>.#
+
 [role="since:com.vaadin:vaadin@V25.2"]
 ==== Overriding the File Name
 
@@ -98,6 +101,18 @@ This method is useful for serving static resources like images, templates, fonts
 
 If the resource name starts with `/`, it will then look from `/src/main/resources` without the class path prepended.
 
+[since:com.vaadin:vaadin@V25.4]#By default, these handlers don't answer byte range requests, which media players use to seek and which Safari requires before it plays audio or video at all. Call [methodname]`enableRangeRequests()` on the handler to opt in:#
+
+[source,java]
+----
+Video video = new Video();
+video.addSource(DownloadHandler.forClassResource(MyView.class, "intro.mp4")
+        .enableRangeRequests(), "video/mp4");
+video.setControlsVisible(true);
+----
+
+See <<#byte-ranges,Byte Range Requests>> for when this is safe and what it costs.
+
 === Download A File From File System
 
 The `forFile` method allows you to serve files from the server's file system.
@@ -109,6 +124,8 @@ Anchor download = new Anchor(DownloadHandler.forFile(new File("/path/to/terms-an
 
 This method is useful for serving files that are stored on the server's file system.
 
+[since:com.vaadin:vaadin@V25.4]#Unlike the other factory methods, it also answers byte range requests by default, by seeking in the file — see <<#byte-ranges,Byte Range Requests>> — which makes it the recommended way to serve large media.#
+
 The [classname]`Anchor` component sets the `download` attribute by default and download handlers extending [classname]`AbstractDownloadHandler` also set the `Content-Disposition` to `attachment`.
 If the content should be inlined to the page, this have to be set explicitly by calling the [methodname]`inline()` method on the `DownloadHandler` instance and using `AttachmentType.INLINE`:
 
@@ -116,6 +133,70 @@ If the content should be inlined to the page, this have to be set explicitly by 
 ----
 Anchor download = new Anchor(DownloadHandler.forFile(new File("/path/to/terms-and-conditions.md")).inline(), AttachmentType.INLINE, "View Terms and Conditions");
 ----
+
+[role="since:com.vaadin:vaadin@V25.4"]
+=== Setting the Content Type
+
+By default, `forFile`, `forClassResource`, `forServletResource`, and `fromInputStream` handlers take the content type from the MIME type that the servlet container maps to the file name, falling back to `application/octet-stream` for an extension it doesn't map. The [methodname]`withContentType` method sets the content type explicitly instead, which is useful for file types the servlet container doesn't recognize, such as `.vtt` subtitle files:
+
+[source,java]
+----
+Anchor download = new Anchor(DownloadHandler.forFile(new File("captions.vtt")).withContentType("text/vtt"), "Download Captions");
+----
+
+A content type that a [classname]`DownloadResponse` gives for a particular download still takes precedence over the one set with [methodname]`withContentType`, as it's the more specific one. The [methodname]`getContentType` method returns the type set with [methodname]`withContentType`, or `null` if none was set.
+
+The built-in handlers apply the type set with [methodname]`withContentType` themselves. A custom handler that extends [classname]`AbstractDownloadHandler` and sets the content type of its own response should take it from [methodname]`resolveContentType(String, VaadinResponse)`, which returns the type set with [methodname]`withContentType`, or else the type the servlet container maps to the given file name:
+
+[source,java]
+----
+@Override
+public void handleDownloadRequest(DownloadEvent downloadEvent) {
+    downloadEvent.setContentType(
+            resolveContentType("report.csv", downloadEvent.getResponse()));
+    // write the response...
+}
+----
+
+[#onclick]
+[role="since:com.vaadin:vaadin@V25.4"]
+== Starting a Download From a Component Click
+
+The examples above bind a `DownloadHandler` to an `Anchor`, which renders a regular link and lets the browser handle the download natively. [methodname]`Download.onClick` starts a download from a click on a [classname]`Button` or any other component -- so the component keeps its own look, keyboard handling, and click listeners instead of being wrapped in a link:
+
+[source,java]
+----
+Button export = new Button("Export");
+Download.onClick(export, DownloadHandler.fromInputStream(event -> {
+    byte[] report = reportService.createReport();
+    return new DownloadResponse(new ByteArrayInputStream(report),
+            "report.pdf", "application/pdf", report.length);
+}));
+----
+
+The download starts in the browser's own click handler, inside the user gesture, without waiting for a server round trip. The handler itself still runs on the server, but only once the browser requests the file -- so the file name and response headers can be decided at that point, as with any `DownloadHandler`.
+
+A download started this way is always saved as a file, so [methodname]`inline()` on the handler has no effect. To show the content in a new browser tab instead, use [methodname]`OpenInNewTab.onClick`, as described in <<#new-tab,Opening Content in a New Tab>>.
+
+[methodname]`Download.onClick` also accepts a URL the browser can already address, optionally with a suggested file name:
+
+[source,java]
+----
+Download.onClick(export, "/files/report.pdf");
+Download.onClick(export, "/files/report.pdf", "report.pdf");
+----
+
+Browsers use the suggested file name only for same-origin URLs; for other URLs the server has to send the name in a `Content-Disposition` header instead.
+
+The handler is served only while the component is attached, visible, and enabled. If a button disables itself on click, the browser may still request the file after the component is disabled; call [methodname]`allowDisabled()` on the handler to serve it in that case. It returns a handler with the `ALWAYS` <<#low-level,disabled update mode>>:
+
+[source,java]
+----
+Download.onClick(export,
+        DownloadHandler.fromInputStream(event -> ...).allowDisabled());
+----
+
+[methodname]`onClick` returns a [classname]`Registration`. Calling [methodname]`remove()` on it removes the click listener and, for a handler-based download, unregisters the handler so its URL stops serving the file.
 
 [#new-tab]
 [role="since:com.vaadin:vaadin@V25.4"]
@@ -133,7 +214,7 @@ OpenInNewTab.onClick(view, DownloadHandler.fromInputStream(event -> {
 }));
 ----
 
-The new tab opens in the browser's own click handler, without waiting for a server round trip, so popup blockers let it through. Opening a tab from a server-side click listener, for example with `Page.open`, happens only after the round trip and may be blocked. The new tab opens without access to the opening page (`noopener`) and without a `Referer` header (`noreferrer`).
+As with <<#onclick,`Download.onClick`>>, the new tab opens in the browser's own click handler, without waiting for a server round trip, so popup blockers let it through. Opening a tab from a server-side click listener, for example with `Page.open`, happens only after the round trip and may be blocked. The new tab opens without access to the opening page (`noopener`) and without a `Referer` header (`noreferrer`).
 
 The handler runs only when the new tab requests the content, once per click, and the browser shows it when it can, for example a PDF, an image, or plain text. Built-in handlers, such as [methodname]`DownloadHandler.forFile`, are switched to serve the content inline automatically; this changes the given handler instance, so it also serves inline wherever else it's used. A custom handler has to call [methodname]`DownloadEvent.inline` itself, since content served as an attachment is downloaded instead of shown.
 
@@ -493,5 +574,26 @@ Anchor downloadLink = new Anchor(new DownloadHandler() {
     }
 }, "Download meeting notes");
 ----
+
+[#byte-ranges]
+[role="since:com.vaadin:vaadin@V25.4"]
+=== Byte Range Requests
+
+A byte range request asks for part of a response instead of the whole thing. Media players use them to seek, and Safari refuses to play audio or video from a handler that doesn't answer them. [methodname]`DownloadHandler.forFile()` always answers them, by seeking in the file. [methodname]`forClassResource`, [methodname]`forServletResource`, and [methodname]`fromInputStream` don't by default. Call [methodname]`enableRangeRequests()` on the handler to opt in -- for example, when a video is packaged with the application rather than stored as a file on disk:
+
+[source,java]
+----
+Video video = new Video();
+video.addSource(DownloadHandler.forClassResource(MyView.class, "intro.mp4")
+        .enableRangeRequests(), "video/mp4");
+video.setControlsVisible(true);
+----
+
+Enabling it isn't free or safe for every kind of content these methods can serve:
+
+* A class or servlet resource inside a packaged jar or war is often compressed, so each range re-inflates the bytes before it, which adds up for large media fetched in many small ranges.
+* An input stream handler calls its callback again for every range request, so ranges are only correct when the callback returns the same content, with a known content length, every time. A stream that can seek, such as a [classname]`FileInputStream`, skips the bytes before a range; other streams read through them instead.
+
+[methodname]`isRangeRequestsEnabled()` reports whether a given handler answers range requests, which code built on [interfacename]`DownloadHandler` can check before deciding how to serve or render the content.
 
 [discussion-id]`C82C3953-6480-493C-A5D6-E397BC072DBA`

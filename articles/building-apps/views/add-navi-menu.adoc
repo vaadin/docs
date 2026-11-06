@@ -49,7 +49,7 @@ SideNavItem homeItem = new SideNavItem("Home", HomeView.class);
 sideNav.addItem(homeItem);
 ----
 
-Now, whenever the user clicks on the item, the router navigates to the specified view. Furthermore, the item will be highlighted when the user is on that view.
+Now, whenever the user clicks on the item, the router navigates to the specified view. Furthermore, the item is highlighted when the user is on that view.
 
 
 === Highlighting Nested Views
@@ -96,6 +96,15 @@ private SideNav createSideNav() {
 ----
 
 For technical details, see the <</flow/routing/menu-configuration#,Menu Configuration>> reference guide.
+
+
+=== Showing Only Accessible Views
+
+`MenuConfiguration.getMenuEntries()` leaves out the views that the current user can't open. It checks each view against the same <<../security/protect-views#,access rules>> that protect the view itself. For example, a user without the `ADMIN` role doesn't get a menu item for a view annotated with `@RolesAllowed("ADMIN")`. It also leaves out views whose routes have required parameters, because a menu item has no values to give them.
+
+Menu items that you create yourself are shown to every user. To hide one, check the roles of the user with [classname]`AuthenticationContext`, as described in <<../security/protect-views#checking-the-roles-of-the-current-user,Checking the Roles of the Current User>>.
+
+A hidden menu item doesn't protect its view: a user can still type the URL in the address bar. Every view needs access rules of its own.
 
 
 == Icons in the Menu
@@ -152,3 +161,24 @@ public class MainLayout extends AppLayout implements AfterNavigationObserver {
 ----
 
 For this to work, views need to declare their titles using the [annotationname]`@PageTitle` annotation. See <<add-view#page-title,Page Title>> for more details on setting page titles.
+
+
+[role="since:com.vaadin:vaadin@V25.2"]
+== Translating Titles and Menu Items
+
+If your application supports several languages, use translation keys as the `@PageTitle` values, and translate them with an application-wide page title generator:
+
+[source,java]
+----
+@Bean
+PageTitleGenerator pageTitleGenerator() {
+    return context -> I18NProvider.translate(context.value()); // <1>
+}
+----
+<1> `context.value()` is the `@PageTitle` value of the view, such as `orders.title`.
+
+The generator applies to every view, so give every view a `@PageTitle` key. For a view without one, `context.value()` is empty.
+
+The generator gives the browser tab its title. `MenuConfiguration.getMenuEntries()` also uses it for every view whose `@Menu` annotation has no `title`, so the menu items are translated as well. `MenuConfiguration.getPageHeader(getContent())` returns the translated title, too. Call it in the layout instead of reading the `@PageTitle` annotation as in <<#displaying-the-current-view-title,Displaying the Current View Title>>.
+
+The layout builds the menu when it's created. If users can change the language while the application is open, rebuild the menu when the locale changes. See <<{articles}/flow/routing/page-titles#generating-page-titles,Generating Page Titles>> for the generator, and the <<{articles}/flow/i18n#,Localization>> reference for translation files, language selection, and reacting to locale changes.
