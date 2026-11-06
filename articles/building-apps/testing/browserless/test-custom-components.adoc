@@ -1,0 +1,425 @@
+---
+title: Test a Custom Component
+page-title: Test a Custom Component | Vaadin
+description: Test a component without a route, add a component tester or locator, set values as a user would, and design gestures for testing.
+meta-description: Test a Vaadin component without a route, write a custom locator or tester, set values the way a user would, and design gesture-based components for testing.
+order: 80
+---
+
+
+= Test a Custom Component
+
+The examples use the plain Java setup from <<{articles}/building-apps/testing/browserless/setup-without-spring#,Set Up Browserless Tests in Plain Java>> and construct components directly, without a dependency injection container.
+To test a component that needs injected dependencies, test it inside a view with your framework's setup.
+`MyForm` and `PersonForm` stand for your own forms, and `PhoneNumberField` is a custom field nested in `PersonFormView`.
+
+== Test a Component Without a View
+
+A single component -- for example, a form or a custom field -- can be tested in isolation, without wrapping it in an [annotationname]`@Route` view.
+Reusable compositions, such as a form used in several views, and the components of your own add-on deserve tests of their own.
+Cover their essential use cases, including invalid input, not only the happy path.
+[methodname]`BrowserlessUIContext.forComponent()` builds a self-contained test environment without routes, attaches the component to a window's [classname]`UI`, and tears everything down when the window closes, so a single try-with-resources is enough:
+
+[source,java]
+----
+try (var window = BrowserlessUIContext.forComponent(new MyForm())) {
+    window.findTextField().withLabel("Name").setValue("Ada");
+    Assertions.assertEquals("Ada",
+            window.findTextField().withLabel("Name").component().getValue());
+}
+----
+
+The returned window is a [classname]`BrowserlessUIContext`, the same type as the windows in the other guides, so the full testing DSL is available: [methodname]`find()`, [methodname]`test()`, and the typed locator entry points such as [methodname]`findButton()`. See <<{articles}/flow/testing/browserless/multi-user#, Application, User, and Window Contexts>> for the context API.
+
+If the component's constructor needs [methodname]`UI.getCurrent()` or the session, pass a factory instead: [methodname]`BrowserlessUIContext.forComponent(MyForm::new)`. The factory runs after the Vaadin thread-locals are installed, so the constructor observes the live environment.
+
+For tests that need the same standalone component in several windows or for several users, use [methodname]`BrowserlessApplicationContext.forComponent(Supplier)`. It returns the application context, and every window created from it gets a fresh component instance from the factory:
+
+[source,java]
+----
+try (var app = BrowserlessApplicationContext.forComponent(MyForm::new)) {
+    var w1 = app.newUser().newWindow();
+    var w2 = app.newUser().newWindow();
+
+    w1.findTextField().withLabel("Name").setValue("Ada");
+    // w2 holds its own MyForm instance
+    Assertions.assertEquals("", w2.findTextField().withLabel("Name")
+            .component().getValue());
+}
+----
+
+
+== Create a Custom Locator
+
+A custom locator gives a composite, a page object, or a domain-specific widget the same fluent API as the built-in locators, and it's the lightest way to wrap the interactions with your own components.
+Subclass [classname]`Locator` with the recursive self-type so filter steps stay fluent, and expose the actions you want the test to see.
+Scope the inner locators with [methodname]`inside(this)` so they only match descendants of the resolved composite.
+The following example assumes a [classname]`PersonForm` with [guilabel]*Name* and [guilabel]*Email* text fields and a [guibutton]*Submit* button:
+
+.`PersonFormLocator.java`
+[source,java]
+----
+import com.vaadin.browserless.locator.Locator;
+import com.vaadin.flow.component.button.ButtonLocator;
+import com.vaadin.flow.component.textfield.TextFieldLocator;
+
+public class PersonFormLocator
+        extends Locator<PersonForm, PersonFormLocator> {
+
+    public PersonFormLocator() {
+        super(PersonForm.class);
+    }
+
+    public PersonFormLocator fillIn(String name, String email) {
+        new TextFieldLocator().withLabel("Name").inside(this).setValue(name);
+        new TextFieldLocator().withLabel("Email").inside(this).setValue(email);
+        return this;
+    }
+
+    public void submit() {
+        new ButtonLocator().withText("Submit").inside(this).click();
+    }
+}
+----
+
+Tests reach the custom locator through [methodname]`find(Supplier<L>)`, for example in a test window that contains the form:
+
+[source,java]
+----
+window.find(PersonFormLocator::new)
+        .fillIn("Ada", "ada@example.com")
+        .submit();
+----
+
+
+[#set-a-value-as-the-user]
+== Set a Value as the User Would
+
+For an add-on or your own component that has no locator, a test can read the component's state through its Java API, which is much less work than writing a tester for it.
+Setting a value through that API doesn't act as the user, though.
+A value set with the component's [methodname]`setValue()` comes from the server, so its value change event reports [methodname]`isFromClient()` as `false`, and a view that reacts only to user changes ignores it.
+
+For a [classname]`HarbourView` that enables its [guibutton]*Save* button only after the user picks a location in the [classname]`LocationField` of a map add-on, this test fails:
+
+[source,java]
+----
+window.navigate(HarbourView.class);
+window.find(LocationField.class).withLabel("Location").single()
+        .setValue("60.088,22.085");
+// Fails: the Save button "is not usable because it is not enabled"
+window.findButton().withText("Save").click();
+----
+
+Write a small locator that sets the value the way a user would.
+The protected [methodname]`setValueAsUser()` method of [classname]`ComponentTester` does that, so the locator reaches it through a private subclass:
+
+.`LocationFieldLocator.java`
+[source,java]
+----
+import com.vaadin.browserless.ComponentTester;
+import com.vaadin.browserless.locator.HasLabelFilter;
+import com.vaadin.browserless.locator.Locator;
+
+/** Locator for the map add-on's location field. */
+public class LocationFieldLocator
+        extends Locator<LocationField, LocationFieldLocator>
+        implements HasLabelFilter<LocationField, LocationFieldLocator> {
+
+    public LocationFieldLocator() {
+        super(LocationField.class);
+    }
+
+    /**
+     * Sets the location as if the user had dropped a pin on the map.
+     * Doesn't test the map itself.
+     */
+    public void dropPin(String location) {
+        new UserInput(component()).enter(location);
+    }
+
+    private static class UserInput extends ComponentTester<LocationField> {
+
+        UserInput(LocationField field) {
+            super(field);
+        }
+
+        void enter(String value) {
+            ensureComponentIsUsable();
+            setValueAsUser(value);
+        }
+    }
+}
+----
+
+[interfacename]`HasLabelFilter` adds [methodname]`withLabel()` to the locator. The other `Has*Filter` interfaces in the `com.vaadin.browserless.locator` package add the other filters of the built-in locators in the same way.
+The test uses the locator through [methodname]`find()`:
+
+[source,java]
+----
+window.navigate(HarbourView.class);
+window.find(LocationFieldLocator::new).withLabel("Location")
+        .dropPin("60.088,22.085");
+window.findButton().withText("Save").click();
+
+Assertions.assertEquals("Saved", window.findNotification().getText());
+----
+
+The locator skips the map itself: whether the user can drop a pin on it.
+Say so in its Javadoc, and cover that part in the add-on's own tests or in a browser test.
+
+
+== Build a Custom Tester
+
+A custom tester is the heavier option.
+It's worth it for a component that you ship as an add-on, or that many test suites use: once registered, [methodname]`test()` returns it for the component in every test.
+Custom testers extend [classname]`ComponentTester` and use the [annotationname]`@Tests` annotation to declare which component they test.
+
+
+=== Create the Component
+
+This view contains a phone number field built from a country code combo box and a number field:
+
+.`PersonFormView.java`
+[source,java]
+----
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.customfield.CustomField;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.Route;
+
+@Route("person-form")
+public class PersonFormView extends Div {
+
+    final PhoneNumberField phone = new PhoneNumberField();
+
+    public PersonFormView() {
+        add(phone);
+    }
+
+    public static class PhoneNumberField extends CustomField<String> {
+        final ComboBox<String> countryCode = new ComboBox<>();
+        final TextField number = new TextField();
+
+        public PhoneNumberField() {
+            countryCode.setItems("+1", "+358");
+            add(countryCode, number);
+            countryCode.addValueChangeListener(event -> updateValue());
+            number.addValueChangeListener(event -> updateValue());
+        }
+
+        @Override
+        protected String generateModelValue() {
+            return (countryCode.getValue() == null ? "" : countryCode.getValue())
+                    + " " + number.getValue();
+        }
+
+        @Override
+        protected void setPresentationValue(String value) {
+            if (value == null || value.isBlank()) {
+                countryCode.clear();
+                number.clear();
+                return;
+            }
+            String[] parts = value.split(" ", 2);
+            countryCode.setValue(parts[0]);
+            number.setValue(parts.length > 1 ? parts[1] : "");
+        }
+    }
+}
+----
+
+
+=== Define the Tester
+
+Place this tester in the same package as `PersonFormView` so it can access the child fields of `PhoneNumberField`:
+
+.`PhoneNumberFieldTester.java`
+[source,java]
+----
+import java.util.List;
+import com.vaadin.browserless.ComponentTester;
+import com.vaadin.browserless.Tests;
+import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.combobox.ComboBoxTester;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.textfield.TextFieldTester;
+
+// Tests defines the components this tester should be used for automatically
+@Tests(PersonFormView.PhoneNumberField.class)
+public class PhoneNumberFieldTester extends ComponentTester<PersonFormView.PhoneNumberField> {
+    // Other testers can be used inside the custom tester
+    final ComboBoxTester<ComboBox<String>, String> combo_;
+    final TextFieldTester<TextField, String> number_;
+
+    public PhoneNumberFieldTester(PersonFormView.PhoneNumberField component) {
+        super(component);
+        combo_ = new ComboBoxTester<>(
+                getComponent().countryCode);
+        number_ = new TextFieldTester<>(getComponent().number);
+    }
+
+    public List<String> getCountryCodes() {
+        return combo_.getSuggestionItems();
+    }
+
+    public void setCountryCode(String code) {
+        ensureComponentIsUsable();
+        if (!getCountryCodes().contains(code)) {
+            throw new IllegalArgumentException("Given code isn't available for selection");
+        }
+        combo_.selectItem(code);
+    }
+
+    public void setNumber(String number) {
+        ensureComponentIsUsable();
+        number_.setValue(number);
+    }
+
+    public String getValue() {
+        return getComponent().getValue();
+    }
+
+}
+----
+
+The tester uses `ComboBoxTester` and `TextFieldTester` internally; custom testers can build on other testers this way.
+
+.Generic Components
+[TIP]
+The [annotationname]`@Tests` annotation also has an [methodname]`fqn` attribute that accepts fully qualified class names as strings. Use this when the component type uses generics that prevent it from being passed as a class literal:
+`@Tests(fqn = "com.example.MyField")`.
+
+
+=== Register and Use the Tester
+
+Keep your tester in an application-owned package, and tell the application context to scan that package with [methodname]`withComponentTesterPackages()`.
+The `test()` method then returns the custom tester for the field:
+
+.`PersonFormViewTest.java`
+[source,java]
+----
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.BrowserlessUIContext;
+
+class PersonFormViewTest {
+
+    private BrowserlessApplicationContext app;
+    private BrowserlessUIContext window;
+
+    @BeforeEach
+    void setUp() {
+        app = BrowserlessApplicationContext.create(builder -> builder
+                .withViewPackages(PersonFormView.class)
+                .withComponentTesterPackages(PhoneNumberFieldTester.class));
+        window = app.newUser().newWindow();
+    }
+
+    @AfterEach
+    void tearDown() {
+        app.close();
+    }
+
+    @Test
+    void enterPhoneNumber() {
+        PersonFormView view = window.navigate(PersonFormView.class);
+        PhoneNumberFieldTester phone = window.test(view.phone);
+
+        phone.setCountryCode("+358");
+        phone.setNumber("40 1234567");
+
+        Assertions.assertEquals("+358 40 1234567", phone.getValue());
+    }
+}
+----
+
+[methodname]`withComponentTesterPackages()` also accepts package names.
+A test that extends a base class declares the package with the [annotationname]`@ComponentTesterPackages` annotation on the test class instead, such as `@ComponentTesterPackages("com.example.application.views.personform")`.
+
+
+[#gestures]
+== Design Gestures for Testing
+
+Browserless tests don't simulate gestures such as drag and drop, drawing on a canvas, or clicking a map, because those happen in the browser.
+Firing low-level DOM events at the internals of a component instead makes a test that breaks when the rendering changes, and that describes the implementation rather than the behavior.
+
+Design such a component so that the user's intent is a public Java method, and route every way of doing it through that method: the gesture, and an alternative such as a context menu, which also helps keyboard and touch users.
+This [classname]`LanePlanner` moves items between lanes by drag and drop, or from the context menu of an item:
+
+.`LanePlanner.java`
+[source,java]
+----
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import com.vaadin.flow.component.contextmenu.ContextMenu;
+import com.vaadin.flow.component.dnd.DragSource;
+import com.vaadin.flow.component.dnd.DropTarget;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.Span;
+
+public class LanePlanner extends Div {
+
+    private final Map<String, Div> lanes = new LinkedHashMap<>();
+    private final Map<String, Span> items = new HashMap<>();
+
+    public LanePlanner(String... laneIds) {
+        for (String laneId : laneIds) {
+            var lane = new Div(new Span(laneId));
+            // Gesture: drop an item on a lane
+            DropTarget.create(lane).addDropListener(event -> event
+                    .getDragData()
+                    .ifPresent(itemId -> moveItem((String) itemId, laneId)));
+            lanes.put(laneId, lane);
+            add(lane);
+        }
+    }
+
+    public void addItem(String itemId, String laneId) {
+        var item = new Span(itemId);
+        DragSource.create(item).setDragData(itemId);
+        // Alternative for keyboard and touch users
+        var menu = new ContextMenu(item);
+        lanes.keySet().forEach(target -> menu.addItem("Move to " + target,
+                event -> moveItem(itemId, target)));
+        items.put(itemId, item);
+        lanes.get(laneId).add(item);
+    }
+
+    /** Moves an item to a lane, whatever the gesture. */
+    public void moveItem(String itemId, String laneId) {
+        lanes.get(laneId).add(items.get(itemId));
+    }
+
+    /** Returns the lane that holds the item. */
+    public String laneOf(String itemId) {
+        var lane = items.get(itemId).getParent().orElseThrow();
+        return lanes.entrySet().stream()
+                .filter(entry -> entry.getValue() == lane)
+                .map(Map.Entry::getKey)
+                .findFirst().orElseThrow();
+    }
+}
+----
+
+The test calls the same method that the gesture calls.
+For a view that shows a [classname]`LanePlanner` with the lanes `STA1-1` and `STA1-2`, and an item `H21E` in the first one:
+
+[source,java]
+----
+var planner = window.find(LanePlanner.class).single();
+planner.moveItem("H21E", "STA1-2");
+Assertions.assertEquals("STA1-2", planner.laneOf("H21E"));
+----
+
+The test covers what a move does, and an input path added later, such as a keyboard shortcut, reuses the logic it tests.
+What it skips is the gesture itself: that a drop on a lane calls [methodname]`moveItem()` with the right arguments.
+Cover that with one browser test for each kind of gesture; see <<../#browser-tests,Keep a Thin Layer of Browser Tests>>.
+Document the methods that tests may rely on in the Javadoc of the component.
+
+
+[discussion-id]`93145B04-239A-434F-A5B8-C95EAC71013B`

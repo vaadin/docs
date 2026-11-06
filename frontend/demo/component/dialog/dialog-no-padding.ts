@@ -5,7 +5,6 @@ import '@vaadin/grid';
 import '@vaadin/grid/vaadin-grid-selection-column.js';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { dialogFooterRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
 import { columnBodyRenderer } from '@vaadin/grid/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
@@ -40,31 +39,21 @@ export class Example extends LitElement {
         @closed="${() => {
           this.dialogOpened = false;
         }}"
-        ${dialogRenderer(
-          () => html`
-            <vaadin-grid
-              .items="${this.people}"
-              style="width: 500px; max-width: 100%; border-radius: 0;"
-            >
-              <vaadin-grid-selection-column></vaadin-grid-selection-column>
-              <vaadin-grid-column
-                header="Name"
-                ${columnBodyRenderer<Person>(
-                  (item) => html`${item.firstName} ${item.lastName}`,
-                  []
-                )}
-              ></vaadin-grid-column>
-            </vaadin-grid>
-          `,
-          this.people
-        )}
-        ${dialogFooterRenderer(
-          () => html`
-            <vaadin-button theme="primary" @click="${this.close}">Filter</vaadin-button>
-          `,
-          []
-        )}
-      ></vaadin-dialog>
+      >
+        <vaadin-grid
+          .items="${this.people}"
+          style="width: 500px; max-width: 100%; border-radius: 0;"
+        >
+          <vaadin-grid-selection-column></vaadin-grid-selection-column>
+          <vaadin-grid-column
+            header="Name"
+            ${columnBodyRenderer<Person>((item) => html`${item.firstName} ${item.lastName}`, [])}
+          ></vaadin-grid-column>
+        </vaadin-grid>
+        <div slot="footer">
+          <vaadin-button theme="primary" @click="${this.close}">Filter</vaadin-button>
+        </div>
+      </vaadin-dialog>
       <!-- end::snippet[] -->
       <vaadin-button @click="${this.open}">Show dialog</vaadin-button>
     `;

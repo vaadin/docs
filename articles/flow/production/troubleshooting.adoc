@@ -82,6 +82,13 @@ When packaging for production, a Vite executable is run. This happens in the `bu
 Note, the hashes differ with each build.
 
 
+== Maximum Request Body Size
+
+Flow limits the size of client-to-server UIDL/RPC and push request bodies. By default, a request whose body exceeds 10 MB is rejected with an HTTP `413` (Request Entity Too Large) response. Normal application interactions stay well below this limit, so reaching it is uncommon -- but a view that sends a very large amount of data to the server in a single request can exceed it.
+
+To allow larger requests, increase the limit -- or set it to `-1` to disable it -- with the `maxRequestBodySize` configuration property. The limit doesn't apply to file uploads, which are streamed in chunks and have their own separate size limits. See <<{articles}/flow/configuration/properties#,Configuration Properties>> for how to set the property.
+
+
 == Common Issues
 
 Below are some common issues faced when attempting to go to production with an application, along with suggestions for resolving them.
@@ -101,6 +108,12 @@ The cause of page reloading is possibly due to server session expiration caused 
 This mean the value from one application is overridden by another. To resolve this, configure a different HTTP session cookie name for each application instance. In a Spring Boot application, the cookie name can be set with the https://docs.spring.io/spring-boot/docs/current/reference/html/application-properties.html#application-properties.server.server.servlet.session.cookie.name[server.servlet.session.cookie.name] property. Another possibility is to get the [classname]`SessionCookieConfig` instance from the [classname]`ServletContext` and use the [methodname]`setName(String)` method to change cookie name.
 +
 See https://datatracker.ietf.org/doc/html/rfc6265#section-8.5[HTTP State Management Mechanism RFC] for more information.
+
+
+The application runs out of memory, and the heap holds a large number of pending JavaScript invocations.::
+JavaScript scheduled from the server with [methodname]`executeJs()` is kept in memory until it's written into a response for the browser, so an application that keeps scheduling invocations which are never delivered grows until it fails. Flow logs a warning once 1000 invocations for one UI are waiting to be sent, naming the component they belong to and why nothing is being delivered.
++
+See <<{articles}/flow/component-internals/element-api/calling-javascript#undelivered-invocations, Undelivered Invocations>> for the causes and for what to do instead.
 
 
 [discussion-id]`9A4AD367-94A0-4933-AE09-1A08016E6E58`

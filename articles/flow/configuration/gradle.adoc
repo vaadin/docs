@@ -10,11 +10,7 @@ include::{articles}/_vaadin-version.adoc[]
 
 = Gradle Configuration Properties
 
---
---
-
 [.introText]
-
 This page describes how to configure a Vaadin application using the Vaadin Gradle plugin.
 
 See <<{articles}/getting-started/starters/gradle#,Creating a Vaadin Project>> page for a guide on creating a Vaadin project with Gradle.
@@ -23,8 +19,8 @@ For information about using Gradle, see the link:https://docs.gradle.org/current
 
 .Requirements
 [NOTE]
-The Vaadin Gradle plugin requires Java SDK 17 or later, Gradle 8.7 or later.
-It installs Node.js and npm automatically when running the build for the first time if they are missing or the installed version is below the minimum required.
+The Vaadin Gradle plugin requires Java 21 or later and Gradle 8.14 or later. See <<{articles}/compatibility#,Supported Technologies>> for the other technologies Vaadin supports.
+The plugin installs Node.js and npm automatically when running the build for the first time if they are missing or the installed version is below the minimum required.
 If you plan to use Vaadin's Gradle-based starter projects, there's no need to install Gradle on your machine. A Gradle Wrapper script is included in starter projects. It manages locally the download and execution of Gradle for your project. For more information on using Gradle Wrapper, see the https://docs.gradle.org/current/userguide/gradle_wrapper.html[Official Gradle Documentation].
 
 
@@ -226,6 +222,21 @@ dependencies {
 ----
 
 
+[[production-bundle-output]]
+[role="since:com.vaadin:vaadin@V25.2"]
+=== Frontend Bundle Output Location
+
+The `vaadinBuildFrontend` task writes the production frontend bundle -- [filename]`index.html`, the compiled client resources, and the other files under [filename]`META-INF/VAADIN` -- into a directory of its own, `build/vaadin-build-frontend/`, instead of the resources directory of the source set, `build/resources/main/`. This keeps the task output separate from the output of other tasks, which is what allows the bundle to be restored correctly from the Gradle build cache.
+
+The directory is registered as an additional output directory of the source set. Gradle therefore puts it on the runtime classpath -- so that in-place runs, such as `bootRun` or running from an IDE that delegates the build to Gradle, serve the bundle -- and packages it into the application archive: at the root of a JAR, or in [filename]`WEB-INF/classes` of a WAR.
+
+No configuration is needed for this. However, if your build reads the bundle directly from the build directory -- for example a custom copy task, a Docker build, or a deployment script -- have it read `build/vaadin-build-frontend/` instead of `build/resources/main/`.
+
+If you override the location with <<all-options,`frontendOutputDirectory`>>, keep it in a directory of its own, such as `build/my-frontend/META-INF/VAADIN/webapp/`.
+
+[NOTE]
+Avoid pointing `frontendOutputDirectory` at a directory inside the output of another task, such as `build/resources/main/META-INF/VAADIN/webapp/`. Gradle cannot cache a task whose output directory overlaps with the output of another task, so the frontend build is no longer restored correctly from the build cache -- which is precisely what the task-owned directory prevents.
+
 [[pre-release]]
 == Using Gradle plugin Snapshot Versions
 
@@ -274,7 +285,7 @@ Whether to generate a production bundle even if an existing pre-compiled bundle 
 Enables development using the frontend development server instead of an application bundle. This applies only to development mode. This must be set in the `vaadin {}` block; the Gradle plugin does not read the corresponding `vaadin.frontend.hotdeploy` property from `application.properties`.
 
 `frontendOutputDirectory: File = null`::
-The folder where Vite should output [filename]`index.js` and other generated files. Defaults to `null`, which uses the automatically detected value of the main SourceSet, usually `build/resources/main/META-INF/VAADIN/webapp/`.
+The folder where Vite should output [filename]`index.js` and other generated files. Defaults to `null`, which uses a directory owned by the `vaadinBuildFrontend` task, usually `build/vaadin-build-frontend/META-INF/VAADIN/webapp/`. See <<production-bundle-output, Frontend Bundle Output Location>> for details. A custom value must end in `META-INF/VAADIN/webapp` (e.g. `build/my-frontend/META-INF/VAADIN/webapp/`); otherwise the production build fails with an error. It should also be a directory of its own, not one inside the output of another task such as `build/resources/main/`.
 
 `npmFolder: File = project.projectDir`::
 The folder where the [filename]`package.json` file is located. Defaults to the project root directory.
@@ -334,13 +345,13 @@ The folder where Flow puts TS API files for client projects. The legacy location
 The Node.js version to be used when Node.js is installed automatically by Vaadin, for example `"v24.14.0"`. Defaults to `[FrontendTools.DEFAULT_NODE_VERSION]`.
 
 `nodeDownloadRoot: String = "https://nodejs.org/dist/"`::
-URL to download Node.js from. This can be needed in corporate environments where the Node.js download is provided from an intranet mirror. Defaults to `[NodeInstaller.DEFAULT_NODEJS_DOWNLOAD_ROOT]`.
+URL to download Node.js from. This can be needed in corporate environments where the Node.js download is provided from an intranet mirror. For the default Node.js version, Flow checks the downloaded archive against checksums it ships, so the mirror has to serve the official, unmodified archive; use `nodeFolder` instead to install a custom build. Defaults to `[NodeInstaller.DEFAULT_NODEJS_DOWNLOAD_ROOT]`.
 
 `resourceOutputDirectory: File = File(project.buildDir, "vaadin-generated")`::
 The output directory for generated non-served resources, such as the token file. Defaults to `build/vaadin-generated`.
 
 `reactEnable: Boolean = true`::
-Whether to use React Router, add React core dependencies, React integration helpers and Vaadin's provided React components (`@vaadin/react-components`). Fallbacks to `vaadin-router`, excludes all React dependencies and adds `Lit` dependencies, if set to `false`.
+Whether to use React Router, add React core dependencies, React integration helpers and Vaadin's provided React components (`@vaadin/react-components`). [deprecated:com.vaadin:vaadin@V25.0]#Setting this to `false`# falls back to the deprecated Vaadin Router, excludes all React dependencies and adds Lit dependencies; that option is removed in Vaadin 26. See <<{articles}/upgrading#vaadin-router-removal, Vaadin Router Deprecation>> for more information.
 
 `filterClasspath: Action<ClasspathFilter>`::
 Use the `include` and `exclude` functions to specify the scanned classpath. Supports glob patterns, e.g., `include("com.vaadin:*")` (all artifacts under the `com.vaadin` group).

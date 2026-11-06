@@ -128,6 +128,8 @@ UploadHandler uploadHandler = (event) -> {
 
 You can also reject without a message by calling [methodname]`event.reject()` with no arguments.
 
+To reject uploads from the built-in handlers, without writing a custom [classname]`UploadHandler`, use a <<#validating-uploads, validator>> instead.
+
 
 === InMemoryUploadHandler
 
@@ -191,6 +193,99 @@ TemporaryFileUploadHandler temporaryFileHandler = UploadHandler.toTempFile(succe
 
 Upload upload = new Upload(temporaryFileHandler);
 ----
+
+[[validating-uploads]]
+[role="since:com.vaadin:vaadin@V25.3"]
+=== Validating Uploads with the Built-in Handlers
+
+The built-in handlers can refuse an upload while it's being received, without writing a custom [classname]`UploadHandler`. Add a validator to a handler with the fluent [methodname]`withValidator()` method, or one of the phase-specific shortcuts, and call [methodname]`UploadEvent.reject()` from it to cancel the upload. A rejected upload is never delivered to the success callback, and any partially written file is deleted.
+
+A validator can act in three phases, each running synchronously on the request thread as the upload is received:
+
+- *Metadata* -- before any data is read. Use it to reject by file name, client-declared content type, or the client-declared size.
+- *Header* -- over the first bytes of the content. Use it for file-signature ("magic byte") or MIME-sniffing checks that need only the leading bytes.
+- *Complete* -- after the whole upload has been received. Use it for whole-content checks, such as antivirus scanning.
+
+Each phase has a fluent shortcut that takes a lambda:
+
+[source,java]
+----
+FileUploadHandler handler = UploadHandler
+    .toFile(successHandler, fileFactory)
+    // Metadata phase: reject before reading any data.
+    .validateMetadata(event -> {
+        if (!"image/png".equals(event.getContentType())) {
+            event.reject("Only PNG images are accepted");
+        }
+    })
+    // Header phase: inspect the first 8 bytes to verify the PNG signature.
+    .validateHeader(8, (event, header) -> {
+        if (!isPngSignature(header)) {
+            event.reject("File is not a valid PNG image");
+        }
+    })
+    // Complete phase: scan the fully received file before it's delivered.
+    .validateComplete((event, content) -> {
+        content.asPath().ifPresent(path -> {
+            if (containsMalware(path)) {
+                event.reject("File failed the virus scan");
+            }
+        });
+    });
+----
+
+The [methodname]`validateHeader()` method takes the number of leading bytes to buffer, and the callback receives a read-only [classname]`ByteBuffer` view of those bytes (fewer if the upload is smaller). Rejecting during the metadata or header phase stops the upload early, before the rest of the body is read. Rejecting during the complete phase happens only after the whole body has been received, so it can't be used to limit the upload size.
+
+The [methodname]`validateComplete()` callback receives an [classname]`UploadContent` handle to the received data, offering [methodname]`getInputStream()`, [methodname]`size()`, and [methodname]`asPath()` -- the last present only for the file-based handlers. The content is valid only for the duration of the call: don't retain it or pass its path to a background process, since the underlying file may be deleted as soon as the call returns.
+
+To combine several phases in a single reusable validator, implement [classname]`UploadValidator` directly and register it with [methodname]`withValidator()`. Override [methodname]`headerSize()` to return a positive value to opt into the header phase; leaving it at the default of `0` skips [methodname]`validateHeader()` altogether.
+
+[source,java]
+----
+public class PngUploadValidator implements UploadValidator {
+
+    @Override
+    public void validateMetadata(UploadEvent event) {
+        if (!"image/png".equals(event.getContentType())) {
+            event.reject("Only PNG images are accepted");
+        }
+    }
+
+    @Override
+    public int headerSize() {
+        // Number of leading bytes to buffer for validateHeader().
+        return 8;
+    }
+
+    @Override
+    public void validateHeader(UploadEvent event, ByteBuffer header) {
+        if (!isPngSignature(header)) {
+            event.reject("File is not a valid PNG image");
+        }
+    }
+
+    @Override
+    public void validateComplete(UploadEvent event, UploadContent content) {
+        content.asPath().ifPresent(path -> {
+            if (containsMalware(path)) {
+                event.reject("File failed the virus scan");
+            }
+        });
+    }
+}
+----
+
+[source,java]
+----
+FileUploadHandler handler = UploadHandler
+    .toFile(successHandler, fileFactory)
+    .withValidator(new PngUploadValidator());
+----
+
+[NOTE]
+Prefer [methodname]`reject()` over throwing an exception. In a multipart upload with several files, a rejection lets the remaining files still be processed (the response is HTTP 207), whereas a thrown exception stops the whole request.
+
+When a validator rejects an upload, progress listeners are notified through [methodname]`onError()` with an [classname]`UploadRejectedException` whose message is the rejection reason, so a deliberate rejection can be told apart from a genuine I/O failure.
 
 == Upload Progress Tracking
 

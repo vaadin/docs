@@ -13,7 +13,7 @@ function Example() {
         <Icon
           icon="vaadin:chevron-down"
           aria-label="Other save options"
-          style={{ '--vaadin-icon-size': '1rem' }}
+          style={{ '--vaadin-icon-size': '1lh' }}
         />
       ),
       children: [{ text: 'Save as draft' }, { text: 'Save as copy' }, { text: 'Save and publish' }],

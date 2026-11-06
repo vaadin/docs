@@ -48,9 +48,15 @@ public class PaymentInformationField extends CustomField<PaymentInformation> {
 
     @Override
     protected void setPresentationValue(PaymentInformation paymentInformation) {
-        cardholderName.setValue(paymentInformation.getCardholderName());
-        cardNumber.setValue(paymentInformation.getCardNumber());
-        securityCode.setValue(paymentInformation.getSecurityCode());
+        if (paymentInformation == null) {
+            cardholderName.clear();
+            cardNumber.clear();
+            securityCode.clear();
+        } else {
+            cardholderName.setValue(paymentInformation.getCardholderName());
+            cardNumber.setValue(paymentInformation.getCardNumber());
+            securityCode.setValue(paymentInformation.getSecurityCode());
+        }
     }
 }
 // end::snippet[]

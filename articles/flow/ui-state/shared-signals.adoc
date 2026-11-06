@@ -98,13 +98,14 @@ SharedValueSignal<String> first = items.insertFirst("First").signal();
 SharedValueSignal<String> last = items.insertLast("Last").signal();
 
 // Insert after a specific entry
-items.insertAt("After First", ListPosition.after(first));
+SharedValueSignal<String> afterFirst =
+    items.insertAt("After First", ListPosition.after(first)).signal();
 
 // Insert before a specific entry
 items.insertAt("Before Last", ListPosition.before(last));
 
 // Insert between two adjacent entries (requires the two to be adjacent)
-items.insertAt("Between", ListPosition.between(first, last));
+items.insertAt("Between", ListPosition.between(first, afterFirst));
 
 // Equivalent to insertFirst / insertLast
 items.insertAt("New First", ListPosition.first());
@@ -198,6 +199,35 @@ mapChildren.peek().get("name"); // Alternative way of accessing 'John Doe'
 ----
 
 
+[role="since:com.vaadin:vaadin@V25.3"]
+=== Parameterized Value Types
+
+The [classname]`Class` object the examples above pass can't express type arguments, so `new SharedValueSignal<>(Set.class)` loses the element type and the value can't be read back as a `Set<Role>`. For a parameterized type, pass a Jackson [classname]`TypeReference` instead of a [classname]`Class`:
+
+[source,java]
+----
+SharedValueSignal<Set<Role>> roles = new SharedValueSignal<>(
+        new TypeReference<Set<Role>>() {});
+
+SharedValueSignal<Map<String, List<UUID>>> index = new SharedValueSignal<>(
+        Map.of(), new TypeReference<Map<String, List<UUID>>>() {});
+----
+
+The same overload is available for the element type of [classname]`SharedListSignal` and [classname]`SharedMapSignal`, and for the [methodname]`asValue()`, [methodname]`asList()`, and [methodname]`asMap()` methods of [classname]`SharedNodeSignal` as well as the [methodname]`value()` method of its snapshot:
+
+[source,java]
+----
+SharedListSignal<List<String>> rows = new SharedListSignal<>(
+        new TypeReference<List<String>>() {});
+
+SharedMapSignal<Set<UUID>> groups = new SharedMapSignal<>(
+        new TypeReference<Set<UUID>>() {});
+
+Set<UUID> members = user.peek().mapChildren().get("members").peek()
+        .value(new TypeReference<Set<UUID>>() {});
+----
+
+
 == Reading Values
 
 
@@ -246,7 +276,7 @@ String optimistic = signal.peek();
 String confirmed = signal.peekConfirmed();
 ----
 
-Shared signals currently support asynchronously confirmed updates only in single JVM environments but don't yet provide an  implementation for asynchronous updates and confirmations in a cluster environment.
+Shared signals currently support asynchronously confirmed updates only in single JVM environments but don't yet provide an implementation for asynchronous updates and confirmations in a cluster environment.
 
 In single JVM deployments, `peekConfirmed()` typically returns the same value as `peek()`. In clustered environments, there may be a brief delay between optimistic local updates and cluster confirmation.
 
@@ -270,6 +300,9 @@ signal.replace("expected", "newValue");
 ----
 
 
+[since:com.vaadin:vaadin@V25.3]#Writing a value the signal can't hold throws an [classname]`InvalidSignalValueTypeException`. The compiler normally prevents this, but not when the value type has been erased from the generic signature of the writing code -- a shared signal handed around as a raw [classname]`SharedValueSignal`, for instance. Where a value comes from outside the application, such as a client-side write to a bound element property, the framework catches this and reverts the value instead of propagating the exception; see <<element-bindings#property-binding, Property Binding>>.#
+
+
 == Thread Safety
 
 Shared signals are designed for concurrent access from multiple threads and users. All operations are atomic and thread-safe. Signals handle UI updates automatically, so you don't need to wrap signal operations in `ui.access()`:
@@ -286,7 +319,7 @@ counter.incrementBy(1); // Atomic operation, UI updates automatically
 
 == Signal Scope Patterns
 
-Signals can be composed into beans that use any Vaadin scope annotation, such as `@VaadinSessionScope`, `@VaadinUIScope`, or `@VaadinRouteScope`. The scope annotation determines the lifetime and sharing behavior of the signal holder bean.
+Signals can be composed into beans that use any Vaadin scope annotation, such as `@VaadinSessionScope`, `@UIScope`, or `@RouteScope`. The scope annotation determines the lifetime and sharing behavior of the signal holder bean.
 
 
 === Session-Scoped Signals
@@ -327,13 +360,13 @@ Use `@Component` (singleton) or static fields to create signals shared by all us
 ----
 @Component
 public class SystemStatusSignal {
-    private final ValueSignal<String> statusSignal;
+    private final SharedValueSignal<String> statusSignal;
 
     public SystemStatusSignal() {
-        this.statusSignal = new ValueSignal<>("ONLINE");
+        this.statusSignal = new SharedValueSignal<>("ONLINE");
     }
 
-    public ValueSignal<String> getStatusSignal() {
+    public SharedValueSignal<String> getStatusSignal() {
         return statusSignal;
     }
 }
@@ -357,7 +390,7 @@ public class DashboardView extends VerticalLayout {
     public DashboardView() {
         Button increment = new Button("Increment");
         increment.addClickListener(e ->
-            counterSignal.set(counterSignal.get() + 1));
+            counterSignal.update(count -> count + 1));
 
         Span counter = new Span();
         counter.bindText(counterSignal.map(count -> "Count: " + count));
@@ -480,7 +513,7 @@ field.bindValue(value, value::set);
 // Changes sync both ways: field to signal and signal to field
 ----
 
-Note that you need to <<{articles}/flow/advanced/server-push#push.configuration.enabling,enable push>> for your application to ensure changes are pushed out for all users immediately when one user makes a change.
+Note that you need to <<{articles}/building-apps/server-push#enabling-push,enable push>> for your application to ensure changes are pushed out for all users immediately when one user makes a change.
 ====
 
 

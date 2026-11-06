@@ -3,12 +3,12 @@ import React from 'react'; // hidden-source-line
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { Button } from '@vaadin/react-components/Button.js';
-import { ContextMenu, type ContextMenuItem } from '@vaadin/react-components/ContextMenu.js';
+import { ContextMenu, type ContextMenuItemData } from '@vaadin/react-components/ContextMenu.js';
 
 function Example() {
   useSignals(); // hidden-source-line
   // tag::snippet[]
-  const items = useSignal<ContextMenuItem[]>([
+  const items = useSignal<ContextMenuItemData[]>([
     { text: 'Share' },
     { text: 'Duplicate' },
     { text: 'Delete', className: 'custom' },

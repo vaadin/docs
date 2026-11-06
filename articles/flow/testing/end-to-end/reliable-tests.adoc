@@ -24,6 +24,13 @@ As with any code, it's important to write tests so that the reader understands t
 If the test is full of low-level details about how you locate the parts of the application with which you want to interact, it becomes overwhelming to try to decode what the test is actually trying to verify. By using page/view objects, you can abstract away the low-level details about how the view is built and what exact components are used. You can also use <<bdd#,Behavior-Driven-Development>> (BDD) to describe your test scenarios using normal English sentences.
 
 
+== Keeping Tests Focused and Independent
+
+End-to-end tests are expensive to run compared to <<{articles}/flow/testing/browserless#,browserless tests>>, so use them deliberately. Cover each critical user journey -- such as logging in, or completing a checkout -- with one focused test rather than trying to exercise every edge case through the browser. Push comprehensive coverage of component logic, validation, and view behavior down to faster browserless tests, and keep the end-to-end suite for the paths that genuinely need a real browser.
+
+Make each test independent: it should set up the state it needs and not rely on another test having run first. Independent tests can run in any order or in parallel, and a failure points to a single scenario instead of a broken chain.
+
+
 == Guarding against Application Changes
 
 If your application never changes, you can test it manually once and know that it works. However, applications are usually developed forward and you will need to maintain the tests as the application evolves.
@@ -43,6 +50,13 @@ When using templates, you also don't need to worry about global `ids` and `ids` 
 [TIP]
 Use `ids` which describe the action that occurs when the button is pressed, not, for example, where in the hierarchy the button is situated.
 If your `id` is tied to the hierarchy, you indirectly depend on the hierarchy and lose many benefits of using `ids`.
+
+
+== Waiting for Asynchronous Updates
+
+Views often update asynchronously -- after navigation, a server round-trip, or lazy data loading -- so an element you want to interact with may not be present the moment a test looks for it. Don't paper over this with fixed pauses such as `Thread.sleep()`: a sleep that's long enough on a fast machine is often too short on a loaded CI server, and any sleep that's reliable is slower than it needs to be.
+
+Instead, wait for the condition you actually care about. Use [methodname]`waitForFirst()` on an [classname]`ElementQuery` to wait until a matching element appears, or [methodname]`waitUntil()` to wait for an arbitrary condition. Explicit waits return as soon as the condition is met, so they are both faster and more reliable than fixed delays.
 
 
 == Dealing with Test Environment Problems

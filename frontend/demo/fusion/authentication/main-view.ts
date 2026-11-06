@@ -15,7 +15,6 @@ export class MainView extends LitElement {
           this.menuRoutes,
           (route) => html`<a href="${router.urlForPath(route.path)}">${route.title}</a>`
         )}
-        ;
       </nav>
     `;
   }

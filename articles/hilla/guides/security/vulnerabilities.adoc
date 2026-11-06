@@ -1,0 +1,91 @@
+---
+title: Common Vulnerabilities
+page-title: How to address security vulnerabilities in Hilla | Vaadin
+description: Dealing with vulnerabilities, such as SQL injection, cross-site request forgery, and Java serialization.
+meta-description: Explore best practices to address and mitigate security vulnerabilities in Hilla applications.
+order: 150
+---
+
+= Common Vulnerabilities
+
+== SQL Injections
+
+Since Hilla is a backend-agnostic UI framework, it doesn't deal directly with backend access.
+Instead, the choice of backend framework (for example, Spring Data) is left to the developer.
+Hilla doesn't provide mitigation for SQL injections.
+This is left to the backend provider and developer.
+
+However, SQL injections can be completely blocked in Hilla applications by validating and escaping data as described in <<best-practices#, Security Best Practices>>, as well as by following standard secure database access practices.
+
+Most providers have their own ways of dealing with injections out of the box, and following those guides is recommended.
+However, if the developer uses pure JDBC, they have to deal with injection risks themselves.
+Here is an example of pure JDBC, demonstrating SQL-injection mitigation using the value from a Text Field in a prepared statement:
+
+[.example]
+--
+.`name-view.tsx`
+[source,tsx]
+----
+import { TextField, type TextFieldValueChangedEvent } from '@vaadin/react-components';
+import { NameService } from 'Frontend/generated/endpoints';
+
+export default function NameView() {
+  return (
+    <TextField
+      label="Your name"
+      onValueChanged={(event: TextFieldValueChangedEvent) =>
+        NameService.updateName(event.detail.value)
+      }
+    />
+  );
+}
+----
+.`NameService.java`
+[source,java]
+----
+@BrowserCallable
+public class NameService {
+    public void updateName(String value) {
+        // This is the correct way
+        String sql = "UPDATE app_users WHERE id=? SET name=?";
+
+        try {
+            // Use prepared statement to safely call the DB
+            PreparedStatement ps = dbConnection.prepareStatement(sql);
+
+            ps.setLong(1, user.getId());
+            ps.setString(2, value);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        // This is the INCORRECT way, DON'T USE!
+        // sql = "UPDATE app_users WHERE id="+ user.getId() +" SET name=\"" + value +
+        // "\"";
+    }
+}
+----
+--
+
+== Cross-Site Request Forgery (CSRF / XSRF)
+
+All requests between the client and the server have a user-session-specific CSRF token included.
+All communication between the server and the client is handled by Vaadin, so you don't need to remember to include and verify the CSRF tokens manually.
+See <<configuring#csrf, CSRF Protection of Browser-Callable Services>> for more information.
+
+The CSRF token mechanism can be overridden on the server, for example to enable repeatable load test scripts using Gatling or similar tools.
+This is strongly discouraged when running in production.
+
+== Java Serialization Vulnerability
+
+A general security issue has been identified in programming language mechanics where the language allows execution of code that comes from serialized objects.
+The Java language isn't immune to this; as a non-exhaustive list, at least the Java Serialization framework, RMI, JMX and JMS features are vulnerable to the issue.
+
+If the application is set up to deserialize Java objects (for example, using the libraries above), an attacker can feed the system a malicious payload that gets deserialized into Java objects.
+The attacker can then execute arbitrary code using specific language features (such as reflection).
+
+Vaadin has published a link:https://vaadin.com/security/2018-11-13[security alert] for this vulnerability.
+
+The vulnerability cannot be fixed in Vaadin.
+Developers need to mitigate the risk using methods described in the alert appendices.

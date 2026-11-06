@@ -62,11 +62,16 @@ export class Example extends LitElement {
           <vaadin-accordion-heading slot="summary">
             <vaadin-horizontal-layout theme="spacing">
               Customer details
-              ${this.customerComplete
-                ? html`
-                    <vaadin-icon icon="vaadin:check" style="--vaadin-icon-size: 1rem"></vaadin-icon>
-                  `
-                : nothing}
+              ${
+                this.customerComplete
+                  ? html`
+                      <vaadin-icon
+                        icon="vaadin:check"
+                        style="--vaadin-icon-size: 1rem"
+                      ></vaadin-icon>
+                    `
+                  : nothing
+              }
             </vaadin-horizontal-layout>
           </vaadin-accordion-heading>
           <!-- end::snippet[] -->
@@ -94,11 +99,16 @@ export class Example extends LitElement {
           <vaadin-accordion-heading slot="summary">
             <vaadin-horizontal-layout theme="spacing">
               Billing address
-              ${this.billingComplete
-                ? html`
-                    <vaadin-icon icon="vaadin:check" style="--vaadin-icon-size: 1rem"></vaadin-icon>
-                  `
-                : nothing}
+              ${
+                this.billingComplete
+                  ? html`
+                      <vaadin-icon
+                        icon="vaadin:check"
+                        style="--vaadin-icon-size: 1rem"
+                      ></vaadin-icon>
+                    `
+                  : nothing
+              }
             </vaadin-horizontal-layout>
           </vaadin-accordion-heading>
 
@@ -130,11 +140,16 @@ export class Example extends LitElement {
           <vaadin-accordion-heading slot="summary">
             <vaadin-horizontal-layout theme="spacing">
               Payment
-              ${this.paymentComplete
-                ? html`
-                    <vaadin-icon icon="vaadin:check" style="--vaadin-icon-size: 1rem"></vaadin-icon>
-                  `
-                : nothing}
+              ${
+                this.paymentComplete
+                  ? html`
+                      <vaadin-icon
+                        icon="vaadin:check"
+                        style="--vaadin-icon-size: 1rem"
+                      ></vaadin-icon>
+                    `
+                  : nothing
+              }
             </vaadin-horizontal-layout>
           </vaadin-accordion-heading>
 

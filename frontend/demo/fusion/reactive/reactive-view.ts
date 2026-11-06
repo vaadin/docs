@@ -4,7 +4,7 @@ import '@vaadin/text-field';
 import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import type { Subscription } from '@vaadin/hilla-frontend';
-import { ReactiveEndpoint } from 'Frontend/generated/endpoints';
+import { ReactiveService } from 'Frontend/generated/endpoints';
 
 @customElement('reactive-view')
 export class ReactiveView extends LitElement {
@@ -31,7 +31,7 @@ export class ReactiveView extends LitElement {
       this.subscription.cancel();
       this.subscription = undefined;
     } else {
-      (this.subscription = ReactiveEndpoint.getClockCancellable()).onNext((time) => {
+      (this.subscription = ReactiveService.getClockCancellable()).onNext((time) => {
         this.serverTime = time;
       });
     }

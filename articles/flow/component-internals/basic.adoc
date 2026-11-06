@@ -161,6 +161,27 @@ include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/basic
 You can also use the `Component.addDetachListener()` method to register a detach listener instead of overriding the [methodname]`onDetach()` method. The listener is invoked after the [methodname]`onDetach()` method. This is useful when you want to add detach behavior to an existing component without creating a subclass.
 
 
+[role="since:com.vaadin:vaadin@V25.3"]
+=== Attach-Scoped Setup and Cleanup
+
+When the cleanup in [methodname]`onDetach()` only undoes what [methodname]`onAttach()` did, the two halves can be kept together with [methodname]`whenAttached()`. The handler runs every time the component is attached -- immediately, if the component is already attached -- and the [classname]`Registration` it returns runs when the component is detached again.
+
+.Subscribing to an event bus in [methodname]`whenAttached()` and unsubscribing in the returned registration
+[example]
+====
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/reference/componentinternals/basics/CartSummaryWhenAttached.java[indent=0]
+----
+====
+
+Because the cleanup closes over the local variables of the handler, no field is needed to carry state from an attach to the matching detach. The handler receives the [classname]`UI` the component was attached to, and it can return `null` when there is nothing to clean up.
+
+Removing the returned registration removes the handler and also runs any cleanup still pending from the latest attach. An exception thrown by the handler is propagated to the caller, whereas one thrown by the cleanup is passed to the session error handler, so that a failing cleanup does not prevent the rest of the detach handling from running.
+
+The same method is available on the element level as [methodname]`Element.whenAttached()`. Both are public, so they can also be used from the outside to hook into the life cycle of another component.
+
+
 == Setting Id
 
 You can set an `Id` for any component. The `Id` is passed to the client side as the `id` of the corresponding element. However, an `Id` *must be unique within the page*, as it can be used to select the element in JavaScript code or CSS rules.

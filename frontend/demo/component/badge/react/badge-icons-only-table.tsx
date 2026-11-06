@@ -34,7 +34,7 @@ function Example() {
       title = 'Yes';
       theme = 'success';
     } else {
-      icon = 'vaadin:close-small';
+      icon = 'vaadin:close';
       title = 'No';
       theme = 'error';
     }

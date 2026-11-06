@@ -13,7 +13,7 @@ export type ViewRoute = Route & {
 // tag::isAuthorizedViewRoute[]
 export function isAuthorizedViewRoute(route: ViewRoute) {
   if (route.rolesAllowed) {
-    return route.rolesAllowed.find((role) => isUserInRole(role));
+    return route.rolesAllowed.some((role) => isUserInRole(role));
   }
 
   return true;

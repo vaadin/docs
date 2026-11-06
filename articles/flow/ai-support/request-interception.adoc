@@ -1,0 +1,145 @@
+---
+title: Request Interception
+description: Validate, sanitize, or replace user prompts and attachments -- or reject them -- before the AIOrchestrator sends anything to the LLM.
+meta-description: Learn how to intercept prompts in the Vaadin AIOrchestrator with the withRequestInterceptor API to validate, sanitize, reject, or postpone user messages.
+order: 37
+---
+
+
+= [since:com.vaadin:vaadin@V25.3]#Request Interception#
+
+A request interceptor receives the user's message text and attachments before the orchestrator acts on them. It runs before the message appears in the Message List, before controller and request listener hooks, before the conversation history entry, and before the orchestrator builds the LLM request. Whatever the interceptor leaves in place is the only version that exists downstream. That makes it the right place to enforce a content policy, mask personal data before it leaves the server, convert an uploaded file to a format the model accepts, or run each prompt past a moderation service.
+
+The interceptor covers every way a prompt enters the orchestrator -- a submit through a connected input component as well as the programmatic [methodname]`prompt()` calls. Prompts whose text is blank are dropped before the interceptor runs.
+
+
+== Registering an Interceptor
+
+Register the interceptor with [methodname]`withRequestInterceptor()` on the builder. The event it receives carries the message text and attachments. Change them, or reject the prompt:
+
+[source,java]
+----
+AIOrchestrator orchestrator = AIOrchestrator
+        .builder(provider, systemPrompt)
+        .withMessageList(messageList)
+        .withInput(messageInput)
+        .withRequestInterceptor(event -> {
+            if (violatesContentPolicy(event.getUserMessage())) {
+                event.reject("This request isn't something the "
+                        + "assistant can help with.");
+                return;
+            }
+            event.setUserMessage(maskPersonalData(event.getUserMessage()));
+        })
+        .build();
+----
+
+[methodname]`violatesContentPolicy` and [methodname]`maskPersonalData` are placeholders for application code. The first decides whether the prompt may go out at all, and the second replaces personal data in the text with placeholders.
+
+The interceptor runs on the UI thread under the session lock, and the orchestrator uses its result as soon as it returns -- keep synchronous work short. Slow work such as a remote moderation call belongs in <<#asynchronous-preprocessing,asynchronous preprocessing>> instead.
+
+.Testing an Interceptor
+[TIP]
+[classname]`RequestInterceptEvent` has a public constructor, so an interceptor can be unit-tested without an orchestrator: create an event with the test's message and attachments, pass it to the interceptor, and assert on the event afterwards.
+
+
+== Rejecting a Prompt
+
+Calling [methodname]`event.reject()` cancels the prompt without feedback. Nothing reaches the LLM, nothing shows up in the Message List or the conversation history, and no controller or request listener hooks fire. To the rest of the application, the prompt never happened.
+
+Calling [methodname]`event.reject(userFacingMessage)` cancels the prompt the same way, but shows the exchange in the Message List: the user's message and attachments as originally submitted -- unaffected by any replacements -- then the given message under the assistant name. The user sees what was rejected and why. Neither entry becomes part of the conversation history. Without a configured Message List, nothing is shown anywhere.
+
+Rejection is final -- changing the message or the attachments afterwards doesn't undo it. A rejected prompt doesn't block the conversation: the orchestrator accepts the next one right away.
+
+.Rejected Exchanges Are Not in the History
+[NOTE]
+The two Message List entries produced by [methodname]`reject(userFacingMessage)` exist only in the component, not in [methodname]`getHistory()`. A UI rebuilt from saved history doesn't show past rejected exchanges. See <<conversation-history#,Conversation History & Session Persistence>>.
+
+
+== Replacing the Message and Attachments
+
+[methodname]`setUserMessage()` replaces the text sent to the LLM. The replacement is also what appears in the Message List and the conversation history -- the original text isn't shown or recorded anywhere. A blank replacement drops the prompt; prefer [methodname]`reject()` to cancel explicitly.
+
+[methodname]`setAttachments()` replaces the attachments the same way, both in the request and in the Message List. Pass an empty list to strip all attachments. Attachments with unsupported MIME types don't reach the model: they still appear in the Message List, but the LLM provider leaves their content out of the request (see <<file-attachments#,File Attachments>>). An interceptor is the place to convert such a file into something the model accepts:
+
+[source,java]
+----
+AIOrchestrator orchestrator = AIOrchestrator
+        .builder(provider, systemPrompt)
+        .withMessageList(messageList)
+        .withInput(messageInput)
+        .withFileReceiver(uploadManager)
+        .withRequestInterceptor(event -> {
+            List<AIAttachment> converted = event.getAttachments()
+                    .stream()
+                    .map(attachment -> isSpreadsheet(attachment)
+                            ? new AIAttachment(
+                                    attachment.name() + ".csv",
+                                    "text/csv",
+                                    toCsv(attachment.data()))
+                            : attachment)
+                    .toList();
+            event.setAttachments(converted);
+        })
+        .build();
+----
+
+Here, spreadsheet uploads -- a format LLMs don't take as-is -- are converted to CSV text. [methodname]`isSpreadsheet` and [methodname]`toCsv` are placeholders for application code.
+
+.Pending Uploads Are Consumed Either Way
+[NOTE]
+By the time the interceptor runs, the orchestrator has already taken pending uploads out of a configured file receiver. If the prompt is then rejected, dropped, or fails, those attachments are gone -- they are not resubmitted with the next prompt. The interceptor's event is the last place to see them.
+
+
+[[asynchronous-preprocessing]]
+== Asynchronous Preprocessing
+
+Some preprocessing can't finish while the UI thread waits -- a call to a remote moderation service, or a heavy media conversion. For these, [methodname]`event.postpone(timeout)` suspends the prompt and returns a [classname]`RequestContinuation`. Run the work on the application's own threads, and complete the continuation when done. [methodname]`proceed()` resumes the prompt with the event's content at that moment, and [methodname]`fail(cause)` abandons it, reporting the cause as an error.
+
+[source,java]
+----
+AIOrchestrator orchestrator = AIOrchestrator
+        .builder(provider, systemPrompt)
+        .withMessageList(messageList)
+        .withInput(messageInput)
+        .withRequestInterceptor(event -> {
+            var continuation = event.postpone(Duration.ofSeconds(10));
+            var ui = UI.getCurrent();
+            progressBar.setVisible(true);
+            moderationService.checkAsync(event.getUserMessage())
+                    .whenComplete((allowed, error) -> {
+                        ui.access(() -> progressBar.setVisible(false));
+                        if (error != null) {
+                            continuation.fail(error);
+                            return;
+                        }
+                        if (!allowed) {
+                            event.reject("Please rephrase your message.");
+                        }
+                        continuation.proceed();
+                    });
+        })
+        .build();
+----
+
+The event stays usable after [methodname]`postpone()` returns. Content changes and rejections made afterwards take effect when the prompt resumes; make them on the thread that completes the continuation, before completing it -- a change attempted after completion throws [classname]`IllegalStateException`. Completion is safe from any thread and first-wins: once the prompt has proceeded, failed, or timed out, later completions are ignored.
+
+While a prompt is postponed, the UI shows nothing and further prompts are ignored. Give the user a sign that something is happening. The example makes an indeterminate [classname]`ProgressBar` visible before scheduling the work and hides it again on completion. The completion arrives on whichever thread runs the work, so wrap component changes in `ui.access()` with a [classname]`UI` reference captured in the interceptor.
+
+Server push or polling must be enabled -- with [annotationname]`@Push` on the application shell class (see <<index#server-push,Server Push>>) or with [methodname]`UI.setPollInterval()` -- for the resumed turn to reach the browser without user interaction.
+
+The timeout is required. When it elapses before the continuation is completed, the prompt fails with a [classname]`TimeoutException`, reported the same way as [methodname]`fail()`. The prompt's content, including attachment data, stays referenced until the continuation completes or the timeout fires, so keep the timeout as tight as the work allows. If the UI the prompt was submitted from is detached before completion -- the user closed the tab -- the prompt is abandoned.
+
+
+== Errors
+
+An exception thrown from the interceptor aborts the prompt much like a rejection: nothing is sent or shown. The difference is that the exception counts as a failure -- the [classname]`ResponseListener` and [methodname]`AIController.onResponse()` receive it, and it propagates to the caller of the [methodname]`prompt()` entry point. Throw only for real failures. For expected validation outcomes, use [methodname]`reject()`.
+
+Failures after postponing -- [methodname]`fail(cause)` or the timeout -- reach the same listeners, but can't propagate to the prompt caller, which returned long ago. Throwing from the interceptor after [methodname]`postpone()` aborts the prompt like any other interceptor failure, and the continuation becomes inert.
+
+
+== Session Persistence
+
+The interceptor is serialized with the orchestrator and, unlike the LLM provider, needs no [methodname]`reconnect()` step. A lambda implementation must therefore capture only serializable state. Don't capture a non-serializable service such as a moderation client in the lambda. Look it up when the interceptor runs instead, for example through a static accessor or an application-scoped registry. In an application that serializes sessions, the moderation service captured in the <<#asynchronous-preprocessing,earlier example>> would need this treatment.
+
+A prompt that is postponed when the session is serialized doesn't survive. Completing its continuation afterwards has no effect, and the deserialized orchestrator accepts new prompts once reconnected. See <<conversation-history#,Conversation History & Session Persistence>> for the reconnection flow.

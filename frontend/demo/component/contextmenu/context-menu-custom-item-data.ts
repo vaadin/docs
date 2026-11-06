@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/context-menu';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { ContextMenuItem, ContextMenuItemSelectedEvent } from '@vaadin/context-menu';
+import type { ContextMenuItemData, ContextMenuItemSelectedEvent } from '@vaadin/context-menu';
 import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('context-menu-custom-item-data')
@@ -15,7 +15,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private items: Array<ContextMenuItem<{ value: string }>> = [
+  private items: Array<ContextMenuItemData<{ value: string }>> = [
     {
       text: 'Copy as plain text',
       value:
@@ -45,7 +45,7 @@ export class Example extends LitElement {
     `;
   }
 
-  itemSelected(e: ContextMenuItemSelectedEvent<ContextMenuItem<{ value?: string }>>) {
+  itemSelected(e: ContextMenuItemSelectedEvent<ContextMenuItemData<{ value?: string }>>) {
     const { value } = e.detail.value;
     if (value) {
       navigator.clipboard.writeText(value);

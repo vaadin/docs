@@ -11,6 +11,14 @@ declare module '*.css?inline' {
 
 declare module '*.css';
 
+// Merges into the shared window.Vaadin.Flow interface declared by the Flow
+// connectors in jar-resources. loadOnDemand is normally defined by
+// generated-flow-imports.js, which the examples do not load, so
+// init-flow-namespace.ts provides a stand-in.
+interface VaadinFlow {
+  loadOnDemand?(id: string): Promise<unknown>;
+}
+
 // Allow any CSS Custom Properties
 declare module 'csstype' {
   interface Properties {

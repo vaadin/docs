@@ -9,6 +9,9 @@ import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.treegrid.TreeGrid;
+import com.vaadin.flow.data.provider.hierarchy.HierarchicalDataProvider.HierarchyFormat;
+import com.vaadin.flow.data.provider.hierarchy.TreeData;
+import com.vaadin.flow.data.provider.hierarchy.TreeDataProvider;
 import com.vaadin.flow.router.Route;
 
 import java.util.List;
@@ -20,7 +23,10 @@ public class TreeGridColumn extends Div {
 
     public TreeGridColumn() {
         TreeGrid<Person> treeGrid = new TreeGrid<>();
-        treeGrid.setItems(managers, this::getStaff);
+        TreeData<Person> treeData = new TreeData<>();
+        treeData.addItems(managers, this::getStaff);
+        treeGrid.setDataProvider(
+                new TreeDataProvider<>(treeData, HierarchyFormat.FLATTENED));
         treeGrid.addHierarchyColumn(Person::getFirstName)
                 .setHeader("First name");
         treeGrid.addColumn(Person::getLastName).setHeader("Last name");

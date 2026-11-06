@@ -23,6 +23,10 @@ function Example() {
     selected: ' hinzugefügt',
     deselected: ' entfernt',
     total: '{count} Einträge ausgewählt',
+    selectAll: 'Alle auswählen',
+    deselectAll: 'Alle abwählen',
+    selectFiltered: 'Gefilterte auswählen',
+    deselectFiltered: 'Gefilterte abwählen',
   };
 
   return (
@@ -32,6 +36,7 @@ function Example() {
       itemIdPath="id"
       items={items.value}
       i18n={i18n}
+      selectAllButtonVisible
       style={{ width: '300px' }}
     />
   );

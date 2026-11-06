@@ -1,4 +1,6 @@
 import './init-flow-namespace';
+// Temporary workaround for https://github.com/vaadin/flow/issues/26041
+import 'Frontend/generated/jar-resources/ElementResize.js';
 import { applyTheme } from 'Frontend/demo/theme';
 // Expose function to inject styles into shadow roots to web components exported from Flow.
 // See Flow application Vite config (apply-docs-theme plugin)

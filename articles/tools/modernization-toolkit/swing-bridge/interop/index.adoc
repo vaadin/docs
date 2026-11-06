@@ -3,7 +3,7 @@ title: Interoperability
 page-title: SwingBridge Interoperability | Vaadin Tools
 description: Type-safe API and tooling to call between Vaadin and an embedded Swing application.
 meta-description: Type-safe interoperability between Vaadin and an embedded Swing application — call Swing methods, react to Swing events, and share domain types.
-order: 4
+order: 7
 ---
 
 include::{articles}/_vaadin-version.adoc[]
@@ -114,7 +114,7 @@ The annotations live in a single JAR with these coordinates:
 
 The JAR carries only the `@ExposedMethod`, `@VaadinCallback`, and `@InstanceProvider` annotations, plus the `Invocation`, `Dispatch`, and `Discovery` enums. It has no transitive dependencies and no runtime cost — it is *compile-only* on the Swing side. The Swing application does not need it on its runtime classpath; the embedded launch on the Vaadin side supplies the runtime classes.
 
-The JAR is published in Vaadin's public Maven repositories — `https://maven.vaadin.com/vaadin-addons` for stable releases and `https://maven.vaadin.com/vaadin-prereleases` for pre-releases. Downloads are anonymous; the SwingBridge license check happens later, at runtime on the Vaadin side, when the embedded Swing app starts. See <<../installation-from-scratch#swing-bridge.installation-from-scratch.license, License Installation>> for the license setup itself.
+The JAR is published to Maven Central, so a stable release needs no extra repository declaration. Pre-releases come from `https://maven.vaadin.com/vaadin-prereleases`. Downloads are anonymous; the SwingBridge license check happens later, at runtime on the Vaadin side, when the embedded Swing app starts. See <<../installation-from-scratch#swing-bridge.installation-from-scratch.license, License Installation>> for the license setup itself.
 
 Pick the approach that matches your Swing project's build:
 
@@ -123,14 +123,6 @@ Pick the approach that matches your Swing project's build:
 
 [source,xml,subs="+attributes"]
 ----
-<repositories>
-    <repository>
-        <id>vaadin-addons</id>
-        <url>https://maven.vaadin.com/vaadin-addons</url>
-    </repository>
-    <!-- ... existing repositories ... -->
-</repositories>
-
 <dependencies>
     <dependency>
         <groupId>com.vaadin</groupId>
@@ -149,7 +141,7 @@ Pick the approach that matches your Swing project's build:
 [source,groovy,subs="+attributes"]
 ----
 repositories {
-    maven { url = uri("https://maven.vaadin.com/vaadin-addons") }
+    mavenCentral()
     // ... existing repositories ...
 }
 
@@ -167,10 +159,10 @@ Most long-running Swing codebases use Ant, IDE-managed libraries, or no formal b
 
 [source,terminal,subs="+attributes"]
 ----
-curl -O https://maven.vaadin.com/vaadin-addons/com/vaadin/swing-bridge-annotations/{swing-bridge-version}/swing-bridge-annotations-{swing-bridge-version}.jar
+curl -O https://repo1.maven.org/maven2/com/vaadin/swing-bridge-annotations/{swing-bridge-version}/swing-bridge-annotations-{swing-bridge-version}.jar
 ----
 
-For a SwingBridge pre-release, swap `vaadin-addons` for `vaadin-prereleases` in the URL. The download is anonymous — no Vaadin license check at this step.
+For a SwingBridge pre-release, take the JAR from `https://maven.vaadin.com/vaadin-prereleases` instead. The download is anonymous — no Vaadin license check at this step.
 
 Then add the JAR to the Swing project:
 
@@ -194,7 +186,7 @@ import com.vaadin.swingbridge.interop.ExposedMethod;
 [[swing-bridge.interop.status]]
 == What's Shipped Today
 
-The interop runtime, the `generate-bridge` Maven goal, and the by-reference domain-types strategy are production-ready. Two further codegen goals exist as in-progress skeletons and are not recommended for production use yet:
+The interop runtime, the `generate-bridge` Maven goal, and the by-reference domain-types strategy are production-ready. Three further codegen goals exist as in-progress skeletons and are not recommended for production use yet:
 
 [cols="3,1,4", options="header"]
 |===
@@ -219,6 +211,10 @@ The interop runtime, the `generate-bridge` Maven goal, and the by-reference doma
 | Shared domain types by reference (Type 3+)
 | Shipped
 | Add the domain JAR as a Maven `<dependency>` of the Vaadin app. Same `Class<?>` on both sides; no conversion.
+
+| `extract-shared-types` Maven goal
+| Roadmap
+| Extracts the domain classes referenced by `@ExposedMethod` signatures out of a fat Swing JAR into a thin domain JAR — the input to the by-reference strategy above. Present in the plugin but not yet covered by tests; building the domain JAR with your own build is the supported path for now.
 
 | `strip-annotations` Maven goal (Type 1)
 | Roadmap

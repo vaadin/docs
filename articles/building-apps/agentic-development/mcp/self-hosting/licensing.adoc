@@ -1,0 +1,136 @@
+---
+title: Licensing
+page-title: Install the License Key for a Self-Hosted Vaadin MCP Server
+description: Request, install, verify, and renew the license key the server needs to start.
+meta-description: Step-by-step setup of the license key for a self-hosted Vaadin MCP server, the file permissions it needs, and what to do when startup is refused.
+order: 10
+---
+
+
+= Licensing
+
+The server needs a license key to start. You supply it when you run the container, rather than building it into the image.
+
+Setting it up is three steps: request the key, install it, and check that the server accepted it.
+
+
+== 1. Request the Key
+
+The self-hosted MCP server is part of the https://vaadin.com/enterprise[Vaadin Enterprise Edition]. Getting a key takes two steps, and the first can't be done from your account page yet.
+
+. *Ask Vaadin to add the entitlement.* https://pages.vaadin.com/contact[Contact Vaadin] and ask for the MCP server to be added to your subscription. Don't skip this on the strength of an existing key: a Pro or Prime key is perfectly valid and still gets refused, because it doesn't cover this product.
+. *Download a server license key* from https://vaadin.com/myaccount/licenses[your Vaadin account], once the entitlement is in place.
+
+Ask for a *server* key, with no machine binding. Machine-bound keys don't work inside a container, so if you're asked which machine the key is for, that's the wrong kind.
+
+What you download is an *offline key*: one long signed token in a text file. A `proKey` is a different credential, and this server doesn't accept one.
+
+One key is enough for any number of instances. Nothing is issued per deployment, and the server counts no seats, instances, or callers -- the same key works on a shared deployment and on every developer's machine.
+
+
+== 2. Install the Key
+
+Pick the option that matches how your platform delivers secrets. An environment variable is quickest; a mounted file is what Docker, Compose, and Kubernetes secrets give you.
+
+=== Option A: Environment Variable
+
+Pass the key's *contents*, not a path to it:
+
+[source,bash]
+----
+docker run --rm -p 8080:8080 \
+    -e VAADIN_OFFLINE_KEY="$(cat /path/to/serverKey)" \
+    vaadin/mcp-server:latest
+----
+
+The value shows up in `docker inspect` and in the container's environment, so use `--env-file` locally and your platform's secret store in a deployment. In Docker Compose, use an `env_file:` or `environment:` entry. A Compose `secrets:` entry arrives as a file, which this option can't read -- use option B for that.
+
+[[key-file]]
+=== Option B: Mounted Key File
+
+Mount the key into `/home/nonroot/.vaadin/`:
+
+[source,bash]
+----
+docker run --rm -p 8080:8080 \
+    -v "$HOME/.vaadin/serverKey:/home/nonroot/.vaadin/serverKey:ro" \
+    vaadin/mcp-server:latest
+----
+
+Four requirements. If you miss any of them the server reports *no license file found* and stops, so check all four before looking elsewhere:
+
+. *Mount into `/home/nonroot/.vaadin/`.* That is the only directory the server searches. A key under `/root/.vaadin/` is never found.
+. *Keep the filename you downloaded.* The accepted names are `offlineKeyV2`, `offlineKeyV2.txt`, `offlineKey`, `offlineKey.txt`, `serverKey`, and `serverKey.txt`. Renaming the file makes it invalid.
+. *Make the file readable by user ID 65532*, the account the container runs as. For a bind mount, run `chown 65532:65532` on your copy of the key. A root-owned key with `0600` permissions cannot be read. Docker Desktop on macOS remaps ownership for you, so this catches out Linux hosts only.
+. *On Kubernetes, set `fsGroup`.* A Secret is owned by `root`, and `runAsUser` changes only which user the process runs as -- not who owns the file. Setting `fsGroup: 65532` in the pod's security context gives the mounted Secret that group, and `defaultMode: 0440` lets the group read it. <<deployment-examples#,Deployment Examples>> has a full manifest.
+. *Mount the single file, not your whole `.vaadin` directory.* Another key in that directory can be read ahead of yours.
+
+Mounting read-only with `:ro` is fine. Nothing is written back.
+
+
+== 3. Verify It Worked
+
+The server prints one line to standard error as it starts:
+
+----
+ready. License valid until 2027-04-30.
+----
+
+You can also ask a running container:
+
+[source,bash]
+----
+curl -s http://localhost:8080/health | jq '.components.license.details.license'
+----
+
+[source,json]
+----
+{ "status": "valid", "expiresAt": "2027-04-30T00:00:00Z" }
+----
+
+A `status` of `valid` means the setup is done. If the server didn't start, see <<#license-refusals,If the Server Doesn't Start>>.
+
+
+[[renewal]]
+== Renewing the Key
+
+Put the new key in place the same way you installed the first one, then restart the container.
+
+Restarting is the reliable way, and it's worth knowing why there isn't a shortcut. The server does re-read its key every hour, but whether a replaced file reaches it depends on how you mounted it: a Kubernetes Secret mounted with `subPath` never receives updates, and replacing a bind-mounted file on the host can leave the container reading the original file. Restart the container and you don't have to work out which case you're in.
+
+You get 30 days' notice before a key expires. The warning appears in four places:
+
+. *The startup log*, each time the container starts.
+. *`/health`*, where `status` becomes `expiring_soon`. This is the one to alert on -- see <<monitoring-and-audit-logging#,Monitoring and Audit Logging>>.
+. *Each client's MCP handshake*, so connecting tools report it.
+. *Every tool response*, as an appended `[PLEASE RELAY TO THE USER]` note. Your developers see the reminder in their agent's own output, so expect to hear about it from them.
+
+If a key does expire, the server keeps working for another 30 days and logs the date it stops. After that it won't start.
+
+
+[[license-refusals]]
+== If the Server Doesn't Start
+
+A refused license stops the server with exit code `78` and prints one of these messages:
+
+[cols="2,3"]
+|===
+|Message |What to Do
+
+|*no license file found*
+|No key reached the server. Check that `VAADIN_OFFLINE_KEY` is set and not empty, or that your mounted file meets all four requirements in <<#key-file,Option B>>.
+
+|*the offline key does not provide access to <product>*
+|The key is valid but isn't entitled to the MCP server. https://pages.vaadin.com/contact[Contact Vaadin] to have the entitlement added. There's nothing to fix in your configuration.
+
+|*invalid offline key*
+|The key was rejected, most often because it's machine-bound. Request a server key with no machine binding. Ignore the machine ID in the message: it's the container's, not your host's.
+
+|*an offline key could not be read*
+|The file is corrupt, or another key in the mounted directory is being read ahead of yours. Mount only your own key file, and confirm it's the file you downloaded.
+
+|*license expired*
+|The key is past expiry and past its 30-day grace period. Install a renewed key.
+|===
+
+Inside the 30-day grace period the server still starts and serves normally, logging that it's in the grace period. See <<#renewal,Renewing the Key>>.

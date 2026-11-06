@@ -7,7 +7,7 @@ order: 10
 ---
 
 
-= Component Bindings
+= [since:com.vaadin:vaadin@V25.1]#Component Bindings#
 
 Signals connect directly to Vaadin components through binding methods. When a signal value changes, bound components update automatically without manual listeners or state synchronization.
 
@@ -34,9 +34,9 @@ ValueSignal<String> greetingSignal = new ValueSignal<>("Hello");
 
 Span greetingSpan = new Span();
 greetingSpan.bindText(greetingSignal);
-// Displays "Hello!"
+// Displays "Hello"
 
-name.set("Hi");
+greetingSignal.set("Hi");
 // Automatically updates to "Hi"
 ----
 
@@ -107,7 +107,7 @@ p.bindText(signal);
 
 == Binding Visibility
 
-Use [methodname]`bindVisible()` to show or hide components based on a boolean signal:
+Use [methodname]`bindVisible()` to show or hide components based on a boolean signal. This is how you express rules such as "show the *Done* button only while a row is being edited" or "hide the *Save* button until the form has unsaved changes": declare the rule once, and the component follows the state instead of being updated from every listener that changes it.
 
 [source,java]
 ----
@@ -122,6 +122,8 @@ Button toggleButton = new Button("Show Details");
 toggleButton.addClickListener(e -> showDetails.update(v -> !v));
 // Clicking toggles panel visibility
 ----
+
+Prefer a binding over calling [methodname]`setVisible()` from listeners whenever visibility follows application state. While a signal is bound, calling [methodname]`setVisible()` on the component throws a [classname]`BindingActiveException`, so change the visibility by updating the signal instead. For [methodname]`setVisible()` semantics and how visibility affects the DOM, see <<{articles}/flow/component-internals/visibility#,Component Visibility>>.
 
 
 === Conditional Visibility
@@ -139,6 +141,18 @@ noResults.bindVisible(searchText.map(text -> text.isEmpty()));
 Div results = new Div();
 results.bindVisible(searchText.map(text -> !text.isEmpty()));
 // Shows when search text is not empty
+----
+
+Use a lambda when the condition reads more than one signal:
+
+[source,java]
+----
+ValueSignal<Boolean> formDirty = new ValueSignal<>(false);
+ValueSignal<Boolean> submitting = new ValueSignal<>(false);
+
+Button saveButton = new Button("Save");
+saveButton.bindVisible(() -> formDirty.get() && !submitting.get());
+// Shows only while there are unsaved changes and no submission is in progress
 ----
 
 
@@ -187,7 +201,7 @@ Use [methodname]`bindValue()` on form fields to create two-way binding. Changes 
 
 [source,java]
 ----
-import com.vaadin.flow.signals.shared.SharedValueSignal;
+import com.vaadin.flow.signals.local.ValueSignal;
 
 ValueSignal<String> username = new ValueSignal<>("");
 
@@ -265,38 +279,6 @@ field.bindRequiredIndicatorVisible(required);
 ----
 
 For more details, see <<element-bindings#required-indicator-binding,Required Indicator Binding>> in Element Bindings.
-
-
-== Binding Theme Variants
-
-Use [methodname]`getThemeList().bind()` to toggle theme variants based on a signal:
-
-[source,java]
-----
-ValueSignal<Boolean> darkMode = new ValueSignal<>(false);
-
-VerticalLayout layout = new VerticalLayout();
-layout.getThemeList().bind("dark", darkMode);
-// Dark theme applied when darkMode is true
-
-Button toggleTheme = new Button("Toggle Dark Mode");
-toggleTheme.addClickListener(e -> darkMode.update(v -> !v));
-----
-
-
-=== Multiple Theme Variants
-
-Bind multiple independent theme variants:
-
-[source,java]
-----
-ValueSignal<Boolean> compact = new ValueSignal<>(false);
-ValueSignal<Boolean> rowStripes = new ValueSignal<>(true);
-
-Grid<Person> grid = new Grid<>();
-grid.getThemeList().bind("compact", compact);
-grid.getThemeList().bind("row-stripes", rowStripes);
-----
 
 
 == Binding Inline Styles
@@ -413,16 +395,18 @@ These are convenience shortcuts for [methodname]`getElement().getClassList().bin
 
 == Binding Theme Names
 
+Theme names apply the style variants a component supports, such as `small` on a button or `row-stripes` on a grid.
+
 Use [methodname]`bindThemeName()` and [methodname]`bindThemeNames()` to bind theme names to signals. These are component-level convenience methods available on components that implement [interfacename]`HasTheme`:
 
 [source,java]
 ----
-ValueSignal<Boolean> compact = new ValueSignal<>(false);
+ValueSignal<Boolean> smallVariant = new ValueSignal<>(false);
 
-Grid<Person> grid = new Grid<>();
+Button button = new Button("Save");
 
 // Toggle a single theme name based on a boolean signal
-grid.bindThemeName("compact", compact);
+button.bindThemeName("small", smallVariant);
 ----
 
 To bind a dynamic list of theme names, use [methodname]`bindThemeNames()`:
@@ -438,8 +422,20 @@ grid.bindThemeNames(themes);
 themes.set(List.of("row-stripes", "compact", "no-border"));
 ----
 
+These methods are convenience shortcuts for [methodname]`getElement().getThemeList().bind()`, the Element-level binding described in <<element-bindings#themelist-binding,ThemeList Binding>>. That one is available on every component, including those that don't implement [interfacename]`HasTheme`. Each theme name binds independently:
+
+[source,java]
+----
+ValueSignal<Boolean> compact = new ValueSignal<>(false);
+ValueSignal<Boolean> rowStripes = new ValueSignal<>(true);
+
+Grid<Person> grid = new Grid<>();
+grid.getElement().getThemeList().bind("compact", compact);
+grid.getElement().getThemeList().bind("row-stripes", rowStripes);
+----
+
 [NOTE]
-These are convenience shortcuts for [methodname]`getThemeList().bind()`. For Element-level theme bindings, see <<element-bindings#themelist-binding,ThemeList Binding>>.
+Theme names are per-component style variants. They are not how an application switches between light and dark: use the [annotationname]`ColorScheme` annotation or [methodname]`Page.setColorScheme()` for that, as described in <<{articles}/styling/themes#color-schemes,Light & Dark Color Schemes>>.
 
 
 == Rendering Lists of Components
@@ -539,10 +535,11 @@ The factory function runs once per list item. When you modify the list:
 
 == Binding Items to Data Components
 
-Use [methodname]`Signal.effect()` and [classname]`ListSignal` to bind data items to components like [classname]`Grid`, [classname]`ComboBox`, or any component implementing [interfacename]`HasDataView` or [interfacename]`HasDataProvider`. This enables reactive updates to the data without manual data provider management:
+Data components, such as [classname]`Grid` and [classname]`ComboBox`, don't have a method for binding their items to a list signal. Instead, pass a mutable list to [methodname]`setItems()` once. Then use [methodname]`Signal.effect()` to copy the values of the list signal into that list, and to refresh the data view:
 
 [source,java]
 ----
+import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.signals.local.ListSignal;
 
 ListSignal<String> items = new ListSignal<>();
@@ -552,20 +549,39 @@ items.insertLast("Item 2");
 Grid<String> grid = new Grid<>();
 grid.addColumn(item -> item).setHeader("Name");
 
-Signal.effect(grid, () -> grid.setItems(items.getValues().toList()));
+List<String> rows = new ArrayList<>();
+GridListDataView<String> dataView = grid.setItems(rows);
+Signal.effect(grid, () -> {
+    List<String> values = items.getValues().toList();
+    rows.clear();
+    rows.addAll(values);
+    dataView.refreshAll();
+});
 
-// Adding or updating an item triggers a full refresh
+// Adding or updating an item refreshes the grid
 items.insertLast("Item 3");
 items.peek().get(0).set("Updated Item 1");
 ----
 
-This pattern refreshes the entire data set by setting a new list of items when any change occurs to the list signal's structure or an individual item signal. The framework doesn't yet provide a dedicated helper for binding items to data components. Support for more efficient granular item updates and lazy loaded items bindings is planned in future releases.
+The effect reads the list signal and the signal of each item, so it runs again when an item is added, removed, moved, or changed. Each run refreshes the entire data set.
+
+Don't call [methodname]`setItems()` from the effect. Each call replaces the data provider, and replacing the data provider clears the selection. When you bind the selection to a signal, for example with `grid.asSingleSelect().bindValue(selected, selected::set)`, every change to the list then sets that signal to `null` (https://github.com/vaadin/flow-components/issues/10575[flow-components#10575]).
+
+Refreshing the data view keeps the selection of a [classname]`Grid`, a [classname]`ComboBox`, or a [classname]`MultiSelectComboBox`. Components that show each item as a child component, such as [classname]`Select`, [classname]`RadioButtonGroup`, and [classname]`CheckboxGroup`, clear their value on every refresh.
 
 This approach works with both [classname]`ListSignal` (for local, single-user scenarios) and [classname]`SharedListSignal` (for multi-user, real-time scenarios).
 
+
+=== Selected Items in a Grid
+
+A grid's selection preservation mode decides which selected items a refresh keeps. By default, the grid keeps them all, even an item that's removed from the list, and a bound selection signal keeps the removed item, too. To deselect removed items, call `grid.setSelectionPreservationMode(SelectionPreservationMode.PRESERVE_EXISTING)`.
+
+The grid recognizes the selected item by its identity. If an update replaces an item with an unequal object, such as a record with a changed field, the grid no longer shows it as selected. Give the items a stable identity, as described in <<{articles}/flow/binding-data/data-provider#data-binding.data-provider.item-identifiers,Stable & Unique Item Identities>>. You can also set an identifier provider on the data view, for example `dataView.setIdentifierProvider(Person::getId)`.
+
+
 === Difference from bindChildren
 
-Use [methodname]`bindChildren()` when you want to create custom components for each item in a layout container (e.g., [classname]`VerticalLayout`). Use [methodname]`Signal.effect()` with [methodname]`setItems()` when you want to populate a data items component (e.g., [classname]`Grid`, [classname]`VirtualList`) that manages its own rendering.
+Use [methodname]`bindChildren()` when you want to create custom components for each item in a layout container, such as [classname]`VerticalLayout`. Use an effect that refreshes the data view when you want to populate a data component, such as [classname]`Grid` or [classname]`VirtualList`, that manages its own rendering.
 
 
 == Component-Specific Bindings
@@ -576,7 +592,7 @@ For example, bind the selection of a [classname]`Grid` to a signal through the s
 
 [source,java]
 ----
-ValueSignal<Person> selectedPerson = new ValueSignal<>();
+ValueSignal<Person> selectedPerson = new ValueSignal<>(null);
 
 Grid<Person> grid = new Grid<>(Person.class);
 grid.asSingleSelect().bindValue(selectedPerson, selectedPerson::set);
@@ -612,6 +628,30 @@ content.bindClassName("mobile-layout", windowSize.map(ws -> ws.width() < 768));
 
 [NOTE]
 The signal is lazily initialized. The actual window dimensions are available from the initial browser connection through extended client details, so the signal has correct values from the start. It also updates automatically on browser window resize.
+
+
+[role="since:com.vaadin:vaadin@V25.3"]
+=== Element Size Signal
+
+Use [methodname]`Element.sizeSignal()` to get a read-only signal that tracks the size of a single element, as reported by the browser ResizeObserver API. The signal provides a [classname]`Size` record with [methodname]`width()` and [methodname]`height()` values in whole pixels:
+
+[source,java]
+----
+Div chartContainer = new Div();
+Signal<Size> size = chartContainer.getElement().sizeSignal();
+
+Span dimensions = new Span();
+dimensions.bindText(size.map(s ->
+    String.format("Container: %d x %d", s.width(), s.height())));
+
+// Switch to a compact rendering when the container itself gets narrow
+chartContainer.bindClassName("compact", size.map(s -> s.width() < 400));
+----
+
+Where the window size signal follows the browser window, this one follows the element, so it also reacts to size changes caused by the surrounding layout -- a side navigation being collapsed, for example.
+
+[NOTE]
+The signal is lazily initialized, and the same instance is returned for later calls on the same element, so one browser-side observer is shared. Its value is `Size(0, 0)` until the browser has reported the actual size, which happens shortly after the element has been attached. Sub-pixel sizes are rounded to whole pixels. While the element is detached there is nothing to observe, so the signal keeps the size last reported for it, and observation resumes when the element is attached again.
 
 
 === UI Locale Signal
@@ -657,7 +697,8 @@ languageSelect.bindValue(session.localeSignal(), session::setLocale);
 ----
 
 
-=== [since:com.vaadin:vaadin@V25.2]#Router State Signal#
+[role="since:com.vaadin:vaadin@V25.2"]
+=== Router State Signal
 
 Use [methodname]`UI.routerStateSignal()` to get a read-only signal that tracks the UI's navigation state. The signal provides a [classname]`RouterState` record with the current location, route parameters, active route chain, and navigation target. Its value updates whenever a navigation completes, making it useful for reactive breadcrumbs and menus:
 
@@ -710,7 +751,7 @@ public class TaskManager extends VerticalLayout {
         Button addButton = new Button("Add Task");
         addButton.bindEnabled(newTaskText.map(t -> !t.isBlank()));
         addButton.addClickListener(e -> {
-            tasks.insertLast(new Task(newTaskText.get(), false));
+            tasks.insertLast(new Task(newTaskText.peek(), false));
             newTaskText.set("");
         });
 

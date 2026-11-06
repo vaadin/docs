@@ -9,7 +9,6 @@ import '@vaadin/vaadin-lumo-styles/vaadin-iconset';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { ifDefined } from 'lit/directives/if-defined.js';
-import { dialogHeaderRenderer, dialogRenderer } from '@vaadin/dialog/lit.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import { applyTheme } from 'Frontend/demo/theme';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
@@ -42,41 +41,35 @@ export class Example extends LitElement {
         @closed="${() => {
           this.dialogOpened = false;
         }}"
-        ${dialogHeaderRenderer(
-          () => html`
-            <vaadin-button theme="tertiary" @click="${this.close}">
-              <vaadin-icon icon="lumo:cross"></vaadin-icon>
-            </vaadin-button>
-          `,
-          []
-        )}
-        ${dialogRenderer(this.renderDialog, this.user)}
-      ></vaadin-dialog>
+      >
+        <div slot="header-content">
+          <vaadin-button theme="tertiary" @click="${this.close}">
+            <vaadin-icon icon="lumo:cross"></vaadin-icon>
+          </vaadin-button>
+        </div>
+        <vaadin-form-layout auto-responsive column-width="18rem" expand-fields>
+          <vaadin-text-field
+            label="Name"
+            value="${`${this.user?.firstName} ${this.user?.lastName}`}"
+            readonly
+            style="padding-top: 0;"
+          ></vaadin-text-field>
+          <vaadin-email-field
+            label="Email"
+            value="${ifDefined(this.user?.email)}"
+            readonly
+          ></vaadin-email-field>
+          <vaadin-text-field
+            label="Address"
+            value="${this.addressDescription()}"
+            readonly
+          ></vaadin-text-field>
+        </vaadin-form-layout>
+      </vaadin-dialog>
       <!-- end::snippet[] -->
       <vaadin-button @click="${this.open}">Show dialog</vaadin-button>
     `;
   }
-
-  private renderDialog = () => html`
-    <vaadin-form-layout auto-responsive column-width="18rem" expand-fields>
-      <vaadin-text-field
-        label="Name"
-        value="${`${this.user?.firstName} ${this.user?.lastName}`}"
-        readonly
-        style="padding-top: 0;"
-      ></vaadin-text-field>
-      <vaadin-email-field
-        label="Email"
-        value="${ifDefined(this.user?.email)}"
-        readonly
-      ></vaadin-email-field>
-      <vaadin-text-field
-        label="Address"
-        value="${this.addressDescription()}"
-        readonly
-      ></vaadin-text-field>
-    </vaadin-form-layout>
-  `;
 
   addressDescription() {
     if (!this.user) {
