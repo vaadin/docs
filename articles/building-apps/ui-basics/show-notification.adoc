@@ -202,22 +202,56 @@ notification.open();
 
 == Undoing an Action
 
-For actions that can't be reverted once they've been performed, such as sending a message, you can give the user a short time to change their mind. Delay the action, show a notification with an Undo button, and cancel the delayed action if the user clicks it:
+For actions that can't be reverted once they've been performed, such as sending a message, you can give the user a short time to change their mind. Delay the action, show a notification with an Undo button, and cancel the delayed action if the user clicks it.
+
+Schedule the delayed action in an <</building-apps/business-logic/add-service#,application service>>, protected with <</building-apps/security/protect-services#,method-level security>> like any other service method. The service returns the `ScheduledFuture`, so that the UI can cancel it:
 
 [source,java]
 ----
-private void sendMessage(String sender, String message) {
-    ScheduledFuture<?> sending = taskScheduler.schedule( // <1>
-            () -> taskExecutor.execute( // <2>
-                    () -> messageService.send(sender, message)), // <3>
-            Instant.now().plusSeconds(5));
+@Service
+public class MessageService {
+
+    private final TaskScheduler taskScheduler;
+    private final TaskExecutor taskExecutor;
+
+    MessageService(TaskScheduler taskScheduler, TaskExecutor taskExecutor) {
+        this.taskScheduler = taskScheduler;
+        this.taskExecutor = taskExecutor;
+    }
+
+    @PreAuthorize("hasAuthority('permission:sendmessage')") // <1>
+    public ScheduledFuture<?> scheduleSend(String message, Duration delay) {
+        String sender = SecurityContextHolder.getContext()
+                .getAuthentication().getName(); // <2>
+        return taskScheduler.schedule( // <3>
+                () -> taskExecutor.execute(() -> send(sender, message)), // <4>
+                Instant.now().plus(delay));
+    }
+
+    private void send(String sender, String message) {
+        // Deliver the message
+    }
+}
+----
+<1> Spring checks the permission when the user schedules the send, in the user's own thread.
+<2> The send runs in a background thread, where the user's security context isn't available. Read the user while it still is, and pass it to the background task. See <</building-apps/business-logic/background-jobs/jobs#security,Security>> for details.
+<3> The `TaskScheduler` waits for the delay before starting the send. See <</building-apps/business-logic/background-jobs#task-scheduling,Task Scheduling>> for how to use it.
+<4> The scheduler only triggers the send and hands it over to the `TaskExecutor`. A slow send would otherwise block the scheduling thread pool, as explained in <</building-apps/business-logic/background-jobs#task-scheduling-caveats,Task Scheduling Caveats>>.
+
+The view schedules the send and shows the notification:
+
+[source,java]
+----
+private void sendMessage(String message) {
+    ScheduledFuture<?> sending = messageService.scheduleSend(message,
+            Duration.ofSeconds(5));
 
     Notification notification = new Notification();
-    notification.setDuration(5000); // <4>
+    notification.setDuration(5000); // <1>
 
     Button undoButton = new Button("Undo", event -> {
         notification.close();
-        if (sending.cancel(false)) { // <5>
+        if (sending.cancel(false)) { // <2>
             Notification.show("Message not sent");
         } else {
             Notification.show("The message can no longer be stopped");
@@ -231,11 +265,8 @@ private void sendMessage(String sender, String message) {
     notification.open();
 }
 ----
-<1> The `TaskScheduler` waits five seconds before starting the send. See <</building-apps/business-logic/background-jobs#task-scheduling,Task Scheduling>> for how to use it.
-<2> The scheduler only triggers the send and hands it over to the `TaskExecutor`. A slow send would otherwise block the scheduling thread pool, as explained in <</building-apps/business-logic/background-jobs#task-scheduling-caveats,Task Scheduling Caveats>>.
-<3> The send runs in a background thread, where the current user's security context isn't available. Check that the user is allowed to send before scheduling, while the security context is still available, and pass the user to the background task as a parameter. Don't rely on method-level security in the method that the task calls. See <</building-apps/business-logic/background-jobs/jobs#security,Security>> for details.
-<4> Unlike other notifications with interactive content, this one closes automatically: the Undo button is only useful while the action can still be cancelled, so the notification stays open for exactly that long.
-<5> `cancel()` returns `false` once the send has been handed over to the `TaskExecutor`. From then on, the action can't be undone anymore.
+<1> Unlike other notifications with interactive content, this one closes automatically: the Undo button is only useful while the action can still be cancelled, so the notification stays open for exactly that long.
+<2> `cancel()` returns `false` once the send has been handed over to the `TaskExecutor`. From then on, the action can't be undone anymore.
 
 If the action needs to update the UI when it's performed, use server push as described in <</building-apps/server-push#,Server Push>>.
 
