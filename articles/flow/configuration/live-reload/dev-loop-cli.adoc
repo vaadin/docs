@@ -167,14 +167,14 @@ Every command, option, and exit code is identical whichever launcher you use.
 `status [--json]`::
 Reports whether the application is up, which modules are in the loop, which runtime started it, the state of the last transaction, and any errors the application has logged since the last `apply`. Starts no JVM, so it costs milliseconds.
 
-`start`::
-Launches the application in development mode. Blocks until it's serving or has failed; a failure names the reason from the application's own log.
+`start [--jvm-args "<flags>"]`::
+Launches the application in development mode. Blocks until it's serving or has failed; a failure names the reason from the application's own log. `start` on an application that's already running changes nothing, including any `--jvm-args` given -- use `restart` to apply them.
 
 `apply [--json] [--no-restart]`::
 Makes the edits on disk live. Blocks until the outcome is terminal. `--no-restart` stops after the compile gate, which is useful when you want compile errors without touching the running application.
 
-`stop` / `restart` / `shutdown`::
-Stop the application; stop and start it again; or stop the daemon along with the application it owns. Use `restart` after changing anything the running JVM can't absorb, such as [filename]`package.json` or [filename]`vite.config.ts`. Use `shutdown` if the daemon seems wedged -- the next command starts a fresh one.
+`stop` / `restart [--jvm-args "<flags>"]` / `shutdown`::
+Stop the application; stop and start it again; or stop the daemon along with the application it owns. `--jvm-args` adds flags such as `-Xmx2g` or `--add-exports` to the application JVM -- see <<#configuration,Configuration>>. Use `restart` after changing anything the running JVM can't absorb, such as [filename]`package.json` or [filename]`vite.config.ts`. Use `shutdown` if the daemon seems wedged -- the next command starts a fresh one.
 
 `--help`::
 The full usage text, including every option and environment variable. Answers without starting a daemon, which is what makes it useful when the loop isn't working.
@@ -291,6 +291,23 @@ VAADIN_DEV_DAEMON_OPTS="-Dspring.profiles.active=dev" .vaadin/vaadin-dev start
 A property set this way lives as long as the daemon and appears in no file, so it's for steering one local run. If a profile is what the project normally runs under, `spring.profiles.active` in [filename]`application.properties` is the better answer.
 
 To develop frontend files actively, turn on hot deploy the same way, with `-Dvaadin.frontend.hotdeploy=true`. Vite then applies frontend edits when you save them, and `apply` says so instead of restarting. See <<{articles}/flow/configuration/properties#,Configuration Properties>>.
+
+`--add-exports`, `-Xmx`, `-XX:…`, and the like aren't system properties, so `VAADIN_DEV_DAEMON_OPTS` can't carry them to the application. `start` and `restart` take them directly with `--jvm-args`, quoted the way the shell quotes anything, and need no `shutdown` first:
+
+[source,bash]
+----
+.vaadin/vaadin-dev restart --jvm-args "-Xmx2g --add-exports java.base/jdk.internal.misc=ALL-UNNAMED"
+----
+
+The flags reach the application JVM alone, after the loop's own, so where the JVM takes the last of a repeated flag, yours wins. The daemon keeps them for every later launch -- a plain `restart`, and the restart an `apply` escalates to -- until the next `--jvm-args` replaces them (`--jvm-args ""` clears them) or the daemon shuts down.
+
+`-Dvaadin.dev.jvmArgs=<flags>` in `VAADIN_DEV_DAEMON_OPTS` does the same from the environment, for a setup that can only set that. Since `VAADIN_DEV_DAEMON_OPTS` itself is split on whitespace, join several flags with `|` and use the `=` form of the ones that take a value:
+
+[source,bash]
+----
+.vaadin/vaadin-dev shutdown
+VAADIN_DEV_DAEMON_OPTS="-Dvaadin.dev.jvmArgs=-Xmx2g|--add-exports=java.base/jdk.internal.misc=ALL-UNNAMED" .vaadin/vaadin-dev start
+----
 
 `-Dvaadin.dev.compiler=maven` switches the compiler an apply uses from the default `javac`, in-process, to the project's own `maven-compiler-plugin` -- see <<#limitations,Limitations>> for what that trades away and what it fixes. `status` names which compiler is active.
 

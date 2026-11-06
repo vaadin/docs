@@ -13,7 +13,7 @@ order: 20
 = JPA & Spring Data
 :toclevels: 2
 
-Jakarta Persistence (formerly Java Persistence API, still abbreviated JPA) is a Java API for managing relational data. It maps Java objects to database tables and tracks changes automatically. https://hibernate.org/[Hibernate] is the JPA implementation supported by Spring Boot and recommended for Vaadin applications.
+Jakarta Persistence (formerly Java Persistence API, still abbreviated JPA) is a Java API for managing relational data. It maps Java objects to database tables and tracks changes automatically. https://hibernate.org/[Hibernate] is the JPA implementation supported by Spring Boot and recommended in these guides.
 
 https://spring.io/projects/spring-data-jpa[Spring Data JPA] builds on JPA to reduce boilerplate. It generates repository implementations at runtime based on interface definitions.
 
@@ -227,7 +227,7 @@ Repository interfaces extend `JpaRepository`:
 ----
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface OrderRepository extends JpaRepository<Order, Long> {
+interface OrderRepository extends JpaRepository<Order, Long> {
 }
 ----
 
@@ -245,6 +245,8 @@ public class OrderService {
     }
 }
 ----
+
+Only the service is public. The repository and the constructor of the service are package private, as no code outside the package needs them.
 
 
 === Entity State and Saving
@@ -314,7 +316,7 @@ Use `@Lock` on query methods to acquire database locks:
 
 [source,java]
 ----
-public interface AccountRepository extends JpaRepository<Account, Long> {
+interface AccountRepository extends JpaRepository<Account, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select a from Account a where a.id = :accountId")
@@ -331,7 +333,7 @@ Spring Data derives queries from method names:
 
 [source,java]
 ----
-public interface CustomerRepository extends JpaRepository<Customer, Long> {
+interface CustomerRepository extends JpaRepository<Customer, Long> {
     List<Customer> findByNameContaining(String name);
 }
 ----
@@ -374,7 +376,7 @@ For dynamic queries, extend `JpaSpecificationExecutor`:
 
 [source,java]
 ----
-public interface CustomerRepository extends JpaRepository<Customer, Long>,
+interface CustomerRepository extends JpaRepository<Customer, Long>,
     JpaSpecificationExecutor<Customer> {
 }
 ----
@@ -430,3 +432,42 @@ public interface OrderSummaryQuery extends Repository<Order, Long> {
 ----
 
 For complex reporting queries, consider <<jooq#,jOOQ>> instead. JPA and jOOQ work well together—use JPA for entity persistence and jOOQ for queries.
+
+
+== Entities in Flow Views
+
+A Flow view keeps its state in server memory between requests, as explained in <<../../architecture/runtime-model#where-state-lives,Where State Lives>>. An entity that a view holds is detached: the transaction that loaded it has ended, and nothing more can be loaded through it.
+
+
+=== Loading What the View Needs
+
+When code accesses a lazy association that wasn't loaded inside the transaction, Hibernate throws a `LazyInitializationException`. In a view, this happens in listeners, in later requests, and in background threads alike.
+
+Spring Boot enables the `spring.jpa.open-in-view` property by default, and logs a warning about it at startup. The property keeps an entity manager open while Spring MVC handles a request, so that lazy associations can still be loaded. It has no effect on the requests that Vaadin handles, so it doesn't make lazy loading work in Flow views. It does affect REST controllers in the same application. Turn it off, so that all of your code follows the same rules:
+
+[source,properties]
+----
+spring.jpa.open-in-view=false
+----
+
+Instead, have the application service load everything the view needs, inside its transaction. For a view that shows a single aggregate, such as a form, fetch the associations that the view uses, for example with an entity graph:
+
+[source,java]
+----
+interface OrderRepository extends JpaRepository<Order, Long> {
+
+    @EntityGraph(attributePaths = {"customer"})
+    Optional<Order> findWithCustomerById(Long id);
+}
+----
+
+For a grid or a list, use a <<#query-classes,query class>> that returns DTOs with only the columns the view shows. A DTO has no lazy associations to trip over.
+
+Don't work around the exception by accessing each association inside the transaction, for example while mapping the entities to DTOs. That runs one more query for each row, which is known as the N+1 problem. A query with a fetch join or an entity graph loads the same data in a single query. See https://docs.hibernate.org/orm/current/introduction/html_single/#association-fetching[Association fetching] in the Hibernate documentation for the options.
+
+
+=== Keeping What the View Holds Small
+
+Everything that a view holds stays in memory for as long as the UI exists, and with session replication, it also has to be serializable. An entity brings along everything that was loaded with it. A grid that is given a list of 10,000 entities keeps all of them, whereas a <<../add-grid/paginated-data#,paginated grid>> keeps only the rows that the user has scrolled to. To find out what your views cost, <<../../architecture/capacity-and-failover#measure-memory-per-session,measure the memory per session>>.
+
+Keep only what the view shows or edits: DTOs for grids, the FDO for a form, and IDs for items the view has to find again later. <<../../business-logic/add-service#input-output,Input & Output>> compares returning entities and DTOs from application services.

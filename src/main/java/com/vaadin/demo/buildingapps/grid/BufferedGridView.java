@@ -11,7 +11,7 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 
 @Route("building-apps/grid/buffered-grid")
-public class BufferedGridView extends VerticalLayout {
+class BufferedGridView extends VerticalLayout {
 
     BufferedGridView() {
         // In a real application, this would be a Spring bean

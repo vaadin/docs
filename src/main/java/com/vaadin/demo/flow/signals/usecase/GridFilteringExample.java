@@ -32,7 +32,7 @@ public class GridFilteringExample extends VerticalLayout {
             boolean inStockOnly = inStockOnlySignal.get();
 
             return allProducts.stream()
-                    .filter(p -> category.equals("All")
+                    .filter(p -> category == null || category.equals("All")
                             || p.category().equals(category))
                     .filter(p -> searchTerm.isEmpty()
                             || p.name().toLowerCase().contains(searchTerm)
