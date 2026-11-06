@@ -18,6 +18,7 @@ This documentation covers the main features of the `DownloadHandler` API, includ
 
 * <<#common,Common download scenarios>>
 * <<#onclick,Starting a download from a component click>>
+* <<#new-tab,Opening content in a new tab>>
 * <<#custom,Creating custom download handlers>>
 * <<#progress,Download progress tracking>>
 * <<#low-level,Low-level API features>>
@@ -175,13 +176,7 @@ Download.onClick(export, DownloadHandler.fromInputStream(event -> {
 
 The download starts in the browser's own click handler, inside the user gesture, without waiting for a server round trip. The handler itself still runs on the server, but only once the browser requests the file -- so the file name and response headers can be decided at that point, as with any `DownloadHandler`.
 
-A download started this way is always saved as a file, so [methodname]`inline()` on the handler has no effect. To show the content in a new browser tab instead, use [methodname]`OpenInNewTab.onClick`, which takes a component and a handler or URL the same way. It switches the built-in handlers to serve the content inline:
-
-[source,java]
-----
-Button view = new Button("View Report");
-OpenInNewTab.onClick(view, DownloadHandler.forFile(new File("/path/to/report.pdf")));
-----
+A download started this way is always saved as a file, so [methodname]`inline()` on the handler has no effect. To show the content in a new browser tab instead, use [methodname]`OpenInNewTab.onClick`, as described in <<#new-tab,Opening Content in a New Tab>>.
 
 [methodname]`Download.onClick` also accepts a URL the browser can already address, optionally with a suggested file name:
 
@@ -203,6 +198,42 @@ Download.onClick(export,
 
 [methodname]`onClick` returns a [classname]`Registration`. Calling [methodname]`remove()` on it removes the click listener and, for a handler-based download, unregisters the handler so its URL stops serving the file.
 
+[#new-tab]
+[role="since:com.vaadin:vaadin@V25.4"]
+== Opening Content in a New Tab
+
+Use [classname]`OpenInNewTab` to show the content of a `DownloadHandler`, or a URL, in a new browser tab when a button or any other clickable component is clicked, instead of downloading it:
+
+[source,java]
+----
+Button view = new Button("View invoice");
+OpenInNewTab.onClick(view, DownloadHandler.fromInputStream(event -> {
+    byte[] pdf = invoiceService.createPdf();
+    return new DownloadResponse(new ByteArrayInputStream(pdf), "invoice.pdf",
+            "application/pdf", pdf.length);
+}));
+----
+
+As with <<#onclick,`Download.onClick`>>, the new tab opens in the browser's own click handler, without waiting for a server round trip, so popup blockers let it through. Opening a tab from a server-side click listener, for example with `Page.open`, happens only after the round trip and may be blocked. The new tab opens without access to the opening page (`noopener`) and without a `Referer` header (`noreferrer`).
+
+The handler runs only when the new tab requests the content, once per click, and the browser shows it when it can, for example a PDF, an image, or plain text. Built-in handlers, such as [methodname]`DownloadHandler.forFile`, are switched to serve the content inline automatically; this changes the given handler instance, so it also serves inline wherever else it's used. A custom handler has to call [methodname]`DownloadEvent.inline` itself, since content served as an attachment is downloaded instead of shown.
+
+The handler follows the clicked component's lifecycle in the same way as with <<#onclick,`Download.onClick`>>, including [methodname]`allowDisabled()` for a button that disables itself on click. The handler that [methodname]`allowDisabled()` returns can no longer be switched to inline, so switch a built-in handler first:
+
+[source,java]
+----
+OpenInNewTab.onClick(button,
+        DownloadHandler.forFile(file).inline().allowDisabled());
+----
+
+[methodname]`OpenInNewTab.onClick` also accepts a URL directly, for content the browser can already address, such as a static file, an application route, or an external page:
+
+[source,java]
+----
+OpenInNewTab.onClick(helpButton, "https://example.com/help");
+----
+
+Both overloads return a `Registration` for removing the behavior from the component; after removal, the handler or URL is no longer opened on click.
 
 [#custom]
 == Custom Download Handlers
