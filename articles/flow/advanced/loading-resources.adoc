@@ -147,7 +147,11 @@ Lit templates should be imported using `@JsModule` (see <</flow/component-intern
 `@JavaScript`::
 Defines a JavaScript file dependency. The file is loaded according to the load mode, as described in <<flow.loading-resources.load-mode>>.
 +
-By default, this renders a classic `<script>` element. Set the `type` attribute to `JavaScript.Type.MODULE` to render a `<script type="module">` element instead. A `type = JavaScript.Type.MODULE` file is always loaded at runtime and never bundled, even for a bare relative path, which is then resolved against the servlet context root. Use it for hand-authored or CDN-hosted ES modules that shouldn't go through Vite; for build-time bundled ES modules, use `@JsModule` instead. `LoadMode.INLINE` isn't supported in combination with `JavaScript.Type.MODULE`.
+A value with a runtime prefix -- `context://`, `base://`, a leading `/`, `http://`, `https://`, `//`, or any other URL scheme -- is never bundled. It's loaded at runtime instead, the same way as the [methodname]`addJavaScript(String url)` method in [classname]`Page`. The `context://` prefix resolves against the servlet context root, and `base://` against the base URI of the page. See <<Static Resources>> and the <<flow.resource-cheat-sheet,Resource Cheat Sheet>> for where to place such files. By default, this renders a classic `<script>` element. Set the `type` attribute to `JavaScript.Type.MODULE` to render a `<script type="module">` element instead. Use a runtime-prefixed value for hand-authored or CDN-hosted scripts that shouldn't go through Vite.
++
+Any other, bare relative value is interpreted as relative to the `frontend` directory and bundled like a `@JsModule` file, unless `type` is `JavaScript.Type.MODULE`. Such a file still loads after the `@JsModule` files, as described in <<Dependency Loading Order>>. This bundled interpretation of `@JavaScript` is deprecated: use `@JsModule` with the same value, adding a `./` prefix if the value doesn't have one, to keep bundling the file, which then loads with the `@JsModule` files, or move the file to a static location, as described in <<Static Resources>> and the <<flow.resource-cheat-sheet,Resource Cheat Sheet>>, and reference it with a runtime prefix (or `JavaScript.Type.MODULE`) to load it at runtime instead.
++
+A `type = JavaScript.Type.MODULE` file is always loaded at runtime and never bundled, even for a bare relative path, which is then resolved against the servlet context root. `LoadMode.INLINE` isn't supported in combination with `JavaScript.Type.MODULE`.
 
 `@CssImport`::
 Imports a style sheet from an npm package, which it can be included in the frontend bundle.
@@ -200,7 +204,7 @@ static class OrderedDependencies extends Div {
 }
 ----
 
-The loading order of the files here would be: `a.js`, `b.js`, `1.js`, `2.js`, `1.css`, then `2.css`.
+The loading order of the files here would be: `a.js`, `b.js`, `1.js`, `2.js`, `1.css`, then `2.css`. The `@JavaScript` values in this example use the deprecated bundled form described for `@JavaScript` in <<Using Annotations>>.
 
 Imports on other classes could be before or after the imports present here, within each file group. You can control the load order of dependencies of different file types by adding imports within a JavaScript import.
 
@@ -292,7 +296,7 @@ Resources can be loaded as individual files or included in the frontend bundle t
 
 Vaadin bundles all of the web components used in an application into a single frontend bundle file, which can be loaded efficiently when the application page is loaded. You can include your own files into the bundle, as well.
 
-Static resources that are bundled using Vite and referenced with the `@JavaScript`, `@JsModule`, and `@CssImport` annotations should be placed under `{project directory}/frontend`. This includes normal JavaScript and TypeScript files, Lit template files, and CSS files.
+Static resources that are bundled using Vite and referenced with the `@JavaScript`, `@JsModule`, and `@CssImport` annotations should be placed under `{project directory}/frontend`. This includes normal JavaScript and TypeScript files, Lit template files, and CSS files. For `@JavaScript`, only a bare relative value (one without a runtime prefix and without `type = JavaScript.Type.MODULE`) is bundled this way, and that interpretation is deprecated -- use `@JsModule` instead for files that should be bundled.
 
 When importing files using these annotations, prefix the path with `./`, which signifies the `frontend/` directory. For example, a CSS file [filename]`my-custom.css` under [filename]`{project directory}/frontend/styles/my-custom.css` would be referenced `@CssImport("./styles/my-custom.css")`.
 
