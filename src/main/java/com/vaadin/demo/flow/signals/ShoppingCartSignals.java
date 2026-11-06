@@ -15,6 +15,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.function.SerializableConsumer;
 import com.vaadin.flow.signals.Signal;
 import com.vaadin.flow.signals.local.ListSignal;
 import com.vaadin.flow.signals.local.ValueSignal;
@@ -203,16 +204,18 @@ public class ShoppingCartSignals extends VerticalLayout {
         quantityField.setStepButtonsVisible(true);
 
         // Two-way mapped signal for quantity
+        SerializableConsumer<Integer> quantityUpdater = itemSignal
+                .updater(CartItem::withQuantity);
         quantityField.bindValue(itemSignal.map(CartItem::quantity),
-                itemSignal.updater(CartItem::withQuantity));
-
-        // Handle removal when quantity drops below 1
-        quantityField.addValueChangeListener(e -> {
-            Integer value = e.getValue();
-            if (value == null || value < 1) {
-                cartItemsSignal.remove(itemSignal);
-            }
-        });
+                quantity -> {
+                    // Remove the item when the quantity is cleared or
+                    // drops below 1
+                    if (quantity == null || quantity < 1) {
+                        cartItemsSignal.remove(itemSignal);
+                    } else {
+                        quantityUpdater.accept(quantity);
+                    }
+                });
 
         Span itemTotalLabel = new Span(itemSignal.map(item -> "$" + item
                 .product().price().multiply(BigDecimal.valueOf(item.quantity()))
@@ -249,6 +252,9 @@ public class ShoppingCartSignals extends VerticalLayout {
     }
 
     private BigDecimal getShippingCost(ShippingOption option) {
+        if (option == null) {
+            return BigDecimal.ZERO;
+        }
         return switch (option) {
         case STANDARD -> new BigDecimal("5.99");
         case EXPRESS -> new BigDecimal("12.99");

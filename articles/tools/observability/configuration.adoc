@@ -95,11 +95,11 @@ See <<reference#ui-state-size,UI State Size>>.
 
 |`vaadin.observability.resync`
 |`true`
-|Observe UIDL message resends and client-requested resynchronizations.
+|Count client message resends, client-requested resynchronizations, and messages with an unexpected ID.
 
 |`vaadin.observability.database`
 |`false`
-|Wrap [classname]`DataSource` beans to record JDBC result-set row counts per route and, when tracing is on, emit a span per query.
+|Wrap [classname]`DataSource` beans to record JDBC result-set row counts per route, report the SQL work behind each <<insights#slow-query-sql,slow data query insight>>, and, when tracing is on, emit a span per query.
 Spring Boot starter only.
 
 |`vaadin.observability.database-statement`
@@ -107,9 +107,22 @@ Spring Boot starter only.
 |Attach the parameterized SQL as `db.statement` on the query span.
 Off by default, since SQL is higher cardinality and can be sensitive.
 
+|`vaadin.observability.database-span-limit`
+|`100`
+|Maximum number of `vaadin.db.query` spans under any one parent span -- a request, an RPC, or a data provider fetch.
+Queries beyond it are still timed and counted, but get no span.
+`0` spans no query that has a parent span.
+At most `10000`.
+See <<reference#span-limit,N+1 Loads and the Span Limit>>.
+
 |`vaadin.observability.traces`
 |`true`
 |Emit tracing spans through the Observation API.
+
+|`vaadin.observability.traces-session-id`
+|`false`
+|Include the HTTP session ID as the `vaadin.session.id` attribute of the `vaadin.request.<type>` span.
+Span-only; it never becomes a metric tag.
 
 |`vaadin.observability.insights`
 |`true`
@@ -128,15 +141,19 @@ For a browser error it governs collection rather than only retention, and is rea
 |Maximum number of retained records, applied to each buffer rather than shared.
 Interactions, data provider queries, and browser errors are retained separately, so with all three active the total is three times this.
 The oldest is evicted once a buffer's cap is reached.
+At most `10000`.
 
 |`vaadin.observability.route-cardinality-limit`
 |`200`
 |Maximum number of distinct `route` tag values before they collapse to `_other`.
 Also caps the `component` and `exception` tag values of `vaadin.errors`, since all three derive from application classes and multiply with each other.
+With tracing off, it also caps the `error` tag of `vaadin.request.duration` and `vaadin.rpc.duration`.
+At most `1000`.
 
 |`vaadin.observability.client-rate-per-session`
 |`100`
-|Client-sample throttling guard: the maximum number of browser samples accepted per UI in each ten-second window.
+|Client-sample throttling guard: the maximum number of browser samples accepted per session in each ten-second window.
+All tabs of a session share the budget.
 Samples beyond it are rejected and counted in `vaadin.client.throttled`.
 Set it to `0` to accept every sample.
 
@@ -150,7 +167,16 @@ One measurement walks that UI's whole component tree under its session lock, so 
 |Bytes per state-tree node, used to project `vaadin.ui.state.size`.
 `0` publishes no byte figure.
 See <<reference#nodes-not-bytes,the reference>> for how to measure a value for your own application.
+
+|`vaadin.observability.ui-state-growth-samples`
+|`5`
+|Number of measurements a collection held in a view field has to grow in, without shrinking, before it's reported as growing.
+`0` doesn't read view collections at all.
+Takes effect only with `ui-state` on.
+See <<reference#state-outside-the-tree,State Outside the Tree>>.
 |===
+
+Values outside the allowed range of a numeric property are rejected at startup with an [classname]`IllegalArgumentException`, rather than silently clamped.
 
 
 [[plain-spring]]
@@ -160,13 +186,8 @@ In a plain-Spring (non-Boot) application, [classname]`ObservabilityConfiguration
 The `vaadin.observability.enabled` master switch is the exception: it's specific to the Boot auto-configuration.
 To disable the kit in plain Spring, don't import [classname]`ObservabilityConfiguration`.
 
-Three keys are read but have no consumer outside Spring Boot, because the features behind them are wired by the auto-configuration rather than by the instrumentation itself:
-
-`vaadin.observability.database` and `vaadin.observability.database-statement`:: Database monitoring wraps the [classname]`DataSource` beans through a Boot bean post-processor, so it's available only with the starter.
-Setting these in plain Spring has no effect.
-
-`vaadin.observability.resync`:: The property gates the servlet filter that the starter registers.
-In plain Spring, register [classname]`SpringResyncDetectionFilter` yourself, mapped to `/*` at the highest precedence, and leave it out to turn the feature off -- the property alone won't switch it on or off.
+The database keys -- `vaadin.observability.database`, `vaadin.observability.database-statement`, and `vaadin.observability.database-span-limit` -- have no effect outside Spring Boot.
+Database monitoring wraps the [classname]`DataSource` beans through a Boot bean post-processor, so it's available only with the starter.
 
 See the <<getting-started#other-setups,Getting Started>> page for the plain-Spring setup.
 
@@ -192,17 +213,6 @@ For standalone no `enabled` flag exists; to disable the kit, don't call [methodn
 This two-argument overload creates an [classname]`ObservationRegistry` internally -- but only when `traces` is left on -- and doesn't expose it.
 To use your own, which you need for exporting spans or for writing custom Observations, pass it explicitly; see <<getting-started#standalone,Standalone (Without Spring)>>.
 
-Resync detection has no auto-configuration outside Spring.
-Register the portable [classname]`ResyncDetectionFilter` yourself against `/*`, early enough that it precedes anything else reading the request body:
-
-[source,java]
-----
-FilterRegistration.Dynamic registration = servletContext.addFilter(
-        "vaadinResyncDetection", new ResyncDetectionFilter(meterRegistry));
-// isMatchAfter=false, so it precedes already-registered filters.
-registration.addMappingForUrlPatterns(null, false, "/*");
-----
-
 
 == What the Features Control
 
@@ -219,7 +229,8 @@ The feature toggles map directly to the built-in meters and spans:
 |Active UI gauge and UI-created counter.
 
 |`ui-state`
-|Aggregate gauges of retained UI state -- state-tree nodes, components, and views, as totals and per-UI and per-session maxima.
+|Aggregate gauges of retained UI state -- state-tree nodes, components, and views, as totals and per-UI and per-session maxima -- and of the collections views hold in their own fields.
+With `insights` on, also reports view fields that keep growing as insights.
 Off by default.
 
 |`navigation`
@@ -240,17 +251,17 @@ Also decorates the session error handler, which is what makes the failures Flow 
 |Browser-observed signals -- bootstrap, navigation, UIDL request and rendering, and Web Vitals timing, client errors, and connection-state transitions with their downtime.
 
 |`resync`
-|A counter of UIDL message resends and client-requested resynchronizations, tagged by type.
+|A counter of client message resends, client-requested resynchronizations, and messages with an unexpected ID, tagged by type.
 
 |`database`
-|JDBC result-set row counts per route and, when tracing is on, a span per query.
+|JDBC result-set row counts per route, the SQL work behind slow data query insights, and, when tracing is on, a span per query.
 Spring Boot starter only, off by default.
 
 |`traces`
 |Tracing spans for the request lifecycle, navigation, RPC, executor tasks, data provider queries, and -- with database monitoring on -- JDBC queries, emitted through the Observation API.
 
 |`insights`
-|Retained failed and over-budget interactions, data provider queries, and browser errors, served by the insights endpoint.
+|Retained failed and over-budget interactions, data provider queries, and browser errors, and -- with `ui-state` on -- growing view state, served by the insights endpoint.
 This one records no meters or spans; see the <<insights#,Interaction Insights>> page.
 |===
 

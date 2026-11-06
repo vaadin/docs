@@ -1,0 +1,139 @@
+---
+title: Write a ViewModel
+page-title: How to write a ViewModel for a complex view in Vaadin
+description: Learn how to keep a view's state in signals, derive its rules, and offer the user's actions as commands.
+meta-description: Write a ViewModel for a Vaadin view. Keep the state in private signals, derive the rules, expose read-only signals, and offer the user's actions as commands.
+order: 10
+---
+
+
+= Write a ViewModel
+:toclevels: 2
+
+A ViewModel holds the state of one view in signals, derives the view's rules from that state, and offers the actions a user can take as methods. This guide builds the ViewModel of the ticket triage view that the <<index#the-example,overview>> describes.
+
+.Part of a Series
+[TIP]
+This is part 1 of the *Structure Views with MVVM* series. Read the <<index#when-to-use-mvvm,overview>> first to decide whether your view needs a ViewModel.
+
+
+== Create a Plain Java Class
+
+The ViewModel is a plain Java class. It isn't a Spring bean, and it has no [annotationname]`@UIScope` or [annotationname]`@RouteScope` annotation. The view creates it with `new`, and passes in the application services it needs. The ViewModel then lives exactly as long as the view instance does. Put the ViewModel in the package of its view, and keep it package-private:
+
+.TicketsViewModel.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/TicketsViewModel.java[tags=class,indent=0]
+----
+
+The ViewModel uses nothing from the `com.vaadin.flow.component`, `com.vaadin.flow.router`, or `com.vaadin.flow.data.binder` packages, and it never calls [methodname]`UI.getCurrent()`. It uses only the signals in `com.vaadin.flow.signals`, and the Model. This is what lets you <<test-viewmodel#,test it>> with plain JUnit.
+
+The constructor only stores the services. It doesn't load any data, because Vaadin can create a view without showing it. The view tells the ViewModel when to load, as <<bind-view#create-the-viewmodel-in-the-view,Bind the View>> shows.
+
+
+== Keep the State in Signals
+
+All the state of the view lives in private signals. Every other field is `final`: services and constants.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/TicketsViewModel.java[tags=state,indent=0]
+----
+
+The ticket appears in three signals because the user sees three different things: the row selected in the list, the ticket in the editor as it was last saved, and that ticket with the user's changes. Most of the time, all three hold the same ticket.
+
+Keep the values in the signals immutable, for example as records with `withX()` methods:
+
+.Ticket.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/Ticket.java[tags=full,indent=0]
+----
+
+Change a value by replacing it, with [methodname]`set()` or [methodname]`update()`: `draft.update(ticket -> ticket.withTitle(title))`. Keep lists immutable too, for example by creating them with [methodname]`List.copyOf()` or [methodname]`Stream.toList()`. Never change an object that you read from a signal in place: the signal can't see that change, so nothing updates. If a value has to be a mutable bean, change it with [methodname]`modify()`; see <<{articles}/flow/ui-state/local-signals#working-with-mutable-values,Working with Mutable Values>>.
+
+
+== Derive, Don't Sync
+
+When a value can be computed from other state, make it a computed signal with [methodname]`Signal.computed()` or [methodname]`map()`:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/TicketsViewModel.java[tags=derived,indent=0]
+----
+
+Never keep a second signal in step with another by hand, in a command or in an effect. A derived signal can't fall out of step, and it states the rule in one place. In the example, `confirmingDiscard` isn't stored at all: the view is waiting for the user to keep or discard their changes exactly when the selected row differs from the opened ticket.
+
+A computed signal runs its callback every time its value is read, so keep the callback cheap and free of side effects. It may call a pure domain function, such as a pricing rule, but never a service that reads a database or calls a remote system. Load data in a command instead. If a computation is expensive and several UI components read it, wrap it in [methodname]`Signal.cached()`; see <<{articles}/flow/ui-state/effects-computed#caching-with-signal-cached,Caching with Signal.cached()>>.
+
+
+== Expose Read-Only Signals
+
+The view reads the state through methods that return read-only signals: [methodname]`asReadonly()`, [methodname]`map()`, or a computed signal. Never return a [classname]`ValueSignal`:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/TicketsViewModel.java[tags=out,indent=0]
+----
+
+Because the view can't set the signals, every change goes through a command. The ViewModel's methods then list exactly what the user can do, and a test can check every rule through them.
+
+
+== Offer Commands
+
+Commands are the methods that the view calls when the user does something. Name them after what the user means to do, such as `select(ticket)`, `search(text)`, `save()`, or `keepEditing()`. A change to a field is a command too: `setTitle()` is what the title field calls when the user types.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/TicketsViewModel.java[tags=commands,indent=0]
+----
+
+React to a change in the command that makes it, not in an effect. When a new search text means reloading the tickets, the [methodname]`search()` command does the reload. A ViewModel has no [methodname]`Signal.effect()`, because an effect needs a UI component as its owner. It has no [methodname]`Signal.unboundEffect()` either, because such an effect stays active until you remove it.
+
+Read signals with [methodname]`peek()` in commands, and with [methodname]`get()` in computed signals. Calling [methodname]`get()` outside a computed signal or an effect throws an [classname]`IllegalStateException`.
+
+
+== Return Outcomes, Keep Conditions as State
+
+When the view has to react once to a command, for example by showing a notification or by navigating to another view, the command returns the outcome. The outcome can be a `boolean`, an enum, or a sealed interface of result records:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/TicketsViewModel.java[tags=save,indent=0]
+----
+
+Anything that stays on the screen is state instead: an error that the user has to fix, a marker that a save is in progress, or a question waiting for an answer. For example, a failed save that only needs a notification is an outcome. A conflict that the form keeps showing until the user resolves it is state, and belongs in a signal.
+
+
+== Keep What a Component Shows as State
+
+When the ViewModel rejects a value in a field's write callback, the field shows the signal's value again. A grid's selection doesn't: the grid keeps showing the row the user clicked, while the signal keeps the old selection (https://github.com/vaadin/flow-components/issues/10575[flow-components#10575]). Therefore, when the ViewModel can't accept a new selection right away, it stores the selection as state, and settles it with a later command:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/TicketsViewModel.java[tags=select,indent=0]
+----
+
+When the user clicks another ticket while the opened ticket has unsaved changes, [methodname]`select()` stores the new selection but doesn't open it. The selected row then differs from the opened ticket, so `confirmingDiscard` becomes `true`, and the view asks the user what to do. [methodname]`discardChanges()` opens the selected ticket. [methodname]`keepEditing()` sets the selection back to the opened ticket, and the grid's selection follows it.
+
+The same applies to every UI component that shows state: if the user can see it, it's in a signal.
+
+
+== Split a Growing ViewModel
+
+When a ViewModel holds groups of state that have little to do with each other, split it along the parts of the view. The ViewModel of the route view creates child ViewModels, such as a `FiltersViewModel` and an `EditorViewModel`, and exposes them. Each child UI component binds to its own ViewModel. Rules that span several parts stay in the parent.
+
+When one part follows another, the parent passes the change on in its command:
+
+[source,java]
+----
+void select(Long ticketId) {
+    selected.set(ticketId);
+    editor.open(ticketId); // The child ViewModel
+}
+----
+
+Don't let the child ViewModel follow a signal of its parent in an effect. That needs an effect owner, and it hides the flow that a command states in one place.
+
+Next, <<bind-view#,bind the view>> to the ViewModel.

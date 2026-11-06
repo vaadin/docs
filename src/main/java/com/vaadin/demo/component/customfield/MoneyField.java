@@ -51,8 +51,13 @@ public class MoneyField extends CustomField<Money> {
 
     @Override
     protected void setPresentationValue(Money money) {
-        amount.setValue(money.getAmount());
-        currency.setValue(money.getCurrency());
+        if (money == null) {
+            amount.clear();
+            currency.clear();
+        } else {
+            amount.setValue(money.getAmount());
+            currency.setValue(money.getCurrency());
+        }
     }
 }
 // end::snippet[]

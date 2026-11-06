@@ -1,7 +1,7 @@
 ---
 title: Protect Views
 page-title: How to protect the views in a Vaadin application
-description: Learn how to protect views in a Vaadin application based on user roles.
+description: Learn how to protect views in your application based on user roles.
 meta-description: Learn how to restrict access to views in a Vaadin application based on user roles.
 order: 3
 ---
@@ -37,12 +37,12 @@ The following example uses [annotationname]`@AnonymousAllowed` to allow *all use
 // tag::snippet[]
 @AnonymousAllowed
 // end::snippet[]
-public class PublicView extends Main {
+class PublicView extends Main {
     ...
 }
 ----
 
-In business applications that require authentication for everything, you typically have to do this on the login view.
+The login view doesn't need this annotation, since Vaadin always allows navigation to the configured login view.
 
 The next example uses [annotationname]`@PermitAll` to allow *only authenticated users* -- with any role -- to access the view:
 
@@ -53,7 +53,7 @@ The next example uses [annotationname]`@PermitAll` to allow *only authenticated 
 // tag::snippet[]
 @PermitAll
 // end::snippet[]
-public class PrivateView extends Main {
+class PrivateView extends Main {
     ...
 }
 ----
@@ -67,7 +67,7 @@ This example uses [annotationname]`@RolesAllowed` to allow *users with the `ADMI
 // tag::snippet[]
 @RolesAllowed("ADMIN")
 // end::snippet[]
-public class AdminView extends Main {
+class AdminView extends Main {
     ...
 }
 ----
@@ -78,7 +78,7 @@ When protecting views, ensure the router layout also allows access. If a view is
 
 .Error Views Need Security Annotations Too
 [NOTE]
-Custom error handler views -- such as a class extending [classname]`RouteNotFoundError` -- are also subject to access control. Add an appropriate security annotation (e.g., [annotationname]`@AnonymousAllowed`) to ensure they are accessible. With Spring Security, a custom not-found view additionally requires relaxing the catch-all request rule, so that requests for non-existing pages reach the application instead of being denied at the HTTP layer. See <<{articles}/flow/routing/exceptions#,Router Exception Handling>> for more details.
+Custom error views, such as a class extending [classname]`RouteNotFoundError`, are also subject to access control, so they need a security annotation as well. With Spring Security, a custom not-found view also needs a change to the security configuration. See <<{articles}/flow/security/access-control/error-views#,Access-Denied & Not-Found Views>> and <<{articles}/flow/security/spring/error-views#,Custom Error Views>>.
 
 
 === Annotation Inheritance
@@ -95,21 +95,17 @@ public abstract class AbstractAdminView extends VerticalLayout {
 }
 
 @Route(value = "user-listing")
-public class UserListingView extends AbstractAdminView {
+class UserListingView extends AbstractAdminView {
     ...
 }
 ----
 
-While multiple security annotations can be applied to a single view, doing so can cause conflicts and is *not recommended*. However, if multiple annotations exist on a view, they override each other in this order:
-
-* [annotationname]`@DenyAll` overrides all other annotations;
-* [annotationname]`@AnonymousAllowed` overrides [annotationname]`@RolesAllowed` and [annotationname]`@PermitAll`; and
-* [annotationname]`@RolesAllowed` overrides `@PermitAll`.
+Use one security annotation per view. For what happens when a view has several, and for the other rules of the annotations, see <<{articles}/flow/security/access-control/annotations#,Annotation-Based Access Control>>.
 
 
 == Programmatic View Security
 
-Vaadin provides API:s for protecting views programmatically. It's more verbose than using the annotations, but gives you greater control.
+Vaadin provides APIs for protecting views programmatically. It's more verbose than using the annotations, but gives you greater control.
 
 
 === Making a Custom Navigation Access Checker
@@ -133,12 +129,7 @@ The [classname]`NavigationContext` object contains information about where you'r
 
 Since the access checker is a Spring bean, you inject other beans into it. For example, you may want to lookup more information to make the access decision.
 
-Once you've made a decision, you have to return an [classname]`AccessCheckResult`. The [classname]`AccessCheckResult` determines whether navigation is allowed, denied, or deferred. There are four possible outcomes:
-
-[methodname]`AccessCheckResult.allow()` :: Access is granted.
-[methodname]`AccessCheckResult.neutral()` :: The access checker cannot make a decision based on the given navigation information. Another access checker have to make the decision, or access will be denied.
-[methodname]`AccessCheckResult.deny()` :: Access is denied.
-[methodname]`AccessCheckResult.reject()` :: Access is denied because of a misconfiguration or critical development time error.
+Once you've made a decision, return an [classname]`AccessCheckResult`: [methodname]`allow()`, [methodname]`deny()`, or [methodname]`neutral()` if the checker can't decide and leaves the decision to the other checkers. If no other checker allows the navigation, access is denied. See <<{articles}/flow/security/access-control/navigation-access-control#access-check-results,Access Check Results>> for all outcomes.
 
 [NOTE]
 The security annotations are actually enforced by a built-in access checker.
@@ -172,25 +163,7 @@ You can have multiple access checkers active at the same time. When you navigate
 [NOTE]
 To enable the built-in annotated view access checker, call `NavigationAccessControlConfigurer.withAnnotatedViewAccessChecker()`.
 
-An [interfacename]`AccessCheckDecisionResolver` computes the final access decision based on the results of every access checker. The default implementation makes the decision by applying the following rules:
-
-[cols="1,1"]
-|===
-| Navigation Access Checkers Results | Decision
-
-| `ALL ALLOW`              | `ALLOW`
-| `ALLOW + NEUTRAL`        | `ALLOW`
-| `ALL DENY`               | `DENY`
-| `DENY + NEUTRAL`         | `DENY`
-| `ALL NEUTRAL`            | `DENY`
-| `ALLOW + DENY`           | `REJECT`
-| `ALLOW + DENY + NEUTRAL` | `REJECT`
-|===
-
-[IMPORTANT]
-The built-in annotated view access checker never returns `NEUTRAL`. It either grants or denies access.
-
-By default, having access checkers both allowing and denying access at the same time is considered a configuration error. This can happen if you combine the built-in annotated view access checker with a custom access checker. If this is what you want, you have to create a custom [interfacename]`AccessCheckDecisionResolver`. This, and more, is covered in the <<{articles}/flow/security/advanced-topics/navigation-access-control#,Navigation Access Control Reference Guide>>.
+When several access checkers are active, an [interfacename]`AccessCheckDecisionResolver` computes the final decision from their results. By default, navigation is allowed when at least one checker allows it and none denies it. If one checker allows navigation and another denies it, the default resolver treats this as a configuration error and rejects the navigation. This can happen when you combine the built-in annotated view access checker, which always either allows or denies access, with a custom access checker. If the checkers are meant to disagree -- for example, if your checker should be able to allow access to a view that the annotations deny -- write a custom [interfacename]`AccessCheckDecisionResolver` that resolves such conflicts, as described in <<{articles}/flow/security/access-control/navigation-access-control#custom-decision-resolver,Custom Decision Resolver>>.
 
 
 == Controlling Access within Views
@@ -206,7 +179,7 @@ Sometimes, you want multiple roles to be able to access a view, but limit what t
 ----
 @Route("")
 @PermitAll // <1>
-public class MyView extends Main {
+class MyView extends Main {
 
     public MyView(AuthenticationContext authenticationContext) {
         if (authenticationContext.hasRole("ADMIN")) { // <2>
@@ -221,7 +194,7 @@ public class MyView extends Main {
 <1> All authenticated user have access to the view.
 <2> Administrators can do more inside the view than normal users.
 
-[classname]`AuthenticationContext` has multiple methods for checking the roles and authorities of the current user. Refer to the Javadoc for more information.
+[classname]`AuthenticationContext` has multiple methods for checking the roles and authorities of the current user. See <<{articles}/flow/security/spring/authentication-context#,Authentication Context>> for the full list.
 
 
 === Leaving Out, Hiding, and Restricting Components
@@ -288,7 +261,7 @@ Leaving out, hiding, disabling, and write-protecting components decides *what us
 
 Always enforce the same rules in the *services* the view calls, as described in the <<protect-services#,Protect Services>> guide. Treat the checks inside the view as a way to give users a relevant UI, and the checks in the services as the actual security boundary.
 
-// TODO Write about access denied error messages once the page on overall error handling has been written
+If a view still calls a service method that the current user isn't allowed to call, Spring Security throws an [classname]`AccessDeniedException`. This points to a bug in the view, since the view shouldn't offer an action that the user can't perform. Unless the view catches the exception, Vaadin passes it to the session's error handler. To show the user a clear message rather than a generic error, install a custom error handler that recognizes the exception, as described in <<../ui-basics/handle-errors#access-denied-by-a-service,Handle Errors>>. The same guide also shows how to customize what users see when they navigate to a view that they aren't allowed to access.
 
 
 == Role Constants
@@ -314,7 +287,7 @@ Then refer to the constants in annotations and method calls:
 // tag::snippet[]
 @RolesAllowed(Roles.ADMIN)
 // end::snippet[]
-public class AdminView extends Main {
+class AdminView extends Main {
     ...
 }
 ----
@@ -323,7 +296,7 @@ public class AdminView extends Main {
 ----
 @Route("")
 @PermitAll
-public class MyView extends Main {
+class MyView extends Main {
 
     public MyView(AuthenticationContext authenticationContext) {
 // tag::snippet[]

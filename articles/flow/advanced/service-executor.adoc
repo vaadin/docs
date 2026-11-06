@@ -28,49 +28,24 @@ This default configuration is suitable for most applications but can be customiz
 
 == Accessing and Using the Executor
 
-You can access the executor service through the [classname]`VaadinService` instance:
+You can access the executor through the [classname]`VaadinService` instance:
 
 [source,java]
 ----
-VaadinService service = VaadinService.getCurrent();
-Executor executor = service.getExecutor();
+Executor executor = VaadinService.getCurrent().getExecutor();
 
 // Execute a task asynchronously
 executor.execute(() -> {
     // Your background task here
-    service.longRunningTask();
+    myService.longRunningTask();
 });
 
-// Execute a task asynchronously using CompletableFeature
-CompletableFuture.supplyAsync(service::longRunningTask, executor);
-    .thenAccept(this::computeResult);
+// Execute a task asynchronously using CompletableFuture
+CompletableFuture.supplyAsync(myService::longRunningTask, executor)
+    .thenAccept(this::handleResult);
 ----
 
-You can use the executor service in your UI components to perform background operations and update the UI when complete.
-
-[source,java]
-----
-Button button = new Button("Start Background Task");
-button.addClickListener(event -> {
-    UI ui = UI.getCurrentOrThrow();
-    VaadinService.getCurrent().getExecutor().execute(() -> {
-
-        // Perform time-consuming operation
-        service.longRunningTask();
-
-        // Update UI from background thread
-        ui.access(() -> {
-            Notification.show("Background task completed!");
-        });
-    });
-});
-----
-
-Remember that code running in the executor is not automatically thread-safe:
-
-* Use `UI.access()` to update the UI from background threads.
-* Be careful with shared state and consider using thread-safe collections or synchronization.
-* Avoid long-running tasks that might block the thread pool.
+Code that runs in the executor doesn't hold the session lock. To update the user interface from it, use signals or the [methodname]`UI.access()` method, as described in <<{articles}/building-apps/server-push/updates#,Pushing UI Updates>>. For guidance on running background jobs and starting tasks from the user interface, see <<{articles}/building-apps/business-logic/background-jobs#,Background Jobs>> and <<{articles}/building-apps/server-push/threads#,User Interface Threads>>.
 
 == Configuring a Custom Executor
 
