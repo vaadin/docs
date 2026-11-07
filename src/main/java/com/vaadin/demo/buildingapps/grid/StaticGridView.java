@@ -10,11 +10,11 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 
 @Route("building-apps/grid/static-grid")
-public class StaticGridView extends VerticalLayout {
+class StaticGridView extends VerticalLayout {
 
     StaticGridView() {
-        // In a real application, this would be injected or
-        // retrieved via a service locator
+        // In a real application, this would be a Spring bean
+        // injected through the constructor
         var service = new ItemService();
 
         // Create components

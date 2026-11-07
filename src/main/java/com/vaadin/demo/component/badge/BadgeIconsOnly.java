@@ -16,8 +16,7 @@ public class BadgeIconsOnly extends HorizontalLayout {
         confirmed.addThemeVariants(BadgeVariant.SUCCESS,
                 BadgeVariant.ICON_ONLY);
 
-        Badge cancelled = new Badge("Cancelled",
-                VaadinIcon.CLOSE_SMALL.create());
+        Badge cancelled = new Badge("Cancelled", VaadinIcon.CLOSE.create());
         cancelled.addThemeVariants(BadgeVariant.ERROR, BadgeVariant.ICON_ONLY);
         // end::snippet[]
 

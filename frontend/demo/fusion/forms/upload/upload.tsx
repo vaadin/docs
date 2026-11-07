@@ -1,9 +1,4 @@
-import {
-  Notification,
-  Upload,
-  type UploadElement,
-  type UploadRequestEvent,
-} from '@vaadin/react-components';
+import { Notification, Upload, type UploadRequestEvent } from '@vaadin/react-components';
 import { UploadService } from 'Frontend/generated/endpoints';
 
 export default function UploadView() {
@@ -11,7 +6,7 @@ export default function UploadView() {
   const handleUploadRequest = async (e: UploadRequestEvent) => {
     e.preventDefault();
 
-    const uploadRef = e.target as UploadElement;
+    const uploadRef = e.target;
 
     const fileId = await UploadService.uploadFile(e.detail.file);
     uploadRef.files = uploadRef.files.map((file) => {

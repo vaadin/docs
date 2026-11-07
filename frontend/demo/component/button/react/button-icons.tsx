@@ -19,7 +19,7 @@ function Example() {
       {/* Icon button using a tooltip to provide a textual description of
           the action that it triggers */}
       <Button aria-label="Close">
-        <Icon icon="vaadin:close-small" />
+        <Icon icon="vaadin:close" />
         <Tooltip slot="tooltip" text="Close the dialog" />
       </Button>
 

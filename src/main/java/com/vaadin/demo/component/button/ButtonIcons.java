@@ -19,7 +19,7 @@ public class ButtonIcons extends Div {
 
         // Icon button using a tooltip to provide textual description
         // of the action that it triggers
-        Button closeButton = new Button(new Icon(VaadinIcon.CLOSE_SMALL));
+        Button closeButton = new Button(new Icon(VaadinIcon.CLOSE));
         closeButton.setAriaLabel("Close");
         closeButton.setTooltipText("Close the dialog");
 
