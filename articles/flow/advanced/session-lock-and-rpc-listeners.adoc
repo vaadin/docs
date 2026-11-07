@@ -63,7 +63,9 @@ Three events expose both:
 |===
 
 All three carry the [classname]`VaadinService` the lock belongs to, through [methodname]`getService()`, and the [classname]`VaadinSession` it protects, through [methodname]`getSession()`.
-The session is an empty [classname]`Optional` when it isn't known yet -- for a lock taken before the session has been created in a new HTTP session -- or no longer known -- once the session has been removed from the HTTP session, since the lock only keeps a removed session through a weak reference.
+The session is an empty [classname]`Optional` when it isn't known.
+This happens when the lock is taken for a new HTTP session before the Vaadin session has been created in it.
+It can also happen after the Vaadin session has been removed from the HTTP session, since the lock keeps the session only through a weak reference.
 
 [classname]`SessionLockAcquiredEvent.getWaitTime()` gives how long the thread waited for the lock, from the moment it was requested until it was acquired, including time other threads spent holding it.
 [classname]`SessionLockReleasedEvent.getHoldTime()` gives how long the thread then held the lock, from acquisition until release.
@@ -71,7 +73,8 @@ Flow measures both itself, so no listener has to time anything on its own; it on
 
 The same lock instance protects a session whether it's acquired by the framework while handling a request, or through [methodname]`VaadinSession.lock()` -- for example from <<server-push#,`UI.access()`>>.
 Events are fired for the _outermost_ acquisition only; reentrant re-locks aren't reported.
-For a single lock-hold, all three are fired on the same thread, in the order requested -> acquired -> released, as shown in the following example:
+For a single lock-hold, all three are fired on the same thread, in the order requested -> acquired -> released.
+The following example logs the wait time and the hold time of each lock-hold:
 
 [source,java]
 ----
