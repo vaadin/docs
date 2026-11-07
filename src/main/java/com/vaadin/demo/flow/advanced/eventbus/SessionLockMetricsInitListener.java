@@ -19,12 +19,12 @@ public class SessionLockMetricsInitListener
         eventBus.addListener(SessionLockAcquiredEvent.class,
                 lockEvent -> LoggerFactory.getLogger(getClass()).debug(
                         "Session lock wait: {} ms",
-                        lockEvent.getWaitTime().toMillis()));
+                        lockEvent.getWaitTime().toNanos() / 1_000_000.0));
 
         eventBus.addListener(SessionLockReleasedEvent.class,
                 lockEvent -> LoggerFactory.getLogger(getClass()).debug(
                         "Session lock hold: {} ms",
-                        lockEvent.getHoldTime().toMillis()));
+                        lockEvent.getHoldTime().toNanos() / 1_000_000.0));
     }
 }
 // end::snippet[]
