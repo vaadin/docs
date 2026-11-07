@@ -21,7 +21,7 @@ export default [
     languageOptions: {
       parserOptions: {
         projectService: {
-          allowDefaultProject: ['scripts/*.js', 'scripts/*.mjs', 'scripts/pick/*.js', 'vite.*.ts'],
+          allowDefaultProject: ['*.js', 'vite.*.ts'],
         },
       },
     },
@@ -85,7 +85,7 @@ export default [
     },
   },
   {
-    files: ['scripts/**/*'],
+    files: ['scripts/**/*', 'dspublisher/*.js', 'dspublisher/theme/init.js', '*.js', 'vite.*.ts'],
     languageOptions: {
       globals: {
         ...globals.node,

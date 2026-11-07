@@ -21,7 +21,7 @@ function Example() {
   return (
     // tag::snippet[]
     <ComboBox
-      style={{ '--vaadin-combo-box-overlay-width': '350px' } as React.CSSProperties}
+      style={{ '--vaadin-combo-box-overlay-width': '350px' }}
       label="Employee"
       itemLabelPath="displayName"
       itemValuePath="id"

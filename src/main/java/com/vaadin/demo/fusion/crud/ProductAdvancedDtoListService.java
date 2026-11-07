@@ -2,11 +2,11 @@ package com.vaadin.demo.fusion.crud;
 
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.hilla.BrowserCallable;
-import com.vaadin.hilla.Nullable;
 import com.vaadin.hilla.crud.JpaFilterConverter;
 import com.vaadin.hilla.crud.ListService;
 import com.vaadin.hilla.crud.filter.Filter;
 import com.vaadin.hilla.crud.filter.FilterTransformer;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;

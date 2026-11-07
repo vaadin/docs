@@ -14,9 +14,9 @@ public class LoginInternationalization extends Div {
         getStyle().set("display", "flex").set("justify-content", "center");
 
         // tag::snippet[]
-        LoginI18n i18n = LoginI18n.createDefault();
+        LoginI18n i18n = new LoginI18n();
 
-        LoginI18n.Form i18nForm = i18n.getForm();
+        LoginI18n.Form i18nForm = new LoginI18n.Form();
         i18nForm.setTitle("Kirjaudu sisään");
         i18nForm.setUsername("Käyttäjänimi");
         i18nForm.setPassword("Salasana");
@@ -24,7 +24,7 @@ public class LoginInternationalization extends Div {
         i18nForm.setForgotPassword("Unohtuiko salasana?");
         i18n.setForm(i18nForm);
 
-        LoginI18n.ErrorMessage i18nErrorMessage = i18n.getErrorMessage();
+        LoginI18n.ErrorMessage i18nErrorMessage = new LoginI18n.ErrorMessage();
         i18nErrorMessage.setTitle("Väärä käyttäjätunnus tai salasana");
         i18nErrorMessage.setMessage(
                 "Tarkista että käyttäjätunnus ja salasana ovat oikein ja yritä uudestaan.");

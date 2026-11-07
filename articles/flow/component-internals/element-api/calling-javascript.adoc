@@ -12,9 +12,9 @@ order: 3
 
 The Element API contains methods for executing JavaScript in the browser from the server side.
 
-Declare the JavaScript in a Java interface and call it through [methodname]`Element.executeJs(Class)`. The build collects the declared JavaScript into the frontend bundle, and the client runs it from there. Nothing is compiled from a string in the browser, so the call works under a content security policy that doesn't allow `unsafe-eval`.
+Declare the JavaScript in a Java interface and call it through [methodname]`Element.executeJs(Class)`. The build collects the declared JavaScript into the frontend bundle, and the client runs it from there. Nothing is compiled from a string in the browser, so the call works under a content security policy that doesn't allow `unsafe-eval`. [methodname]`callJsFunction()` [since:com.vaadin:vaadin@V25.4]#works under such a policy as well#, since it calls a function that already exists on the element -- unless an argument is a [classname]`JsFunction`.
 
-The other methods described on this page -- [methodname]`executeJs(String, Object...)`, [methodname]`callJsFunction()`, [classname]`JsFunction`, and [methodname]`addJsInitializer()` -- send the JavaScript to the browser as a string that's compiled there. Avoid them for anything a declaration can express.
+The other methods described on this page -- [methodname]`executeJs(String, Object...)`, [classname]`JsFunction`, and [methodname]`addJsInitializer()` -- send the JavaScript to the browser as a string that's compiled there. Avoid them for anything a declaration can express.
 
 
 [[declaring-javascript]]
@@ -243,9 +243,9 @@ If you need to run JavaScript without having access to an element, use the [meth
 
 The [methodname]`Element.callJsFunction()` method allows you to run a client-side component function from the server side. The method accepts two parameters: the name of the function to call; and the arguments to pass to the function.
 
-The call is sent to the browser as an expression and compiled there, the same way [methodname]`executeJs()` is, so it also needs a content security policy that allows `unsafe-eval`. A definition method that declares an expression such as `return this.clearSelection()` calls the same client-side function without one (see <<#declaring-javascript,Declaring JavaScript in Java>>).
+The name of the function and the arguments [since:com.vaadin:vaadin@V25.4]#are sent to the browser, which looks the function up on the element and calls it. Nothing is compiled from a string there, so the call works under a content security policy that doesn't allow `unsafe-eval`.# A dotted name, such as `$connector.method`, is resolved on the element property by property, and the function is called with the property it's read from as `this`.
 
-The arguments passed to the function must be a type supported by the communication mechanism. The supported types are `String`, `Boolean`, `Integer`, `Double`, `JsonNode`, `Element`, `Component`, and `JsFunction` (see <<#js-function,Passing JavaScript Functions>>).
+The arguments passed to the function must be a type supported by the communication mechanism. The supported types are `String`, `Boolean`, `Integer`, `Double`, `JsonNode`, `Element`, `Component`, and `JsFunction` (see <<#js-function,Passing JavaScript Functions>>). Passing a [classname]`JsFunction` brings the browser-side compilation back, since the client builds such a function from its body string.
 
 .Calling the `clearSelection()` JavaScript function on the root element from the server side
 [example]
@@ -284,6 +284,39 @@ public void configure(String label, int count) {
 }
 ----
 ====
+
+
+[[undelivered-invocations]]
+[role="since:com.vaadin:vaadin@V25.3"]
+== Undelivered Invocations
+
+An invocation scheduled on the server is held in memory until it's written into a response for the browser. An application that keeps scheduling invocations which never reach the browser grows until it runs out of memory. Once 1000 invocations for one UI are waiting to be sent, Flow logs a warning naming the component they belong to, the expression of the most recent one, and why nothing is being delivered. The warning is logged once per UI.
+
+Invocations pile up whenever nothing carries them to the browser:
+
+- *The owner is detached.* An invocation for a detached element is held until that element is attached again, which never happens for a component the application has discarded.
+- *The owner is invisible.* Invocations for an invisible component are kept until it becomes visible.
+- *The UI has no open push connection.* Nothing is sent until the browser makes a request of its own, which a closed tab whose session hasn't expired yet never does.
+
+Where only the latest value matters -- a progress value, a clock, a live measurement -- avoid scheduling a new invocation for every update:
+
+- Keep the [classname]`PendingJavaScriptResult` that [methodname]`executeJs()` returns, and call [methodname]`cancelExecution()` on it before scheduling the next one.
+- If the invocation only sets an element property, use [methodname]`Element.setProperty()` instead of [methodname]`executeJs()`. Only the last value of a property is sent.
+- In a background task, compare [methodname]`UI.getLastUpdateSentTimestamp()` against the current time and stop scheduling updates while the browser isn't receiving them.
+
+The timestamp is readable without the session lock, so a background task can decide whether to update the UI before acquiring it:
+
+[source,java]
+----
+if (Duration.between(ui.getLastUpdateSentTimestamp(), Instant.now())
+        .compareTo(STALE_THRESHOLD) < 0) {
+    ui.access(() -> statusLabel.setText(statusText));
+}
+----
+
+It tells when the pending updates were last written towards the browser, not that the browser received them, and for a UI that has had no response written yet it's the time the UI was created.
+
+To find the code that schedules the invocations, enable debug logging for `com.vaadin.flow.component.internal.PendingJavaScriptInvocationUtil`, which then also logs the call site of the invocation that triggered the warning. Turning that logger off silences the warning.
 
 
 [[js-function]]
