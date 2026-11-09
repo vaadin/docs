@@ -1,8 +1,8 @@
 ---
 title: Service Event Bus
 page-title: How to observe session locks, RPC invocations pass:[&] data queries in Vaadin
-description: Observing requests, session locks, client-to-server RPC invocations, and data provider queries through the VaadinService event bus.
-meta-description: Learn how to use the Vaadin service event bus to observe requests, session locks, RPC invocations, and data provider queries, and to fire your own service-wide events.
+description: Observing requests, session locks, client-to-server RPC invocations, message synchronization, data provider queries, and navigations through the VaadinService event bus.
+meta-description: Learn how to use the Vaadin service event bus to observe requests, session locks, RPC invocations, message synchronization, data provider queries, and navigations, and to fire your own service-wide events.
 order: 850
 ---
 
@@ -10,7 +10,16 @@ order: 850
 = [since:com.vaadin:vaadin@V25.3]#Service Event Bus#
 
 Every [classname]`VaadinService` has an event bus through which the framework reports what it's doing, and through which an application can fire service-wide events of its own.
-The events the framework fires cover the machinery that a request passes through: the request itself from start to finish, the session lock that serializes all server-side work for a session, the individual client-to-server RPC invocations handled while that lock is held, and the data provider queries those invocations trigger.
+The events the framework fires cover the machinery that a request passes through:
+
+* the request itself, from start to finish,
+* the session lock that serializes all server-side work for a session,
+* the individual client-to-server RPC invocations handled while that lock is held,
+* the client-server message synchronization those invocations depend on,
+* the data provider queries the invocations trigger,
+* the server-side navigations that a router link click, a `UI.navigate()` call, or a page load can start, and
+* the redirect to the page shown when a browser is too old to run the application.
+
 Listening to them is useful for performance monitoring, distributed tracing, diagnosing lock contention, and reporting slow or failing requests -- without modifying application logic.
 
 The bus is reached with [methodname]`VaadinService.getEventBus()`, and a listener is added for one event type:
@@ -113,12 +122,19 @@ Three events expose both:
 |Immediately after the outermost hold has been released (the hold count reached zero).
 |===
 
-All three carry the [classname]`VaadinService` the lock belongs to, through [methodname]`getService()`.
+All three carry the [classname]`VaadinService` the lock belongs to, through [methodname]`getService()`, and the [classname]`VaadinSession` it protects, through [methodname]`getSession()`.
+The session is an empty [classname]`Optional` when it isn't known.
+This happens when the lock is taken for a new HTTP session before the Vaadin session has been created in it.
+It can also happen after the Vaadin session has been removed from the HTTP session, since the lock keeps the session only through a weak reference.
+
+[classname]`SessionLockAcquiredEvent.getWaitTime()` gives how long the thread waited for the lock, from the moment it was requested until it was acquired, including time other threads spent holding it.
+[classname]`SessionLockReleasedEvent.getHoldTime()` gives how long the thread then held the lock, from acquisition until release.
+Flow measures both itself, so no listener has to time anything on its own; it only measures them while a listener is registered to receive the value, so an application that listens to neither pays nothing for the timing.
 
 The same lock instance protects a session whether it's acquired by the framework while handling a request, or through [methodname]`VaadinSession.lock()` -- for example from <<server-push#,`UI.access()`>>.
 Events are fired for the _outermost_ acquisition only; reentrant re-locks aren't reported.
 For a single lock-hold, all three are fired on the same thread, in the order requested -> acquired -> released.
-This makes a [classname]`ThreadLocal` a natural place to record timing, as shown in the following example:
+The following example logs the wait time and the hold time of each lock-hold:
 
 [source,java]
 ----
@@ -128,7 +144,8 @@ include::{root}/src/main/java/com/vaadin/demo/flow/advanced/eventbus/SessionLock
 When several listeners are registered, the requested and acquired events are delivered in registration order, while the released event is delivered in reverse registration order.
 Listeners therefore nest like `try`/`finally` blocks: a listener registered later sees the release before one registered earlier does.
 
-Listeners registered after a session's lock has already been created are still honored.
+Listeners registered after a session's lock has already been created are still honored, but only a listener already registered for [classname]`SessionLockReleasedEvent` at the moment the lock was acquired is notified of its release.
+A listener added while a thread is already holding the lock therefore misses the release event for that hold; it's notified of the next one.
 
 
 == RPC Invocation Events
@@ -150,6 +167,8 @@ The framework still routes it to the session error handler independently of this
 
 |[classname]`RpcInvocationEndedEvent`
 |Once an invocation has been handled, whether it completed normally or threw.
+[methodname]`getDuration()` gives how long it took, measured from just before the started event was fired.
+[methodname]`getError()` gives the throwable it raised -- the same one the failed event carried -- or an empty optional if it completed normally.
 |===
 
 All three expose the same details about the invocation:
@@ -172,13 +191,46 @@ Never `null`.
 |[methodname]`getName()`
 |A human-readable identifier -- the DOM event name, the invoked method name, the navigation location, and so on -- or `null` if none applies.
 It never carries the data of the invocation, only its identity.
+
+|[methodname]`getComponent()`
+|An [classname]`Optional` with the component the invocation targets, looked up in the state tree each time the method is called.
+Empty if the invocation doesn't target a node, the node is no longer in the UI, or the node isn't the element of a component.
+Call it while the invocation is being handled -- if the invocation detaches the component it targets, the component is found for the started event but no longer for the ended one.
 |===
 
 For one invocation, the started event, the optional failed event, and the ended event are fired on the same thread, in that order.
-The ended event is always fired after the started one, regardless of outcome, so timing state can again be kept in a [classname]`ThreadLocal`.
+The ended event is always fired after the started one, regardless of outcome, so a listener may keep state in a [classname]`ThreadLocal`.
+The ended event carries what such state is most often kept for -- the duration and the error of the invocation -- so a listener that only needs those can listen for the ended event alone.
 Within one request the events don't nest: those of one invocation are all fired before those of the next.
 
 Being reported doesn't mean the invocation had an effect: an RPC targeting a node that's detached, disabled, or inert is reported and only then discarded unhandled.
+
+
+== Message Synchronization Events
+
+Every client-to-server message carries an incrementing id, which the server uses to detect a resent message or one it didn't expect.
+The client can also ask the server to resynchronize a [classname]`UI` whose client-side state has fallen behind.
+See <<server-client-communication#,Sync Server & Client UI States>> for how the ids and resynchronization work.
+Three events report these cases, on the request thread while the session lock is held:
+
+[cols="1,3",options="header"]
+|===
+|Event |When It's Fired
+
+|[classname]`ClientMessageResentEvent`
+|When the client resends the message it didn't get a response to, before the server responds with the response it sent the first time instead of processing the message again.
+
+|[classname]`MessageIdSyncErrorEvent`
+|When the client sends a message with an id the server didn't expect, before the message is discarded and the client is shown the session synchronization error.
+This typically happens when the server that handled the [classname]`UI` stopped before its state was stored, and the client continues on another server with an older state.
+
+|[classname]`UIResynchronizationEvent`
+|When the client asks the server to resynchronize a [classname]`UI`, before its full state is sent to the client.
+This typically happens because of a bad network connection with packet loss, or because some part of the network infrastructure closed a push connection.
+|===
+
+All three expose the [classname]`UI` involved through [methodname]`getUI()`.
+[classname]`MessageIdSyncErrorEvent` additionally exposes [methodname]`getExpectedId()` and [methodname]`getReceivedId()`, the message id the server expected and the one the client actually sent.
 
 
 == Data Provider Query Events
@@ -199,6 +251,7 @@ The throwable is available from [methodname]`getError()`.
 |[classname]`DataFetchEndedEvent`
 |Once the items have been loaded and consumed, or the fetch threw.
 [methodname]`getRowsReturned()` gives the number of items the data provider actually returned -- possibly fewer than requested -- or `-1` if it threw.
+[methodname]`getDuration()` gives how long the fetch took, measured from just before the started event was fired.
 
 |[classname]`DataCountStartedEvent`
 |Before a count query is issued.
@@ -209,6 +262,7 @@ The throwable is available from [methodname]`getError()`.
 |[classname]`DataCountEndedEvent`
 |Once the count query has returned or thrown.
 [methodname]`getCount()` gives the reported number of items, or `-1` if it threw.
+[methodname]`getDuration()` gives how long the query took, measured from just before the started event was fired.
 |===
 
 The events describe the query and where it came from:
@@ -239,6 +293,96 @@ Queries made for a component that isn't attached to a live UI aren't reported.
 
 [NOTE]
 Data fetches triggered by push updates run on the executor given to [methodname]`DataCommunicator.enablePushUpdates()`, so these events aren't always fired on a request thread.
+
+
+== Navigation Events
+
+Each server-side navigation the router handles fires a matching pair of events, useful for timing navigations and tagging them with their outcome -- something that pairing <<../routing/lifecycle#BeforeEnterEvent,`BeforeEnterEvent`>> and <<../routing/lifecycle#AfterNavigationEvent,`AfterNavigationEvent`>> listeners gets wrong for forwards, reroutes, redirects, postponed navigations, and error views.
+
+[cols="1,3",options="header"]
+|===
+|Event |When It's Fired
+
+|[classname]`NavigationStartedEvent`
+|Before the router starts handling a navigation, before any `BeforeLeaveEvent` or `BeforeEnterEvent` listener runs.
+
+|[classname]`NavigationEndedEvent`
+|Once the navigation has finished, whatever the outcome.
+|===
+
+Only the *outermost* navigation is reported.
+A <<../routing/lifecycle#Rerouting,reroute>>, a <<../routing/lifecycle#Forwarding,forward>>, the redirect that adds or removes a trailing slash, and the rendering of an error view are part of the navigation that caused them and fire no events of their own; their effect shows up in the ended event's outcome instead.
+Resuming a <<../routing/lifecycle#postpone,postponed>> navigation with [methodname]`ContinueNavigationAction.proceed()` is reported as a navigation of its own, with an outcome of `Completed`, `Failed`, `NotShown`, or `Postponed` again.
+Showing a `PreserveOnRefresh` view once the browser has sent its window name fires no events, since it continues a navigation that has already been reported.
+
+Both events carry the details of the navigation that was requested:
+
+[cols="1,3",options="header"]
+|===
+|Method |Description
+
+|[methodname]`getUI()`
+|The [classname]`UI` that navigates.
+Never `null`.
+
+|[methodname]`getLocation()`
+|The requested location, before any forward or reroute.
+Never `null`.
+
+|[methodname]`getTrigger()`
+|The action that triggered the navigation, such as a page load, a router link click, or a call to [methodname]`UI.navigate()`.
+Never `null`.
+|===
+
+[classname]`NavigationEndedEvent` additionally exposes how the navigation ended:
+
+[cols="1,3",options="header"]
+|===
+|Method |Description
+
+|[methodname]`getOutcome()`
+|One of the records of the sealed `NavigationEndedEvent.Outcome` interface: `Completed` (the view that's shown after all forwards and reroutes, together with the route parameters it's shown with), `Postponed` (a leave listener postponed the navigation), `Failed` (an error view was shown, or the navigation threw), or `NotShown` (no server view was shown, for example for a client-side route the browser renders or an external forward).
+
+`Completed` carries the route parameters together with the navigation target, so a listener can tell a plain navigation apart from a forward or reroute to the same view with different parameters -- for example from `orders/17` to `orders/42` -- without reading `UIInternals` or the router state signal directly.
+
+|[methodname]`getStatusCode()`
+|The HTTP status code of the navigation, such as 200 or 404, or `-1` if the navigation threw.
+|===
+
+For one navigation, the started event and the ended event are fired on the same thread, in that order, even when the navigation throws, so timing state can again be kept in a [classname]`ThreadLocal`.
+The ended event is fired in reverse registration order, so listeners nest around the started one.
+
+*Example*: Finding broken links in the application.
+
+A navigation that ends with status 404 after the user opened a URL directly usually means a mistyped address or an outdated bookmark.
+When the user followed a router link instead, the application itself links to a route that doesn't exist:
+
+[source,java]
+----
+service.getEventBus().addListener(NavigationEndedEvent.class, event -> {
+    if (event.getStatusCode() == 404
+            && event.getTrigger() == NavigationTrigger.ROUTER_LINK) {
+        LoggerFactory.getLogger(getClass()).warn(
+                "Router link points to a missing route: {}",
+                event.getLocation().getPath());
+    }
+});
+----
+
+
+== Browser Compatibility Events
+
+[classname]`UnsupportedBrowserEvent` is fired when a browser is redirected to the page telling it that it's too old to run the application, just before that page is written to the response.
+It carries the [classname]`VaadinService`, through [methodname]`getService()`, the [classname]`VaadinSession` of the browser, through [methodname]`getSession()`, and the [classname]`VaadinRequest` for the page, through [methodname]`getRequest()` -- the request's `User-Agent` header identifies the browser.
+
+[source,java]
+----
+service.getEventBus().addListener(UnsupportedBrowserEvent.class,
+        event -> log(event.getSession(),
+                event.getRequest().getHeader("User-Agent")));
+----
+
+A browser too old to run the inline script that detects the need for the redirect never makes the redirected request, so no event is fired for it.
 
 
 == Other Framework Events

@@ -1,0 +1,165 @@
+---
+title: Bind the View
+page-title: How to bind a Vaadin view to its ViewModel with signals
+description: Learn how to create a ViewModel in a view, bind UI components to its signals, and call its commands from listeners.
+meta-description: Bind a Vaadin view to its ViewModel. Create the ViewModel in the route view, bind UI components to its signals, and call its commands from the listeners.
+order: 20
+---
+
+
+= Bind the View
+:toclevels: 2
+
+With the state and the rules in the ViewModel, the view is left with the UI components, their layout, and the bindings between them and the ViewModel. This guide builds the view of the ticket triage example.
+
+.Part of a Series
+[TIP]
+This is part 2 of the *Structure Views with MVVM* series. It builds on the ViewModel from <<write-viewmodel#,Write a ViewModel>>.
+
+
+== Create the ViewModel in the View
+
+The [annotationname]`@Route` class creates the ViewModel in its constructor, and keeps it in a `private final` field. Spring injects the application services into the view's constructor, and the view passes them on:
+
+.TicketsView.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/TicketsView.java[tags=create,indent=0]
+----
+
+The view doesn't load data in its constructor, because Vaadin can create a view without showing it. Instead, it calls the [methodname]`refresh()` command after the user has navigated to the view. See <<{articles}/building-apps/business-logic/add-service#calling-a-service-on-view-creation,Calling a Service on View Creation>> for more.
+
+A field that you assign in its declaration can't use the ViewModel, not even inside a lambda: the compiler reports that the final field might not have been initialized. Assign such fields, for example event listeners, in the constructor after the ViewModel.
+
+
+== Bind UI Components to Signals
+
+The view binds each UI component to the ViewModel once, instead of pushing values into the UI components whenever something changes. Here is the list part of the view:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/TicketsView.java[tags=list,indent=0]
+----
+
+A field binds to a read-only signal and a command with `bindValue(viewModel.x(), viewModel::setX)`. The field shows the signal's value, and passes the user's input to the command. The grid's selection binds the same way, through [methodname]`asSingleSelect()` or [methodname]`asMultiSelect()`. For the other properties of a UI component, use the one-way bindings, such as [methodname]`bindText()`, [methodname]`bindVisible()`, [methodname]`bindEnabled()`, and [methodname]`bindReadOnly()`, and render a list of UI components with [methodname]`bindChildren()`. <<{articles}/flow/ui-state/building-ui#,Component Bindings>> lists them all.
+
+Vaadin doesn't have bind methods for a grid's items or a field's error message. For those, the view uses [methodname]`bindItems()` and [methodname]`bindError()` from a small helper class in the application, which the <<#bind-grids-and-error-messages,last section of this guide>> shows. For anything else that has no bind method, write an effect with [methodname]`Signal.effect()`, as the view does to open a dialog.
+
+The editor part of the view works the same way:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/TicketsView.java[tags=editor,indent=0]
+----
+
+By default, a text field passes its value to the ViewModel only when the user presses kbd:[Enter] or moves the focus elsewhere. The title field uses the eager value change mode, so that the ViewModel sees every keystroke and enables *Save* as soon as the user has typed a change. The search field uses the lazy mode, which waits until the user stops typing. The <<{articles}/components/text-field#,Text Field>> page lists the value change modes.
+
+
+== Call Commands from Listeners
+
+A listener calls one command, and at most acts on its result. It doesn't call services, and doesn't decide anything that the ViewModel could decide. The *Save* button calls [methodname]`save()`, and shows a notification only when the command reports that it saved the ticket. The *Discard* button calls [methodname]`discardChanges()` without checking anything first.
+
+Sometimes a framework callback needs an answer at once, and can't wait for a signal to change. For example, [methodname]`beforeLeave()` has to decide whether to postpone the navigation. In such a callback, the view reads a signal of the ViewModel with [methodname]`peek()`, such as `viewModel.dirty().peek()`. <<dialogs-and-navigation#protect-unsaved-changes,Protect Unsaved Changes>> shows the whole callback.
+
+
+== Leave UI Work to the View
+
+The view does what only a UI can do: it shows notifications and dialogs, navigates to other views, moves the focus, and reads route parameters. The ViewModel decides _that_ something happens, by returning an outcome or by changing its state. The view decides _how_ it shows up on the screen.
+
+
+== Pass State to Child Components
+
+A large view is built from child UI components, such as a list and an editor, as <<{articles}/building-apps/ui-basics/compose#,Compose with Components>> describes. A ViewModel doesn't change how you split the view into components. It changes where the state lives: in the ViewModel, instead of in the view.
+
+A one-off child component, which exists only inside this view, receives its state from the view. Pass it either the whole ViewModel, or only the signals and commands that it needs:
+
+[source,java]
+----
+class TicketGrid extends VerticalLayout {
+
+    TicketGrid(Signal<List<Ticket>> tickets, Signal<Ticket> selected,
+            SerializableConsumer<Ticket> select) {
+        Grid<Ticket> grid = new Grid<>();
+        grid.addColumn(Ticket::title).setHeader("Title");
+        bindItems(grid, tickets).setIdentifierProvider(Ticket::id);
+        grid.asSingleSelect().bindValue(selected, select);
+        add(grid);
+    }
+}
+----
+
+[source,java]
+----
+// In the view
+add(new TicketGrid(viewModel.tickets(), viewModel.selected(),
+        viewModel::select), new TicketEditor(viewModel));
+----
+
+The two children don't know about each other, and the view doesn't pass anything from one to the other. The grid calls [methodname]`select()`, and the editor follows the state of the ViewModel. Without a ViewModel, the view would listen to the grid, and call a setter on the editor.
+
+A reusable component, such as a card that shows a person in many views, knows nothing about the ViewModel. It accepts generic values, and reports the user's actions with events or callbacks, which the parent passes on to commands:
+
+[source,java]
+----
+master.addEmployeeSelectedListener(
+        event -> viewModel.select(event.getEmployee()));
+----
+
+To show state from a signal, a reusable component takes a read-only [classname]`Signal` rather than a [classname]`ValueSignal`, or offers a bind method next to its setter. The [classname]`SignalPropertySupport` helper makes such a method easy to write; see <<{articles}/flow/ui-state/element-bindings#signalpropertysupport-helper,SignalPropertySupport Helper>>. The component then works both in plain views and in views with a ViewModel.
+
+Only the route view creates a ViewModel. If the ViewModel has child ViewModels, the parent ViewModel creates them, as <<write-viewmodel#split-a-growing-viewmodel,Split a Growing ViewModel>> describes.
+
+
+[#bind-grids-and-error-messages]
+== Bind Grids & Error Messages
+
+Vaadin doesn't have bind methods for a grid's items, or for a field's error message (https://github.com/vaadin/flow/issues/26829[flow#26829]). Copy the following class into your application, and import its methods statically in each view that has a ViewModel:
+
+.SignalBindings.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/SignalBindings.java[tags=full,indent=0]
+----
+
+The class has three helpers:
+
+[cols="1,2",options="header"]
+|===
+|Helper |Binds
+
+|`bindItems(grid, items)`
+|A signal holding a list to the items of a grid
+
+|`bindItems(grid, query, fetch, count)`
+|Items loaded page by page to a grid, refreshed whenever the `query` signal changes; see <<lists#load-data-page-by-page,Load Data Page by Page>>
+
+|`bindError(field, error)`
+|A signal holding an error message to a field, where `null` means that the value is valid
+|===
+
+Each helper is an effect owned by the UI component, so the binding ends when the UI component is detached. Bind each grid and field with one line:
+
+[source,java]
+----
+bindItems(grid, viewModel.tickets()).setIdentifierProvider(Ticket::id);
+bindError(title, viewModel.titleError());
+----
+
+Keep the following in mind when you use the helpers:
+
+Data View::
+Each [methodname]`bindItems()` returns the grid's data view, as [methodname]`setItems()` does. Set an identifier provider on it when a save replaces an item with a new record, as in the example. The grid then recognizes the saved ticket as the selected row.
+
+Selection::
+Bind the selection separately, with `grid.asSingleSelect().bindValue(...)` or `grid.asMultiSelect().bindValue(...)`. The helpers set the items once, and refresh them on every change. Calling [methodname]`setItems()` again, for example from an effect, would replace the data provider. That always clears the selection, and the selection binding passes the cleared selection to the ViewModel as `null` (https://github.com/vaadin/flow-components/issues/10575[flow-components#10575]).
+
+Select-All Checkbox::
+In multi-select mode, a grid updates the select-all checkbox in its header only when the selection changes, and treats an empty grid as having all its rows selected. When the rows change, the checkbox would be left in the wrong state (https://github.com/vaadin/flow-components/issues/10553[flow-components#10553]). The in-memory [methodname]`bindItems()` updates the checkbox from the rows and the selection. Call `setSelectionMode(SelectionMode.MULTI)` before [methodname]`bindItems()`, so that the helper sees the mode.
+
+Customizing::
+When a grid needs something that the helpers don't do, such as a configurable filter or an estimated count, write the effect yourself, starting from the helper's code.
+
+Grids Only::
+The item helpers take a [classname]`Grid` on purpose, because other UI components react to changed items in their own ways. See <<forms#change-the-options-of-a-select-or-combo-box,Change the Options of a Select or Combo Box>>.
+
+Next, <<test-viewmodel#,test the ViewModel>>.

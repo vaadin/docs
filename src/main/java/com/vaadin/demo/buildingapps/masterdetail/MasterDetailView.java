@@ -11,7 +11,7 @@ import com.vaadin.flow.signals.Signal;
 import com.vaadin.flow.signals.local.ValueSignal;
 
 @Route("building-apps/master-detail")
-public class MasterDetailView extends MasterDetailLayout {
+class MasterDetailView extends MasterDetailLayout {
 
     // tag::signal[]
     // The selected item's id; null means nothing is selected.

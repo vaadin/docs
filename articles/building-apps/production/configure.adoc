@@ -1,0 +1,106 @@
+---
+title: Configure the Application
+page-title: How to configure a Vaadin application for production
+description: Keep production settings in a Spring profile, and secrets out of the source code.
+meta-description: Configure a Vaadin application for production. Use a Spring profile, pass secrets as environment variables or mounted files, and set Vaadin properties.
+order: 20
+---
+
+
+= Configure the Application
+
+Build the JAR once, and run the same JAR in every environment. Settings that differ between environments, and secrets such as database passwords, come from outside the JAR through Spring Boot's https://docs.spring.io/spring-boot/reference/features/external-config.html[externalized configuration].
+
+In short, put the production settings that aren't secret in a profile:
+
+.`src/main/resources/application-prod.properties`
+[source,properties]
+----
+server.forward-headers-strategy=native
+spring.jpa.hibernate.ddl-auto=validate
+----
+
+Then activate the profile, and pass the secrets, when you start the application:
+
+[source,terminal]
+----
+SPRING_PROFILES_ACTIVE=prod \
+SECRETS_DATASOURCE_URL=jdbc:postgresql://db.example.com/app \
+SECRETS_DATASOURCE_USERNAME=app \
+SECRETS_DATASOURCE_PASSWORD=... \
+java -jar target/*.jar
+----
+
+The rest of this guide explains these settings.
+
+
+== Use a Profile for Production Settings
+
+Keep the configuration in two files, and commit both:
+
+* [filename]`application.properties` contains the settings that are the same everywhere, and the settings for development.
+* [filename]`application-prod.properties` contains the settings for production, and overrides the ones in [filename]`application.properties`. It's used only when the `prod` profile is active.
+
+Activate the profile with the `SPRING_PROFILES_ACTIVE` environment variable, or with the `--spring.profiles.active=prod` command-line argument. The [filename]`Dockerfile` in projects from https://start.vaadin.com[`start.vaadin.com`] starts the application with the `prod` profile active.
+
+These settings typically go in the production profile:
+
+`server.forward-headers-strategy=native`::
+Needed when the application runs behind a reverse proxy that terminates TLS. Without it, the application redirects to `http://` URLs, and sends the session cookie without the `Secure` attribute. See <<reverse-proxy#,Deploy Behind a Proxy>>.
+
+`spring.jpa.hibernate.ddl-auto=validate`::
+Makes Hibernate check the database schema, which Flyway manages, without changing it. Projects from `start.vaadin.com` set it to `update` for development, which you shouldn't use in production. See <<{articles}/building-apps/forms-data/persistence/add-spring-data#,Add Spring Data>> and <<{articles}/building-apps/forms-data/persistence/add-flyway#,Add Flyway>>.
+
+Also decide how long sessions live, as described next.
+
+
+== Decide How Long Sessions Live
+
+A user's session, and the UI state in it, stays in server memory until it expires -- by default, 30 minutes after its last request. The `server.servlet.session.timeout` property changes this. An open browser tab sends heartbeat requests, though, so its session never expires.
+
+To end sessions that nobody uses, set `vaadin.close-idle-sessions=true`. The timeout then ignores heartbeats. A user who comes back to an idle tab has to start over, and log in again if the application requires login. See <<{articles}/building-apps/architecture/runtime-model#where-state-lives,Where State Lives>> for how sessions, tabs, and heartbeats relate, and <<{articles}/building-apps/architecture/capacity-and-failover#count-sessions-not-users,Count Sessions, Not Users>> for what the timeout means for memory.
+
+
+== Keep Secrets Out of the Source Code
+
+Don't put passwords, API keys, or other secrets in [filename]`application.properties`, in [filename]`application-prod.properties`, or in the container image. Instead, refer to them with placeholders, and give them development defaults. The <<{articles}/building-apps/forms-data/persistence/replace-h2#update-application-configuration,Replace H2>> guide does this for the database connection:
+
+.`application.properties`
+[source,properties]
+----
+spring.datasource.url=${secrets.datasource.url:jdbc:postgresql://localhost/postgres}
+spring.datasource.username=${secrets.datasource.username:postgres}
+spring.datasource.password=${secrets.datasource.password:mysecretpassword}
+----
+
+In production, provide the real values in one of the following ways.
+
+
+=== Environment Variables
+
+Spring Boot reads properties from environment variables. To get the variable name, write the property name in uppercase, replace the dots with underscores, and remove the dashes. For example, `secrets.datasource.password` becomes `SECRETS_DATASOURCE_PASSWORD`.
+
+Environment variables are easy to set, but anyone who can inspect the process or the container configuration can read them.
+
+
+=== Files Mounted by the Platform
+
+Docker and Kubernetes can mount secrets as files instead. Import the directory that contains them as a https://docs.spring.io/spring-boot/reference/features/external-config.html#features.external-config.files.configtree[configuration tree]:
+
+.`application-prod.properties`
+[source,properties]
+----
+spring.config.import=optional:configtree:/run/secrets/
+----
+
+Spring Boot then turns each file in the directory into a property. The file name is the property name, and the content of the file is the value. For example, a file named [filename]`/run/secrets/secrets.datasource.password` provides the `secrets.datasource.password` property.
+
+
+== Set Vaadin Properties
+
+Vaadin's <<{articles}/flow/configuration/properties#,configuration properties>> are Spring Boot properties with the `vaadin.` prefix, so you can set them in the same ways as any other property. For example, the `heartbeatInterval` property can be set as `vaadin.heartbeat-interval` in a properties file, or as the `VAADIN_HEARTBEATINTERVAL` environment variable. See <<{articles}/flow/integrations/spring/configuration#,Vaadin Spring Configuration>> for the properties that are specific to Spring.
+
+
+== Next Steps
+
+With the configuration outside the JAR, you can package the same JAR for every environment. <<container#,Build a Container Image>> shows how.
