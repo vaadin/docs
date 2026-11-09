@@ -33,7 +33,7 @@ This guide shows how to run it yourself with https://calcite.apache.org[Apache C
 Use Calcite when:
 
 * your data has no SQL interface, such as a REST API, a gRPC service, or a set of files, or
-* you want the LLM to join and group data from several such sources in one query.
+* you want the LLM to join, group, and total data from several such sources in one query.
 
 Every query loads the tables it uses into memory. Calcite therefore suits data that fits in the server's memory with room to spare for every user who queries it at the same time.
 
@@ -53,7 +53,7 @@ Add `calcite-core` to your project:
 </dependency>
 ----
 
-Calcite shares libraries with Vaadin, such as the Jackson annotations and SLF4J, and declares older versions of them. In a Spring Boot project, Spring Boot's dependency management aligns these versions with Vaadin's, so the dependency needs no exclusions. In a project without that dependency management, exclude `com.fasterxml.jackson.core:jackson-annotations` from Calcite, so that its older version doesn't replace the one Vaadin's Jackson uses. Calcite brings many other transitive dependencies. The command `mvn dependency:tree` lists them.
+Calcite shares libraries with Vaadin, such as SLF4J and the Jackson annotations, and declares older versions of them. The Vaadin BOM aligns the SLF4J version in every project. In a Spring Boot project, Spring Boot's dependency management aligns the Jackson annotations as well, so the dependency needs no exclusions. In a project without Spring Boot, exclude `com.fasterxml.jackson.core:jackson-annotations` from Calcite, so that its older version doesn't replace the one Vaadin's Jackson uses. Calcite brings many other transitive dependencies. The command `mvn dependency:tree` lists them.
 
 
 == Describe the Data as Tables
@@ -269,7 +269,8 @@ public class CatalogDatabaseProvider implements DatabaseProvider {
     @Override
     public synchronized List<Map<String, Object>> executeQuery(String sql) {
         try (var statement = connection().createStatement();
-                var resultSet = statement.executeQuery(sql)) {
+                var resultSet = statement
+                        .executeQuery(withoutTrailingSemicolon(sql))) {
             return rows(resultSet);
         } catch (SQLException e) {
             throw new ToolException(messageForLlm(e), e);
@@ -283,7 +284,7 @@ public class CatalogDatabaseProvider implements DatabaseProvider {
     @Override
     public List<Map<String, Object>> executeQuery(String sql,
             QueryPage page) {
-        var paged = sql;
+        var paged = withoutTrailingSemicolon(sql);
         if (!page.sortOrders().isEmpty()) {
             // The grid's sort replaces an ORDER BY the LLM wrote
             paged = "SELECT * FROM (" + sql + ") AS page ORDER BY "
@@ -298,6 +299,11 @@ public class CatalogDatabaseProvider implements DatabaseProvider {
         }
         return executeQuery(
                 paged + " LIMIT " + page.limit() + " OFFSET " + page.offset());
+    }
+
+    @Override
+    public int count(String sql) {
+        return DatabaseProvider.super.count(withoutTrailingSemicolon(sql));
     }
 
     private CalciteConnection connection() throws SQLException {
@@ -355,6 +361,14 @@ public class CatalogDatabaseProvider implements DatabaseProvider {
         return rows;
     }
 
+    // Calcite rejects a statement that ends with a semicolon
+    private static String withoutTrailingSemicolon(String sql) {
+        var trimmed = sql.strip();
+        return trimmed.endsWith(";")
+                ? trimmed.substring(0, trimmed.length() - 1)
+                : trimmed;
+    }
+
     // Calcite's parse and validation errors describe the problem in the
     // SQL the LLM wrote, so they are safe to relay
     private static String messageForLlm(SQLException exception) {
@@ -380,6 +394,7 @@ How the parts work together:
 * [methodname]`executeQuery()` is `synchronized`. It creates the connection on first use, and Calcite doesn't document its connections as safe for concurrent use. The grid can load a page while the LLM validates its next query, so both can run at the same time.
 * Calcite returns dates as [classname]`java.sql.Date` and timestamps as [classname]`java.sql.Timestamp`. The provider converts them to [classname]`LocalDate` and [classname]`LocalDateTime`, which the grid renders with its date renderers.
 * Calcite's parse and validation errors name the problem in the SQL the LLM wrote, such as an unknown column. The provider relays them in a [classname]`ToolException`, so the LLM can correct its query. Every other failure, including the unchecked exceptions Calcite throws while a query runs, becomes a [classname]`ToolException` with a generic message.
+* Calcite rejects a statement that ends with a semicolon, and LLMs often write one. The provider removes a trailing semicolon before it runs or wraps a query, so the LLM doesn't spend a turn on correcting it.
 * The grid loads rows one page at a time through [methodname]`executeQuery(String sql, QueryPage page)` and [methodname]`count(String sql)`. Their default implementations wrap the query in sub-queries, and Calcite drops an `ORDER BY` from a sub-query that has no `LIMIT` of its own. With the defaults, the grid loses a sort the user applies, and also an `ORDER BY` the LLM wrote, for example to show the ten most expensive products. The override in the listing handles both cases. When the grid has no sort of its own, it appends `LIMIT` and `OFFSET` to the LLM's query. Otherwise it wraps the query, so that the grid's sort replaces the LLM's. The grid instructs the LLM not to write `LIMIT` or `OFFSET`. When a query has one anyway, the validation of the query fails, and the parse error tells the LLM why. The default [methodname]`count()` works as it is.
 
 
