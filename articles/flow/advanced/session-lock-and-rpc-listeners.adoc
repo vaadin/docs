@@ -71,7 +71,11 @@ Every started event is followed by a matching ended event for the same request, 
 Requests are handled concurrently, so a listener must expect several requests to be in flight on several threads at once.
 
 Both events carry the [classname]`VaadinService` handling the request and the request itself, through [methodname]`getService()` and [methodname]`getRequest()`.
-[methodname]`getResponse()` gives an [classname]`Optional` with the response -- empty for a push message, which is reported as a request of its own, without a response.
+[methodname]`getResponse()` gives an [classname]`Optional` with the response.
+It's empty for a push message, which is reported as a request of its own, without a response.
+The daily active user tracking reports some requests before they reach Flow.
+For those requests, the response is empty in [classname]`RequestEndedEvent` but not in [classname]`RequestStartedEvent`.
+So a missing response doesn't by itself mean a push message.
 
 [classname]`RequestEndedEvent` reports more, including how long handling the request took:
 
@@ -85,14 +89,21 @@ Both events carry the [classname]`VaadinService` handling the request and the re
 |[methodname]`getHandler()`
 |An [classname]`Optional` with the [classname]`RequestHandler` that handled the request.
 Its type identifies what kind of request it was -- for example [classname]`UidlRequestHandler` for a client-to-server message.
-Empty if no handler accepted the request.
+Empty for a push message, for a request that a sessionless handler handled, and for a request that failed before a handler accepted it.
+
+|[methodname]`getSessionlessHandler()`
+|An [classname]`Optional` with the [classname]`SessionlessRequestHandler` that handled the request.
+An example is [classname]`TranslationFileRequestHandler` for a translation file request.
+Such a request doesn't use a session.
 
 |[methodname]`getFailure()`
 |An [classname]`Optional` with the exception that made handling the request fail.
 The exception has already been passed to the session [classname]`ErrorHandler` by this point.
+Failures of push messages are reported as well.
 
 |[methodname]`getDuration()`
-|How long handling the request took, measured from just before [classname]`RequestStartedEvent` was fired.
+|How long handling the request took.
+It's measured from when the framework starts handling the request, before the request interceptors' `requestStart` callback runs.
 |===
 
 The following example logs slow or failed requests, along with the handler that handled them:

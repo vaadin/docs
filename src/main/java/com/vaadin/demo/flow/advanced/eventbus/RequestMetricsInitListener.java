@@ -15,7 +15,8 @@ public class RequestMetricsInitListener implements VaadinServiceInitListener {
         VaadinServiceEventBus eventBus = event.getSource().getEventBus();
 
         eventBus.addListener(RequestEndedEvent.class, requestEvent -> {
-            String handler = requestEvent.getHandler()
+            String handler = requestEvent.getHandler().map(Object.class::cast)
+                    .or(requestEvent::getSessionlessHandler)
                     .map(h -> h.getClass().getSimpleName()).orElse("none");
 
             requestEvent.getFailure()
@@ -24,7 +25,7 @@ public class RequestMetricsInitListener implements VaadinServiceInitListener {
 
             long millis = requestEvent.getDuration().toMillis();
             if (millis > 1000) {
-                LoggerFactory.getLogger(getClass()).debug(
+                LoggerFactory.getLogger(getClass()).warn(
                         "Slow request ({} ms) handled by {}", millis, handler);
             }
         });
