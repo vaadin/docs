@@ -48,10 +48,17 @@ Only one controller can be attached per orchestrator. If you need tools from sev
 
 [classname]`DatabaseProvider` is the bridge between the LLM and an application database. The built-in grid and chart controllers use it to let the LLM discover the schema and run SQL queries on demand. Critically, the data flow is asymmetric: the LLM sees the schema so it can write valid queries, but the query results are rendered in the [classname]`Grid` or [classname]`Chart` component -- the rows themselves are never sent back to the LLM.
 
-The interface defines two methods:
+The interface defines two methods to implement:
 
 * [methodname]`getSchema()` -- returns a plain-text description of the tables, columns, and SQL dialect. The LLM uses this to write valid queries.
 * [methodname]`executeQuery(String sql)` -- executes a SQL query and returns the rows as a list of column-name-to-value maps. These rows are handed to the grid or chart for rendering; they do not appear in any prompt as such.
+
+[since:com.vaadin:vaadin@V25.4]#Two more methods have default implementations.# The grid uses them to load rows lazily:
+
+* [methodname]`executeQuery(String sql, QueryPage page)` -- returns one page of the query's rows: at most `limit` rows from `offset`, sorted by the page's sort orders.
+* [methodname]`count(String sql)` -- returns the number of rows the query produces.
+
+The defaults wrap the query in sub-queries with `ORDER BY`, `LIMIT`, and `OFFSET`, or with `COUNT(*)`, and run the result through [methodname]`executeQuery(String sql)`. Override them when your database pages or counts differently, or when it can do so more efficiently.
 
 The following example is a straightforward JDBC implementation:
 
@@ -103,6 +110,8 @@ public class JdbcDatabaseProvider implements DatabaseProvider {
 The example returns a hardcoded string for clarity, but [methodname]`getSchema()` can return whatever helps the LLM. Build the description at runtime from [classname]`java.sql.DatabaseMetaData` if your schema changes often, and add free-form context -- column meanings, business rules, common joins, units, sample values -- in plain English. The LLM treats the entire string as guidance, so anything that improves its queries is fair game.
 
 When a query fails -- for example, because it references an unknown column -- the exception type determines what the LLM learns about the failure. The example above [since:com.vaadin:vaadin@V25.3]#throws a `ToolException`#, whose message is relayed to the LLM so it can correct the query on its next attempt; any other exception is replaced with a generic error message. See <<#tool-error-handling,Tool Error Handling>>.
+
+To expose data that has no SQL interface, such as a REST API, a service, or files, see <<{articles}/building-apps/ai/custom-backends#,Custom Backends for AI-Powered Grids and Charts>>.
 
 .Read-Only Database Access
 [IMPORTANT]

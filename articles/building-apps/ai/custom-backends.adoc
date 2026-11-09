@@ -1,0 +1,504 @@
+---
+title: Custom Backends
+page-title: Custom Backends for AI-Powered Grids and Charts | Vaadin
+description: Give the LLM an SQL view of a REST API, a service, or any other data source with Apache Calcite.
+meta-description: Expose a REST API or any other backend without SQL to Vaadin's AI-powered Grid and Chart by running the LLM's queries over Java objects with Apache Calcite.
+order: 30
+section-nav: badge-preview
+---
+
+
+= [since:com.vaadin:vaadin@V25.4]#Custom Backends for AI-Powered Grids and Charts#
+
+:preview-feature: AI integration features
+:feature-flag: com.vaadin.experimental.aiComponents
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+The <<{articles}/flow/ai-support/ai-powered-grid#,AI-powered Grid>> and <<{articles}/flow/ai-support/ai-powered-chart#,Chart>> let users explore data in natural language. The LLM reads a schema description, writes SQL, and a <<{articles}/flow/ai-support/controllers#database-provider,[classname]`DatabaseProvider`>> runs the query. When your data lives behind a REST API, in a service, or in files, no database runs that SQL for you.
+
+This guide shows how to run it yourself with https://calcite.apache.org[Apache Calcite], a Java library that parses SQL and executes it over tables you define in Java. The LLM keeps writing standard SQL, and your provider answers from any data you can load into Java objects. You don't need prior experience with Calcite.
+
+
+== When to Use Calcite
+
+Use Calcite when:
+
+* your data has no SQL interface, such as a REST API, a gRPC service, or a set of files, or
+* you want the LLM to join and aggregate data from several such sources in one query.
+
+The alternative is to copy the data into an in-memory database such as H2 and use a plain JDBC provider, as shown on the <<{articles}/flow/ai-support/controllers#database-provider,Controllers>> page. The copy is simpler when the data is small and changes rarely. Calcite avoids the copy: it reads the backend when a query runs, so users see current data, and one provider can combine several backends. Both approaches load whole data sets into memory. Calcite can also pass simple conditions to the backend, as the last section shows.
+
+
+== Add the Dependency
+
+Add `calcite-core` to your project. Vaadin already provides newer versions of two of its transitive dependencies, so exclude them from Calcite:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.apache.calcite</groupId>
+    <artifactId>calcite-core</artifactId>
+    <version>1.42.0</version><!-- use the latest release -->
+    <exclusions>
+        <!-- Vaadin uses Jackson 3. Calcite's Jackson 2 annotations
+             have the same artifact name and can take its place. -->
+        <exclusion>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+        </exclusion>
+        <!-- Vaadin uses SLF4J 2. Calcite declares SLF4J 1.7. -->
+        <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </exclusion>
+    </exclusions>
+</dependency>
+----
+
+Calcite has many transitive dependencies. If your build reports another conflict, run `mvn dependency:tree` to see which one Calcite brings.
+
+
+== Describe the Data as Tables
+
+Calcite runs SQL over tables that you define in Java. A table tells Calcite two things:
+
+* its row type: the column names and their SQL types, and
+* how to read its rows: a method that returns every row as an `Object[]`.
+
+The following reusable class turns a list of Java objects from your backend into such a table. You describe each column with a name, a Java type, and a function that reads the value from an object:
+
+[source,java]
+----
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
+import org.apache.calcite.DataContext;
+import org.apache.calcite.linq4j.Enumerable;
+import org.apache.calcite.linq4j.Linq4j;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.schema.ScannableTable;
+import org.apache.calcite.schema.impl.AbstractTable;
+import org.apache.calcite.sql.type.SqlTypeName;
+
+public class BackendTable<T> extends AbstractTable implements ScannableTable {
+
+    public record Column<T>(String name, Class<?> type,
+            Function<T, Object> value) {
+    }
+
+    private static final Duration CACHE_FOR = Duration.ofSeconds(10);
+
+    private final List<Column<T>> columns;
+    private final Supplier<List<T>> loader;
+    private List<T> cached;
+    private long cachedUntil;
+
+    public BackendTable(List<Column<T>> columns, Supplier<List<T>> loader) {
+        this.columns = columns;
+        this.loader = loader;
+    }
+
+    @Override
+    public RelDataType getRowType(RelDataTypeFactory typeFactory) {
+        var builder = typeFactory.builder();
+        for (var column : columns) {
+            var type = sqlType(typeFactory, column.type());
+            builder.add(column.name(),
+                    typeFactory.createTypeWithNullability(type, true));
+        }
+        return builder.build();
+    }
+
+    @Override
+    public Enumerable<Object[]> scan(DataContext root) {
+        var result = new ArrayList<Object[]>();
+        for (var item : rows()) {
+            var values = new Object[columns.size()];
+            for (int i = 0; i < values.length; i++) {
+                values[i] = toCalcite(columns.get(i).value().apply(item));
+            }
+            result.add(values);
+        }
+        return Linq4j.asEnumerable(result);
+    }
+
+    // The grid reads a table several times per render: for the row
+    // count, for a sample row, and for each page
+    private synchronized List<T> rows() {
+        var now = System.nanoTime();
+        if (cached == null || now - cachedUntil > 0) {
+            cached = loader.get();
+            cachedUntil = now + CACHE_FOR.toNanos();
+        }
+        return cached;
+    }
+
+    static RelDataType sqlType(RelDataTypeFactory typeFactory,
+            Class<?> type) {
+        if (type == Integer.class) {
+            return typeFactory.createSqlType(SqlTypeName.INTEGER);
+        } else if (type == Long.class) {
+            return typeFactory.createSqlType(SqlTypeName.BIGINT);
+        } else if (type == Double.class) {
+            return typeFactory.createSqlType(SqlTypeName.DOUBLE);
+        } else if (type == BigDecimal.class) {
+            return typeFactory.createSqlType(SqlTypeName.DECIMAL, 19, 4);
+        } else if (type == Boolean.class) {
+            return typeFactory.createSqlType(SqlTypeName.BOOLEAN);
+        } else if (type == LocalDate.class) {
+            return typeFactory.createSqlType(SqlTypeName.DATE);
+        } else if (type == LocalDateTime.class) {
+            return typeFactory.createSqlType(SqlTypeName.TIMESTAMP);
+        }
+        return typeFactory.createSqlType(SqlTypeName.VARCHAR);
+    }
+
+    // Calcite represents dates as days and timestamps as milliseconds
+    // since the epoch
+    static Object toCalcite(Object value) {
+        if (value instanceof LocalDate date) {
+            return (int) date.toEpochDay();
+        } else if (value instanceof LocalDateTime timestamp) {
+            return timestamp.toInstant(ZoneOffset.UTC).toEpochMilli();
+        }
+        return value;
+    }
+}
+----
+
+A few details of this class matter:
+
+* Calcite expects every value in a fixed Java representation. `Integer`, `Long`, `Double`, `BigDecimal`, `Boolean`, and `String` values pass as they are. A date is the number of days since 1970-01-01, and a timestamp the number of milliseconds since then, which is what [methodname]`toCalcite()` produces for [classname]`LocalDate` and [classname]`LocalDateTime` values. Any other Java type is declared as `VARCHAR`, so the column's function has to return a `String` for it, for example `item -> item.status().name()`.
+* Every column is nullable, so a `null` in a Java object becomes SQL `NULL`.
+* A grid render reads a table several times: for the row count, for a sample row that decides the columns, and for each page. The table keeps the loaded objects for a short time, so a render costs one backend call. Set the duration to how fresh the data has to be.
+
+
+== Implement the Provider
+
+The provider opens a Calcite connection, registers the tables under a schema name, and runs each query through plain JDBC. The following example exposes the products and orders of a `CatalogClient`, which stands for the client of your REST API or service:
+
+[source,java]
+----
+import java.math.BigDecimal;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.stream.Collectors;
+
+import org.apache.calcite.jdbc.CalciteConnection;
+import org.apache.calcite.runtime.CalciteContextException;
+import org.apache.calcite.schema.impl.AbstractSchema;
+import org.apache.calcite.sql.parser.SqlParseException;
+
+import com.vaadin.flow.component.ai.common.QueryPage;
+import com.vaadin.flow.component.ai.provider.DatabaseProvider;
+import com.vaadin.flow.component.ai.provider.ToolException;
+import com.vaadin.flow.data.provider.SortDirection;
+
+public class CatalogDatabaseProvider implements DatabaseProvider {
+
+    private final CatalogClient client;
+    private transient CalciteConnection connection;
+
+    public CatalogDatabaseProvider(CatalogClient client) {
+        this.client = client;
+    }
+
+    @Override
+    public String getSchema() {
+        return """
+                Tables:
+                products(id INT, name VARCHAR, category VARCHAR, price DECIMAL, discontinued BOOLEAN)
+                orders(id INT, product_id INT, quantity INT, ordered_on DATE)
+                orders.product_id refers to products.id.
+                Dialect: Apache Calcite, standard SQL. JOIN, GROUP BY, subqueries, LIMIT and OFFSET are supported.
+                Compare DATE columns with DATE literals, for example ordered_on >= DATE '2025-01-01'.
+                """;
+    }
+
+    @Override
+    public synchronized List<Map<String, Object>> executeQuery(String sql) {
+        try (var statement = connection().createStatement();
+                var resultSet = statement.executeQuery(sql)) {
+            return rows(resultSet);
+        } catch (SQLException e) {
+            throw new ToolException(messageForLlm(e), e);
+        }
+    }
+
+    @Override
+    public List<Map<String, Object>> executeQuery(String sql,
+            QueryPage page) {
+        var paged = "SELECT * FROM (" + sql + ") AS page";
+        if (!page.sortOrders().isEmpty()) {
+            paged += " ORDER BY " + page.sortOrders().stream()
+                    .map(order -> "\""
+                            + order.getSorted().replace("\"", "\"\"") + "\" "
+                            + (order.getDirection() == SortDirection.DESCENDING
+                                    ? "DESC"
+                                    : "ASC"))
+                    .collect(Collectors.joining(", "));
+        }
+        return executeQuery(
+                paged + " LIMIT " + page.limit() + " OFFSET " + page.offset());
+    }
+
+    private CalciteConnection connection() throws SQLException {
+        if (connection == null) {
+            var properties = new Properties();
+            // Unquoted names are case-insensitive; quoting uses double
+            // quotes as in standard SQL
+            properties.setProperty("lex", "MYSQL_ANSI");
+            connection = DriverManager
+                    .getConnection("jdbc:calcite:", properties)
+                    .unwrap(CalciteConnection.class);
+            var schema = connection.getRootSchema().add("catalog",
+                    new AbstractSchema());
+            schema.add("products", new BackendTable<>(List.of(
+                    new Column<Product>("id", Integer.class, Product::id),
+                    new Column<Product>("name", String.class, Product::name),
+                    new Column<Product>("category", String.class,
+                            Product::category),
+                    new Column<Product>("price", BigDecimal.class,
+                            Product::price),
+                    new Column<Product>("discontinued", Boolean.class,
+                            Product::discontinued)),
+                    client::products));
+            schema.add("orders", new BackendTable<>(List.of(
+                    new Column<Order>("id", Integer.class, Order::id),
+                    new Column<Order>("product_id", Integer.class,
+                            Order::productId),
+                    new Column<Order>("quantity", Integer.class,
+                            Order::quantity),
+                    new Column<Order>("ordered_on", LocalDate.class,
+                            Order::orderedOn)),
+                    client::orders));
+            connection.setSchema("catalog");
+        }
+        return connection;
+    }
+
+    private static List<Map<String, Object>> rows(ResultSet resultSet)
+            throws SQLException {
+        var metaData = resultSet.getMetaData();
+        var rows = new ArrayList<Map<String, Object>>();
+        while (resultSet.next()) {
+            var row = new LinkedHashMap<String, Object>();
+            for (int i = 1; i <= metaData.getColumnCount(); i++) {
+                var value = resultSet.getObject(i);
+                if (value instanceof java.sql.Date date) {
+                    value = date.toLocalDate();
+                } else if (value instanceof java.sql.Timestamp timestamp) {
+                    value = timestamp.toLocalDateTime();
+                }
+                row.put(metaData.getColumnLabel(i), value);
+            }
+            rows.add(row);
+        }
+        return rows;
+    }
+
+    // Calcite's parse and validation errors describe the problem in terms
+    // of the SQL the LLM wrote, so they are safe to relay
+    private static String messageForLlm(SQLException exception) {
+        for (Throwable cause = exception; cause != null; cause = cause
+                .getCause()) {
+            if (cause instanceof CalciteContextException
+                    || cause instanceof SqlParseException) {
+                var message = cause.getMessage();
+                var expecting = message.indexOf("\nWas expecting");
+                return expecting > 0 ? message.substring(0, expecting)
+                        : message;
+            }
+        }
+        return "The query could not be executed.";
+    }
+}
+----
+
+How the parts work together:
+
+* The `lex` setting makes unquoted names case-insensitive, so `SELECT Name FROM Products` finds the `name` column of `products`, and it makes double quotes the way to quote a name. The LLM and the grid both quote names that way.
+* The connection is created on first use and is `transient`, because the provider lives in the session, which Vaadin may serialize. Keep the backend client serializable too, or mark it `transient` and look it up again, for example from the Spring context.
+* [methodname]`executeQuery()` is `synchronized`, since a Calcite connection runs one statement at a time, and a user can scroll the grid while the LLM validates its next query.
+* Calcite returns dates as [classname]`java.sql.Date` and timestamps as [classname]`java.sql.Timestamp`. The provider converts them to [classname]`LocalDate` and [classname]`LocalDateTime`, which the grid renders with its date renderers.
+* Parse and validation errors name the problem in terms of the SQL the LLM wrote, such as an unknown column. The provider relays them in a [classname]`ToolException`, so the LLM can correct its query. Any other failure reaches the LLM as a generic message.
+* The grid loads rows one page at a time through [methodname]`executeQuery(String sql, QueryPage page)` and [methodname]`count(String sql)`. Their default implementations wrap the query in sub-queries. Calcite drops an `ORDER BY` from a sub-query that has no `LIMIT` of its own, so the default page query returns sorted pages unsorted. The override above puts `ORDER BY`, `LIMIT`, and `OFFSET` on one level. The default [methodname]`count()` works as it is.
+
+
+== Use the Provider
+
+Pass the provider to a [classname]`GridAIController` or a [classname]`ChartAIController` like any other [classname]`DatabaseProvider`:
+
+[source,java]
+----
+var provider = new CatalogDatabaseProvider(catalogClient);
+var controller = new GridAIController(grid, provider);
+----
+
+Attach the controller to the orchestrator as described on <<{articles}/flow/ai-support/ai-powered-grid#,AI-Powered Grid>> and <<{articles}/flow/ai-support/ai-powered-chart#,AI-Powered Chart>>.
+
+
+== Describe the Schema for the LLM
+
+The text that [methodname]`getSchema()` returns is all the LLM knows about your data. The general advice on the <<{articles}/flow/ai-support/controllers#database-provider,Controllers>> page applies. A few points are specific to Calcite:
+
+* Name the dialect. Calcite accepts standard SQL, including `JOIN`, `GROUP BY`, subqueries, `LIMIT`, and `OFFSET`.
+* Tell the LLM to write dates as `DATE` literals, for example `ordered_on >= DATE '2025-01-01'`.
+* Avoid column names that are SQL keywords, such as `year`, `month`, `value`, or `order`. Calcite accepts them only in double quotes, and the LLM writes them unquoted unless told otherwise. Rename the column in the table definition, or say in the schema text that the name has to be quoted.
+* With the `lex` setting above, table and column names are case-insensitive, so the LLM may write them as they appear in the description.
+
+
+== What to Expect at Runtime
+
+Each query reads every table it uses in full, and Calcite filters, joins, sorts, and aggregates in memory. A sorted or paged grid query reads the whole table as well. The time and memory a query takes therefore grow with the size of the tables it reads, not with the size of its result. For large backends, pass conditions to the backend as shown next, or copy the data into a database.
+
+Calcite can't change data through these tables. A `DELETE` or `UPDATE` fails before anything runs, so the provider is read-only by construction. The advice on the Controllers page about keeping secrets out of the schema text and error messages still applies.
+
+
+== Pass Conditions to the Backend
+
+When your backend can filter, such as a REST endpoint with query parameters, let Calcite hand it the conditions of the `WHERE` clause. Implement [interfacename]`FilterableTable` instead of [interfacename]`ScannableTable`. Its [methodname]`scan()` receives the conditions as a list: you take the ones the backend understands and remove them from the list, and Calcite applies the rest itself. The following table passes `column = value` conditions to the loader as a map. It reuses the [classname]`Column` record and the type helpers of [classname]`BackendTable`:
+
+[source,java]
+----
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+
+import org.apache.calcite.DataContext;
+import org.apache.calcite.linq4j.Enumerable;
+import org.apache.calcite.linq4j.Linq4j;
+import org.apache.calcite.plan.RelOptUtil;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexLiteral;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.schema.FilterableTable;
+import org.apache.calcite.schema.impl.AbstractTable;
+import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.util.DateString;
+
+public class FilteringBackendTable<T> extends AbstractTable
+        implements FilterableTable {
+
+    private final List<Column<T>> columns;
+    private final Function<Map<String, String>, List<T>> loader;
+
+    public FilteringBackendTable(List<Column<T>> columns,
+            Function<Map<String, String>, List<T>> loader) {
+        this.columns = columns;
+        this.loader = loader;
+    }
+
+    @Override
+    public RelDataType getRowType(RelDataTypeFactory typeFactory) {
+        var builder = typeFactory.builder();
+        for (var column : columns) {
+            var type = BackendTable.sqlType(typeFactory, column.type());
+            builder.add(column.name(),
+                    typeFactory.createTypeWithNullability(type, true));
+        }
+        return builder.build();
+    }
+
+    @Override
+    public Enumerable<Object[]> scan(DataContext root,
+            List<RexNode> filters) {
+        var conditions = new LinkedHashMap<String, String>();
+        var remaining = new ArrayList<RexNode>();
+        for (var filter : filters) {
+            var handled = true;
+            for (var condition : RelOptUtil.conjunctions(filter)) {
+                var equality = equality(condition);
+                if (equality != null) {
+                    conditions.put(equality.getKey(), equality.getValue());
+                } else {
+                    handled = false;
+                }
+            }
+            if (!handled) {
+                remaining.add(filter);
+            }
+        }
+        // Calcite applies the filters left in the list itself
+        filters.clear();
+        filters.addAll(remaining);
+        var result = new ArrayList<Object[]>();
+        for (var item : loader.apply(conditions)) {
+            var values = new Object[columns.size()];
+            for (int i = 0; i < values.length; i++) {
+                values[i] = BackendTable
+                        .toCalcite(columns.get(i).value().apply(item));
+            }
+            result.add(values);
+        }
+        return Linq4j.asEnumerable(result);
+    }
+
+    // Recognizes "column = literal" and "literal = column"
+    private Map.Entry<String, String> equality(RexNode condition) {
+        if (condition instanceof RexCall call
+                && call.getKind() == SqlKind.EQUALS) {
+            var left = call.getOperands().get(0);
+            var right = call.getOperands().get(1);
+            if (left instanceof RexInputRef column
+                    && right instanceof RexLiteral literal) {
+                return entry(column, literal);
+            } else if (right instanceof RexInputRef column
+                    && left instanceof RexLiteral literal) {
+                return entry(column, literal);
+            }
+        }
+        return null;
+    }
+
+    private Map.Entry<String, String> entry(RexInputRef column,
+            RexLiteral literal) {
+        var text = switch (literal.getTypeName()) {
+        case CHAR, VARCHAR -> literal.getValueAs(String.class);
+        case BOOLEAN -> String.valueOf(literal.getValueAs(Boolean.class));
+        case DECIMAL -> literal.getValueAs(BigDecimal.class)
+                .stripTrailingZeros().toPlainString();
+        case DATE -> String.valueOf(literal.getValueAs(DateString.class));
+        default -> null; // other types are not passed to the backend
+        };
+        return text == null ? null
+                : Map.entry(columns.get(column.getIndex()).name(), text);
+    }
+}
+----
+
+Register the table with a loader that takes the map, for example a method that turns it into query parameters of the endpoint:
+
+[source,java]
+----
+schema.add("products", new FilteringBackendTable<>(productColumns,
+        client::products)); // List<Product> products(Map<String, String> filters)
+----
+
+What to keep in mind:
+
+* A condition stays in the list unless every part of it was taken. For `WHERE category = 'Books' AND price > 10`, the table sends the category to the backend and leaves the whole condition to Calcite, which checks both parts again. Leaving a condition to Calcite is always safe. Removing one that the backend didn't apply returns wrong results.
+* Calcite rewrites some conditions before they reach the table: an `IN` list arrives as a search over a set of values, and `discontinued = TRUE` arrives as the column on its own. The method above leaves both to Calcite.
+* `ORDER BY`, `LIMIT`, and `OFFSET` don't reach the table. The backend returns every matching row, and Calcite sorts and cuts the page.
+* If you add a cache to this table, key it by the conditions, since each set of conditions loads different rows.
