@@ -1,0 +1,217 @@
+---
+title: Show Lists and Grids
+page-title: How to show lists and grids from a ViewModel in Vaadin
+description: Learn how a ViewModel holds lists, selections, editable rows, and data loaded page by page.
+meta-description: Show lists and grids from a ViewModel in Vaadin. Reload lists as a whole, keep selections as IDs, edit rows one by one, and load large data sets page by page.
+order: 50
+---
+
+
+= Show Lists and Grids
+:toclevels: 2
+
+How a ViewModel holds a list depends on how the list changes: whether it's reloaded as a whole, edited entry by entry, or too large to load at once. This guide shows each case.
+
+.Part of a Series
+[TIP]
+This is part 5 of the *Structure Views with MVVM* series. It uses the [classname]`SignalBindings` class from <<bind-view#bind-grids-and-error-messages,Bind Grids & Error Messages>>.
+
+
+== Show a List That Reloads as a Whole
+
+A list that the ViewModel reloads as a whole, such as search results, is an immutable list in a [classname]`ValueSignal`. A command replaces the list, as the [methodname]`refresh()` command in <<write-viewmodel#offer-commands,Write a ViewModel>> does.
+
+Bind a grid to the list with [methodname]`bindItems()`, and its selection with [methodname]`bindValue()`:
+
+[source,java]
+----
+bindItems(grid, viewModel.tickets()).setIdentifierProvider(Ticket::id);
+grid.asSingleSelect().bindValue(viewModel.selected(), viewModel::select);
+----
+
+[methodname]`bindItems()` sets the items once, and refreshes them whenever the list changes. The identifier provider keeps the row selected when a save replaces its record with a new one.
+
+
+== Keep the Selection as IDs
+
+Keep a selection as the IDs of the selected items, and derive the selected items from the IDs and the current list. After a reload, the derived selection then holds the latest data of each item, and an item that is no longer listed drops out of the selection without any command having to remove it. This matters most for a multi-select grid, whose commands act on every selected row:
+
+[source,java]
+----
+private final ValueSignal<Set<Long>> selectedIds = new ValueSignal<>(
+        Set.of());
+private final Signal<Set<Ticket>> selectedTickets = Signal.computed(() -> {
+    Set<Long> ids = selectedIds.get();
+    return tickets.get().stream().filter(t -> ids.contains(t.id()))
+            .collect(Collectors.toUnmodifiableSet());
+});
+
+Signal<Set<Ticket>> selectedTickets() {
+    return selectedTickets;
+}
+
+void selectTickets(Set<Ticket> selection) {
+    selectedIds.set(selection.stream().map(Ticket::id)
+            .collect(Collectors.toUnmodifiableSet()));
+}
+----
+
+The view binds the grid's selection to the derived signal:
+
+[source,java]
+----
+grid.setSelectionMode(Grid.SelectionMode.MULTI);
+bindItems(grid, viewModel.tickets()).setIdentifierProvider(Ticket::id);
+grid.asMultiSelect().bindValue(viewModel.selectedTickets(),
+        viewModel::selectTickets);
+----
+
+The commands that act on the selection, such as one that resolves every selected ticket, read `selectedTickets.peek()`, never the IDs. They then never act on a ticket that is no longer listed.
+
+
+== Edit a List Entry by Entry
+
+When the user edits a list entry by entry, such as the lines of an order, keep the list in a [classname]`ListSignal`. Each entry of the list is a signal of its own. A [methodname]`bindChildren()` binding creates one row of UI components for each entry, and keeps the row when its entry changes or moves. The rows aren't rebuilt while the user types, so the fields don't lose the focus.
+
+A [classname]`ListSignal` has no [methodname]`asReadonly()` method. To keep the view from changing the entries without a command, expose the entries typed as read-only signals. They are the same signal instances, so [methodname]`bindChildren()` still keeps track of them, and the commands find the entry that they receive by its identity:
+
+.LinesViewModel.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/LinesViewModel.java[tags=full,indent=0]
+----
+
+A few things to note about this ViewModel:
+
+- Reading `lines.getValues()` in a computed signal makes the signal depend on the list and on the value of every entry. The total therefore follows both a changed quantity and an added or removed line.
+- The `dirty` signal compares the current values with a copy taken when the lines were opened.
+- The rows are identified by their signals, not by an ID. A new line that hasn't been saved yet doesn't need a temporary ID.
+- A rule about one row is a derived signal of the row's entry, such as the one that [methodname]`quantityError()` returns.
+
+The view renders one row for each entry. The factory receives the read-only signal of the entry, and passes it back to the commands:
+
+.LinesEditor.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/LinesEditor.java[tags=rows,indent=0]
+----
+
+A list that the user only views, or that the ViewModel reloads as a whole, doesn't need a [classname]`ListSignal`. Keep it as an immutable list in a [classname]`ValueSignal`, and show it in a grid.
+
+
+== Load Data Page by Page
+
+A grid that loads its rows page by page needs a data provider, and a data provider belongs to one UI component. Several UI components may show the same ViewModel, so the ViewModel doesn't hand out a data provider. Instead, it offers what every data provider needs:
+
+- The [methodname]`fetch()` and [methodname]`count()` methods, which load one page of items and count the items. They read the filter with [methodname]`peek()`.
+- The [methodname]`query()` signal, which changes whenever the contents of the list would change. It holds the filter, and a revision number that the commands increase after they change data.
+
+The query is a record:
+
+.TicketQuery.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/TicketQuery.java[tags=full,indent=0]
+----
+
+The ViewModel replaces the query when the user searches, or when a command has changed a ticket:
+
+.PagedTicketsViewModel.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/PagedTicketsViewModel.java[tags=full,indent=0]
+----
+
+Each UI component that shows the tickets builds its own data provider with [methodname]`bindItems()`. The view passes the same ViewModel to each of them:
+
+.TicketList.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/TicketList.java[tags=full,indent=0]
+----
+
+[methodname]`bindItems()` sets the data provider once, and refreshes it whenever the query changes. The refresh keeps the selection, and the identifier provider keeps the resolved ticket selected after its record has been replaced. The binding ends when its grid is detached, so no UI component has to unsubscribe from the ViewModel.
+
+For more about data providers, see <<{articles}/building-apps/forms-data/add-grid/paginated-data#,Paginated Data>>.
+
+
+=== Pass the Query to the Data Provider
+
+If you'd rather have [methodname]`fetch()` and [methodname]`count()` work only from their arguments, make them take the query as a parameter:
+
+[source,java]
+----
+Stream<Ticket> fetch(TicketQuery query, int offset, int limit) {
+    return ticketService.search(query.text(), offset, limit).stream();
+}
+
+int count(TicketQuery query) {
+    return ticketService.count(query.text());
+}
+----
+
+The view then passes the query to the data provider as its filter. Setting the filter refreshes the data provider. [methodname]`bindItems()` doesn't cover this case, so the view creates the data provider and the effect itself:
+
+[source,java]
+----
+ConfigurableFilterDataProvider<Ticket, Void, TicketQuery> tickets =
+        new CallbackDataProvider<Ticket, TicketQuery>(
+                query -> viewModel.fetch(query.getFilter().orElseThrow(),
+                        query.getOffset(), query.getLimit()),
+                query -> viewModel.count(query.getFilter().orElseThrow()),
+                Ticket::id).withConfigurableFilter();
+grid.setItems(tickets);
+Signal.effect(grid, () -> tickets.setFilter(viewModel.query().get()));
+----
+
+The effect sets the filter before the grid fetches its first page, so the filter is always present when the data provider asks for it.
+
+
+=== Refresh on Changes by Other Users
+
+The revision number counts only the changes that this ViewModel makes. To refresh the list whenever any user saves a ticket, let the Model count the saves in a <<{articles}/flow/ui-state/shared-signals#,shared signal>>:
+
+[source,java]
+----
+private final SharedNumberSignal changes = new SharedNumberSignal();
+
+public Ticket save(Ticket ticket) {
+    // Store the ticket
+    changes.incrementBy(1);
+    return ticket;
+}
+
+// Changes whenever any user saves a ticket
+public Signal<Integer> changes() {
+    return changes.mapIntValue(count -> count);
+}
+----
+
+The ViewModel derives its query from its own search text and the Model's signal. It no longer increases a revision number itself, because its own saves go through the service as well:
+
+[source,java]
+----
+private final Signal<TicketQuery> query;
+
+LiveTicketsViewModel(TicketService ticketService) {
+    this.ticketService = ticketService;
+    query = Signal.computed(() -> new TicketQuery(searchText.get(),
+            ticketService.changes().get()));
+}
+----
+
+The Model now depends on the signal classes of Vaadin. For the lists of the other users to refresh without an action of their own, the application needs <<{articles}/building-apps/server-push#enabling-push,server push>>. <<background-work#react-to-changes-in-the-model,React to Changes in the Model>> shows an alternative that keeps the Model free of signals.
+
+
+=== Test the Refresh
+
+A ViewModel test can't see a grid, so test the refresh in a browserless test of the view. A browserless grid locator reads the rows from the data provider, so it shows the current data even when no refresh happened. To test that the grid refreshes, count the refresh events of its data provider:
+
+[source,java]
+----
+var refreshes = new AtomicInteger();
+grid.getDataProvider()
+        .addDataProviderListener(event -> refreshes.incrementAndGet());
+----
+
+Next, <<dialogs-and-navigation#,handle dialogs and navigation>>.

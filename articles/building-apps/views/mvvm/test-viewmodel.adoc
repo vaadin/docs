@@ -1,0 +1,135 @@
+---
+title: Test a ViewModel
+page-title: How to test the ViewModel of a Vaadin view with JUnit
+description: Learn how to test the rules of a view with plain JUnit tests of its ViewModel.
+meta-description: Test the rules of a Vaadin view with plain JUnit tests of its ViewModel, without a Vaadin environment or a Spring context, and test its use cases separately.
+order: 30
+---
+
+
+= Test a ViewModel
+:toclevels: 2
+
+A ViewModel is a plain Java class, so you test it like one. The tests need no Vaadin environment and no Spring context, and they run in milliseconds. This guide tests the ViewModel of the ticket triage example.
+
+.Part of a Series
+[TIP]
+This is part 3 of the *Structure Views with MVVM* series. It tests the ViewModel from <<write-viewmodel#,Write a ViewModel>>.
+
+
+== Write Plain JUnit Tests
+
+Put the test in the package of the ViewModel, under `src/test/java`, because the ViewModel is package-private. Create the ViewModel with `new`, and pass it the application service, or a fake or a mock of it. Then call commands as the view would, and read the state with [methodname]`peek()`:
+
+.TicketsViewModelTest.java
+[source,java]
+----
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+class TicketsViewModelTest {
+
+    TicketService service;
+    TicketsViewModel viewModel;
+
+    Ticket printer;
+    Ticket vpn;
+
+    @BeforeEach
+    void setUp() {
+        service = new TicketService();
+        viewModel = new TicketsViewModel(service);
+        viewModel.refresh(); // <1>
+        printer = viewModel.tickets().peek().get(0);
+        vpn = viewModel.tickets().peek().get(2);
+    }
+
+    @Test
+    void searchNarrowsTheList() {
+        viewModel.search("vpn");
+
+        assertEquals(1, viewModel.tickets().peek().size());
+        assertEquals("VPN drops hourly",
+                viewModel.tickets().peek().getFirst().title());
+    }
+
+    @Test
+    void openingATicketIsNotAnUnsavedChange() {
+        viewModel.select(printer);
+
+        assertTrue(viewModel.editing().peek());
+        assertFalse(viewModel.dirty().peek());
+        assertFalse(viewModel.canSave().peek());
+    }
+
+    @Test
+    void blankTitleCannotBeSaved() {
+        viewModel.select(printer);
+        viewModel.setTitle(" ");
+
+        assertEquals("Title is required", viewModel.titleError().peek());
+        assertFalse(viewModel.canSave().peek());
+        assertFalse(viewModel.save()); // <2>
+    }
+
+    @Test
+    void switchingTicketsWithUnsavedChangesAsksFirst() {
+        viewModel.select(printer);
+        viewModel.setTitle("Printer on fire again");
+
+        viewModel.select(vpn);
+
+        assertTrue(viewModel.confirmingDiscard().peek());
+        assertEquals("Printer on fire again", viewModel.title().peek());
+    }
+
+    @Test
+    void keepingTheChangesStaysOnTheTicket() {
+        viewModel.select(printer);
+        viewModel.setTitle("Printer on fire again");
+        viewModel.select(vpn);
+
+        viewModel.keepEditing();
+
+        assertFalse(viewModel.confirmingDiscard().peek());
+        assertEquals(printer, viewModel.selected().peek()); // <3>
+        assertEquals("Printer on fire again", viewModel.title().peek());
+    }
+
+    @Test
+    void discardingTheChangesMovesOn() {
+        viewModel.select(printer);
+        viewModel.setTitle("Printer on fire again");
+        viewModel.select(vpn);
+
+        viewModel.discardChanges();
+
+        assertFalse(viewModel.confirmingDiscard().peek());
+        assertEquals(vpn, viewModel.selected().peek());
+        assertEquals("VPN drops hourly", viewModel.title().peek());
+        assertEquals("Printer on fire",
+                service.search("printer", null).getFirst().title()); // <4>
+    }
+}
+----
+<1> Loads the tickets, as the view does after navigation.
+<2> A command that refuses to act reports it, so the test checks the outcome as well as the state.
+<3> The grid's selection follows this signal, so the test also covers what the user sees in the list.
+<4> The test checks the Model too: discarding the changes didn't save them.
+
+Each test states one rule of the view without naming a UI component, and its name says which rule. Test every rule: the derived signals, the guards, and the outcomes of the commands.
+
+Read state with [methodname]`peek()` in tests. Calling [methodname]`get()` outside a computed signal or an effect throws an [classname]`IllegalStateException`.
+
+
+== Test Each Rule Once
+
+The ViewModel tests prove the rules. They can't prove that the view binds the right field to the right signal, or that a button calls the right command. Browserless tests of the view cover that: they click and type in the view as a user does, and check what the user sees. See <<{articles}/building-apps/testing/browserless#,Browserless Tests>> for how to write them.
+
+Write a browserless test for each use case of the view, such as editing and saving a ticket, or keeping the changes when the user switches tickets. Don't repeat every rule at both levels. When a rule changes, only its ViewModel test should have to change.
+
+Next, <<forms#,edit data without Binder>>.

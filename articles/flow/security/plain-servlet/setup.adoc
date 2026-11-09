@@ -1,0 +1,278 @@
+---
+title: Setting Up Security
+page-title: How to secure plain servlet applications with Vaadin
+description: Enabling view access control in a Vaadin application that doesn't use Spring.
+meta-description: Learn how to secure a plain servlet Vaadin application, without Spring, using the built-in security helpers for view-based access control.
+order: 10
+---
+
+include::{articles}/_vaadin-version.adoc[]
+
+= Setting Up Security
+
+This page describes how to set up view access control in a plain servlet application.
+
+Securing a plain servlet application takes the following:
+
+- a way to authenticate users, and to set the user on the request
+- a log-in view, and a way to log out
+- a [interfacename]`VaadinServiceInitListener` that enables navigation access control, registered under `META-INF/services`
+- an access annotation on each view class and on each layout class
+
+
+== Authenticating Users
+
+Navigation access control reads the current user from [methodname]`HttpServletRequest.getUserPrincipal()`, and checks roles with [methodname]`HttpServletRequest.isUserInRole()`. The following example authenticates users against the application's own user store, such as a database table, and keeps the authenticated user in the HTTP session. If the servlet container authenticates the users instead, see <<container-authentication#,Container-Managed Authentication>>.
+
+The user is kept in the session as a [interfacename]`Principal` that also holds the user's roles:
+
+.[filename]`AppUser.java`
+[source,java]
+----
+public record AppUser(String name, Set<String> roles)
+        implements Principal, Serializable {
+
+    @Override
+    public String getName() {
+        return name;
+    }
+}
+----
+
+A servlet filter wraps each request of an authenticated user, so that the request returns the user and checks the user's roles:
+
+.[filename]`AuthenticationFilter.java`
+[source,java]
+----
+@WebFilter(urlPatterns = "/*", asyncSupported = true) // <1>
+public class AuthenticationFilter extends HttpFilter {
+
+    static final String USER_ATTRIBUTE = AppUser.class.getName();
+
+    @Override
+    protected void doFilter(HttpServletRequest request,
+            HttpServletResponse response, FilterChain chain)
+            throws IOException, ServletException {
+        HttpSession session = request.getSession(false);
+        AppUser user = session == null ? null
+                : (AppUser) session.getAttribute(USER_ATTRIBUTE);
+        if (user == null) {
+            chain.doFilter(request, response);
+            return;
+        }
+        chain.doFilter(new HttpServletRequestWrapper(request) {
+            @Override
+            public Principal getUserPrincipal() {
+                return user;
+            }
+
+            @Override
+            public boolean isUserInRole(String role) {
+                return user.roles().contains(role);
+            }
+        }, response);
+    }
+}
+----
+<1> Enables asynchronous processing, which push needs for transports that suspend the request, such as long polling.
+
+[classname]`SecurityUtils` logs users in by storing the user in the session, and logs them out by invalidating the session:
+
+.[filename]`SecurityUtils.java`
+[source,java]
+----
+public class SecurityUtils {
+
+    public static boolean isAuthenticated() {
+        VaadinServletRequest request = VaadinServletRequest.getCurrent();
+        return request != null && request.getUserPrincipal() != null;
+    }
+
+    public static boolean authenticate(String username, String password) {
+        AppUser user = findUser(username, password); // <1>
+        if (user == null) {
+            return false;
+        }
+        HttpServletRequest request = VaadinServletRequest.getCurrent()
+                .getHttpServletRequest(); // <2>
+        request.changeSessionId(); // <3>
+        request.getSession().setAttribute(
+                AuthenticationFilter.USER_ATTRIBUTE, user);
+        return true;
+    }
+
+    public static void logout() {
+        UI.getCurrentOrThrow().getPage().setLocation("./"); // <4>
+        VaadinSession.getCurrent().getSession().invalidate();
+    }
+
+    // ...
+}
+----
+<1> Checks the credentials against the user store of the application, for example by loading the user from a database and comparing a password hash. Returns `null` if they don't match. Never store passwords in plain text.
+<2> The current request is available only in threads that handle a request, so call [methodname]`authenticate()` from a listener, not from a background thread.
+<3> Gives the session a new ID, to protect against session fixation.
+<4> Redirects to the root of the application. The URL is relative, because Vaadin sets the base URL of the page to the root of the application, so it also works when the application is deployed under a context path.
+
+The filter sets the user on the requests that follow the log-in request, not on the log-in request itself. The log-in view therefore reloads the page after a successful log-in, as shown in <<#log-in-view,Log-in View>>.
+
+Role names in [annotationname]`@RolesAllowed` are passed unchanged to [methodname]`isUserInRole()`. With the filter above, [annotationname]`@RolesAllowed("ADMIN")` matches a user whose roles contain `ADMIN`.
+
+
+[[log-in-view]]
+== Log-in View
+
+The log-in view is where navigation access control sends users who aren't authenticated when they try to open a protected view. The following example uses the <<{articles}/components/login#,Login>> component, but any view works:
+
+.[filename]`LoginView.java`
+[source,java]
+----
+@Route(value = "login", autoLayout = false)
+@PageTitle("Login")
+public class LoginView extends VerticalLayout {
+
+    public LoginView() {
+        LoginForm login = new LoginForm();
+        login.addLoginListener(event -> {
+            if (SecurityUtils.authenticate(event.getUsername(),
+                    event.getPassword())) {
+                UI.getCurrentOrThrow().getPage().setLocation("./"); // <1>
+            } else {
+                login.setError(true);
+            }
+        });
+        add(login);
+    }
+}
+----
+<1> Reloads the page at the root of the application, so that the following requests carry the authenticated user.
+
+The log-in view doesn't need an access annotation. Navigation access control always allows navigation to the configured log-in view.
+
+
+== Logging Out
+
+The following example shows a log-out button in the header of the main layout:
+
+.[filename]`MainLayout.java`
+[source,java]
+----
+@AnonymousAllowed // <1>
+public class MainLayout extends AppLayout {
+
+    public MainLayout() {
+        H1 logo = new H1("Vaadin CRM");
+        logo.addClassName("logo");
+        HorizontalLayout header;
+        if (SecurityUtils.isAuthenticated()) {
+            Button logout = new Button("Logout", click ->
+                    SecurityUtils.logout());
+            header = new HorizontalLayout(logo, logout);
+        } else {
+            header = new HorizontalLayout(logo);
+        }
+
+        // Other page components omitted.
+
+        addToNavbar(header);
+    }
+}
+----
+<1> The access annotations of a layout are checked in addition to those of the views inside it. This layout hosts both public and protected views, so it allows anonymous access.
+
+
+[[adding-vaadinserviceinitlistener]]
+== Enabling Navigation Access Control
+
+A [interfacename]`VaadinServiceInitListener` enables [classname]`NavigationAccessControl` for all UIs:
+
+.[filename]`NavigationAccessCheckerInitializer.java`
+[source,java]
+----
+import com.vaadin.flow.server.ServiceInitEvent;
+import com.vaadin.flow.server.VaadinServiceInitListener;
+import com.vaadin.flow.server.auth.NavigationAccessControl;
+import org.vaadin.example.views.login.LoginView;
+
+public class NavigationAccessCheckerInitializer implements VaadinServiceInitListener {
+
+    private NavigationAccessControl accessControl;
+
+    public NavigationAccessCheckerInitializer() {
+        accessControl = new NavigationAccessControl(); // <1>
+        accessControl.setLoginView(LoginView.class); // <2>
+    }
+
+    @Override
+    public void serviceInit(ServiceInitEvent serviceInitEvent) {
+        serviceInitEvent.getSource().addUIInitListener(uiInitEvent -> {
+            uiInitEvent.getUI().addBeforeEnterListener(accessControl); // <3>
+        });
+    }
+}
+----
+<1> Creates the navigation access control. It's enabled by default.
+<2> Sets the view to which users who aren't authenticated are redirected.
+<3> Adds the access control as a [interfacename]`BeforeEnterListener` to every UI, so that it checks every navigation.
+
+Vaadin loads the listener with the Java Service Provider Interface (SPI). Create a file named `com.vaadin.flow.server.VaadinServiceInitListener` in the `META-INF/services` directory of the application resources, and put the fully qualified name of the listener class into it, for example:
+
+.[filename]`src/main/resources/META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener`
+[source]
+----
+org.vaadin.example.security.NavigationAccessCheckerInitializer
+----
+
+For more information, see <<{articles}/flow/advanced/service-init-listener#,VaadinServiceInitListener>>.
+
+
+=== Customizing Navigation Access Control
+
+To customize navigation access control, pass the navigation access checkers and the decision resolver to the [classname]`NavigationAccessControl` constructor. Flow doesn't provide an [interfacename]`AccessPathChecker` for plain servlet applications, but you can implement one that integrates with the security framework that you use. The following example replaces the constructor of the [classname]`NavigationAccessCheckerInitializer` class above. It activates a path-based checker and two custom checkers in addition to the annotation checker, and a custom decision resolver, as described in <<../access-control/navigation-access-control#customization,Customization>>:
+
+.Custom NavigationAccessControl in a Plain Servlet Application
+[source,java]
+----
+public class FooBarSecurityAccessPathChecker implements AccessPathChecker {
+    @Override
+    public boolean hasAccess(
+        String path, Principal principal, Predicate<String> roleChecker) {
+        // implementation omitted
+    }
+}
+
+// In NavigationAccessCheckerInitializer:
+public NavigationAccessCheckerInitializer() {
+    accessControl = new NavigationAccessControl(List.of(
+        new AnnotatedViewAccessChecker(), // <1>
+        new RoutePathAccessChecker(new FooBarSecurityAccessPathChecker()),
+        new CustomChecker(),
+        new VotingNavigationAccessChecker()
+    ), new CustomDecisionResolver());
+    accessControl.setLoginView(LoginView.class);
+}
+----
+<1> The list replaces the default checkers, which consist of only [classname]`AnnotatedViewAccessChecker`. Include it to keep checking the access annotations.
+
+
+== Access Annotations
+
+Annotate each view class and each layout class with an access annotation, as described in <<../access-control/annotations#,Annotation-Based Access Control>>. The log-in view is the only exception.
+
+The annotation-based access checks need an additional dependency. [annotationname]`@AnonymousAllowed` is part of Vaadin, but [annotationname]`@PermitAll`, [annotationname]`@RolesAllowed`, and [annotationname]`@DenyAll` are part of the Jakarta Annotations API, which Vaadin doesn't add to your project. Add it to the dependencies in your [filename]`pom.xml` file:
+
+[source,xml,subs="+attributes"]
+----
+<dependency>
+    <groupId>jakarta.annotation</groupId>
+    <artifactId>jakarta.annotation-api</artifactId>
+    <version>{jakarta-annotation-version}</version>
+</dependency>
+----
+
+If your application server provides the Jakarta Annotations API, as Jakarta EE servers do, add the dependency with the `provided` scope instead.
+
+With this setup, users who aren't authenticated are redirected to the log-in view when they try to navigate to a view that requires authentication. For what authenticated users see when they navigate to a view for which they have no permission, see <<../access-control/error-views#,Access-Denied & Not-Found Views>>.
+
+
+[discussion-id]`5D3E1BB8-9D7C-4FAD-9381-8DBB3C65F6A8`

@@ -14,7 +14,7 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 
 @Route("building-apps/grid/paginated-grid")
-public class PaginatedGridView extends VerticalLayout {
+class PaginatedGridView extends VerticalLayout {
 
     PaginatedGridView() {
         // In a real application, this would be a Spring bean

@@ -7,7 +7,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouterLink;
 
 @Route("building-apps/navigate/home")
-public class HomeView extends VerticalLayout {
+class HomeView extends VerticalLayout {
 
     HomeView() {
         add(new RouterLink("Go to About (link)", AboutView.class));

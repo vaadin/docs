@@ -16,6 +16,16 @@ The main branch is `main`. Always target `main` when creating pull requests, unl
 * frontend/ - TypeScript/frontend code examples that can be referred to from the documentation articles.
 * dspublisher/ - Configuration files for Vaadin Design System Publisher, which is used to build the documentation website.
 
+See `guidelines/repository.md` for the full layout and the checks that run on a pull request.
+
+## Guidelines & Conventions
+
+Always read `CONVENTIONS.md` in full when **writing** or **reviewing** documentation, and before **committing** or **opening a pull request** — it is the canonical list of checkable conventions.
+
+Writing and structural guidelines live in `guidelines/`. Read the chapters mapped in `guidelines/overview.md` selectively for the topics your work touches.
+
+The published contributor guides under `articles/contributing/docs/` — the style guide, the types of documentation, the Vale setup and the word list — stay the source of truth for writing style. The files above refer to them instead of repeating them.
+
 ## Development Workflow
 
 ```bash
@@ -31,240 +41,21 @@ npm run dspublisher:build
 # Run ESLint on frontend code
 npm run lint
 
+# Compile the Java examples
+mvn compile
+
+# Format the Java examples, must be run before committing a Java change
+mvn spotless:apply
+
+# Check that moved or removed pages have a redirect (compares with origin/main)
+npm run check-redirects
+
+# Check that the version attributes match pom.xml
+npm run sync-versions
+
+# Run the tests of the scripts under scripts/
+npm test
+
 # Clean Maven build artifacts
 mvn clean
 ```
-
-## AsciiDoc Front Matter
-
-Each `.adoc` file starts with YAML front matter between `---` delimiters:
-
-```yaml
----
-title: Page Title
-order: 10
-page-title: SEO Title - Vaadin Docs
-meta-description: A 150-160 character description for search engines.
----
-```
-
-### Required Attributes
-
-- **title**: The page title displayed in navigation and as the main heading
-
-### SEO Attributes
-
-- **page-title**: Browser tab title, 50-60 characters, should include "Vaadin"
-- **meta-description**: Search engine description, 150-160 characters
-
-### Optional Attributes
-
-- **description**: Subtitle shown below the title
-- **order**: Numeric value controlling the page's position in navigation
-- **layout**: Page layout template
-- **section-nav**: Navigation behavior (e.g., `badge`)
-- **page-links**: Related links shown on the page
-
-## Moving or Removing Pages
-
-A page's URL is its path under `articles/` without the extension and without a trailing `/index`. When a change moves or removes a page, add a redirect from the old URL to `redirects` in `dspublisher/config/default.json`, pointing at the page that replaces it. Write both paths without the path prefix, and keep the entries sorted by source path. The Check Redirects workflow fails a pull request that leaves an old URL without one; run `npm run check-redirects` to check locally against `origin/main`.
-
-## Code Example Patterns
-
-### File Locations
-
-- **Java examples**: `src/main/java/com/vaadin/demo/`
-- **TypeScript examples**: `frontend/demo/`
-
-### Snippet Tags
-
-Use tags to mark extractable code sections:
-
-```java
-// tag::snippet[]
-Button button = new Button("Click me");
-button.addClickListener(e -> Notification.show("Clicked!"));
-// end::snippet[]
-```
-
-### Hidden Lines
-
-Hide boilerplate code that clutters the documentation:
-
-```java
-public class Example extends Div {
-    public Example() {
-        Button button = new Button("Click me"); // hidden-source-line
-        add(button);
-    }
-}
-```
-
-Lines with `// hidden-source-line` are not displayed in documentation but are compiled.
-
-### DemoExporter Pattern
-
-For rendered examples, include an inner exporter class:
-
-```java
-public class ButtonExample extends Div {
-    public ButtonExample() {
-        // Example code here
-    }
-
-    public static class Exporter extends DemoExporter<ButtonExample> {} // hidden-source-line
-}
-```
-
-### Including Code in Documentation
-
-Use the `include` directive with the `{root}` attribute for absolute paths:
-
-```asciidoc
-[source,java]
-----
-include::{root}/src/main/java/com/vaadin/demo/component/button/ButtonBasic.java[render,tags=snippet,indent=0]
-----
-```
-
-Common include options:
-- `render` - Renders a live demo
-- `tags=snippet` - Includes only tagged sections
-- `indent=0` - Removes indentation
-
-### Choosing Between Source Files and Inline Code
-
-**Use compilable source files** (included via `include::{root}/`) when:
-- Code needs to be rendered as a **live, interactive demo** (uses `render` attribute)
-- Same example should be shown in **multiple frameworks** (Flow/Lit/React variants)
-- Code is **complex or long** (typically 30+ lines) and benefits from compilation testing
-- It's a **reusable reference implementation** for a component feature
-- Writing **component documentation** (articles/components/)
-
-**Use inline code** when:
-- Showing **design patterns or architectural concepts** rather than specific features
-- Snippets are **short and illustrative** (typically under 30 lines)
-- Examples are **configuration** (properties, XML, CSS, annotations)
-- Writing **how-to guides or deep dives** where the focus is education, not live demos
-- Code is **pseudo-code or conceptual** - showing intent, not a complete implementation
-- Multiple **small variations** are easier to compare side-by-side inline
-
-## Documentation Types
-
-### How-To Guides (articles/building-apps)
-
-- **Purpose**: Show how to achieve specific goals
-- **Tone**: Practical, opinionated, production-ready
-- **Focus**: Common use cases, best practices, pitfalls to avoid
-- **Code**: Copy-paste ready snippets at the top when applicable
-
-### Reference Manuals (articles/flow, articles/components, articles/tools)
-
-- **Purpose**: Document features, APIs, and capabilities
-- **Tone**: Neutral, factual, complete
-- **Focus**: What features exist, what they do, how to use them
-- **Code**: Technical, API-focused examples
-
-### Deep Dives (articles/building-apps)
-
-- **Purpose**: Explore concepts and reasoning
-- **Tone**: Conceptual, insightful, opinionated
-- **Focus**: Why certain practices exist, alternative approaches
-- **Code**: Illustrative examples supporting concepts
-
-## Writing Style
-
-### General Guidelines
-
-- Use present tense (avoid "will")
-- American English spelling (customize, color, behavior)
-- Professional, friendly tone
-- Title case for headings
-- Use Oxford comma in lists (a, b, and c)
-
-### Style Linting
-
-The repository uses Vale for automated style checking. Configuration is in `.vale.ini`, and style rules are in the `.github/styles/` folder.
-
-### Version References
-
-Avoid explicit Vaadin version numbers in text. Instead, use a `since` badge. The badge attaches to a
-section heading or to a phrase in body text, and it is written differently in each case.
-
-**Section headings (`==`, `===`, …): use the role attribute.** Put `[role="since:..."]` on its own
-line directly above the heading. This is the preferred form for section headings — keep them
-consistent rather than mixing both styles.
-
-```asciidoc
-// Correct — section heading:
-[role="since:com.vaadin:vaadin@V25.2"]
-== Hierarchical Data
-
-// The heading text can still carry other badges:
-[role="since:com.vaadin:vaadin@V25.2"]
-== Focus Selected Item [badge-flow]#Flow#
-```
-
-**Top-level heading (`=`) and body text: use a formatted span.** The role attribute is not allowed on
-the page title (`=`), so there — and when wrapping a phrase in running text — write the badge as an
-inline role **immediately followed (no space) by a formatted text span** that holds the text the badge
-applies to. This is usually `#...#`, but any inline formatting works (e.g. `*...*`). Without a
-following span the badge shows up as literal `[since:...]` brackets or is dropped entirely.
-
-```asciidoc
-// Correct — page title (top-level heading):
-= [since:com.vaadin:vaadin@V25.1]#Slider#
-
-// Correct — wrapping a phrase in body text:
-The component can also [since:com.vaadin:vaadin@V25.2]#do the sanitization itself#.
-```
-
-```asciidoc
-// WRONG — badge after the heading text, with no span (renders literal brackets):
-== Hierarchical Data [since:com.vaadin:vaadin@V25.2]
-
-// WRONG — bare inline badge alone on its own line; use the quoted role attribute instead:
-[since:com.vaadin:vaadin@V25.2]
-```
-
-This keeps documentation version-agnostic and maintainable.
-
-## Documentation Sections
-
-### articles/getting-started
-
-Environment setup and tutorials for new users. After completing these, users should be ready for the Building Apps guides.
-
-### articles/building-apps
-
-Action-oriented, opinionated how-to guides for building business applications. Focus on essentials, common use cases, pitfalls, and practical tips. Include copy-paste ready code snippets at the top when applicable.
-
-Also contains deep dive articles that explore concepts, reasoning behind practices, and alternative approaches.
-
-### articles/flow
-
-Vaadin Framework reference documentation. Technical, code-centric, unopinionated API documentation describing features and usage. Forms the foundation for Building Apps articles.
-
-**Note:** Legacy content exists here from when this contained all framework docs. Old tutorials and how-to content should be migrated to Building Apps.
-
-### articles/hilla
-
-Hilla framework documentation (discontinued). Relevant content should be migrated to articles/flow as features merge into Vaadin.
-
-The `articles/hilla/lit` sub-tree documents Hilla with Lit, which is deprecated and is removed in Vaadin 26. Every page in it carries the deprecation banner in its front matter (`banner`, `banner-id: hilla-lit-deprecated`, `banner-style: caution`), so any page added there needs one too. The banner goes in front matter rather than on the page title because a shared page's title sits inside the content tag, where a badge would render on the React page as well. Index pages are served without a trailing slash, so their banner link needs one level less than a sibling page's.
-
-Content that is shared between the Lit and React versions of a page lives in `articles/hilla/_shared` as underscore-prefixed partials, which both pages include, so that removing `articles/hilla/lit` does not break the React pages. A partial keeps the directory depth of the page it was extracted from, so `{root}{root-fix}` includes and page-relative xrefs resolve identically from both wrappers. Nothing outside `articles/hilla/lit` may include it, and every link into it has to go when the tree does. There are two: the one from a partial to the Lit-only Web Component field strategy page, guarded with `ifdef::hilla-lit[]` so it disappears with the tree, and the note in `articles/hilla/guides/event-handling.adoc` pointing React readers at the Lit binding syntax, which has to be removed with it.
-
-Pages whose content does not depend on the frontend framework exist only in the main section; the Lit section does not repeat them, and its section index pages link to them instead. A shared partial that links to such a page uses an absolute `{articles}/hilla/...` xref, so the link resolves to the main page from both wrappers. When a topic is otherwise framework-independent but has a few Lit-specific details, the main page carries them as short notes instead of a separate Lit page. The reference documentation is entirely in the main section; `articles/hilla/lit` has no reference pages.
-
-### articles/components
-
-Component documentation covering capabilities, usage, and styling for each Vaadin component.
-
-### articles/styling
-
-General styling guidance for Vaadin applications.
-
-### articles/tools
-
-Documentation for official Vaadin tools.
