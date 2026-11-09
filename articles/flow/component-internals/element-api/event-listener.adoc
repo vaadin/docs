@@ -68,10 +68,61 @@ private void handleClick(DomEvent event) {
 [NOTE]
 [methodname]`DomEvent.getEventData()` now returns a Jackson [classname]`JsonNode` (`tools.jackson.databind.JsonNode`) instead of the previous Elemental `JsonObject`. Code written for earlier versions no longer compiles: replace `JsonObject` with [classname]`JsonNode`, and the Elemental getters such as `getString(key)`, `getBoolean(key)`, and `getNumber(key)` with `get(key).asText()`, `get(key).asBoolean()`, and `get(key).asDouble()`. See <<{articles}/upgrading#,the upgrade guide>> for the full list of Elemental-to-Jackson changes.
 
+The browser compiles each [methodname]`addEventData()` expression from a string, so it doesn't work with a Content Security Policy that doesn't allow `unsafe-eval`. To get event data under such a policy, declare it in a [annotationname]`@JsDefinition` interface as a method returning [classname]`DomEventData`, and pass what the method returns to [methodname]`addEventData()`.
+
+.Declaring event data and reading it with [methodname]`getEventData(DomEventData)`
+[example]
+====
+[source,java]
+----
+@JsDefinition
+public interface ButtonEventsJs extends Serializable {
+
+    @JsExpression("return event.shiftKey;")
+    DomEventData<Boolean> shiftKey();
+}
+
+private static final ButtonEventsJs JS = JsSnippets.of(ButtonEventsJs.class);
+
+private void addHelloButtonListener(Element helloButton) {
+    DomEventData<Boolean> shiftKey = JS.shiftKey();
+    helloButton.addEventListener("click", event -> {
+        boolean shiftPressed = event.getEventData(shiftKey);
+        // ...
+    }).addEventData(shiftKey);
+}
+----
+====
+
+The build adds the declared expression to the frontend bundle, so the browser runs it without compiling anything from a string. See <<calling-javascript#declaring-javascript,Declaring JavaScript in Java>> for more about [annotationname]`@JsDefinition` interfaces.
+
 
 == Filtering and Debouncing
 
 Filtering and debouncing are covered in detail in <<../events#limiting-event-frequency,Declaring and Firing Component Events>>, in the context of the `@DomEvent` annotation. However, you can configure the exact same settings through the [classname]`DomListenerRegistration` object.
+
+[methodname]`DomListenerRegistration.setFilter()` takes the filter as a JavaScript expression string, which the browser compiles, so it doesn't work with a Content Security Policy that doesn't allow `unsafe-eval`. To filter events under such a policy, declare the filter in a [annotationname]`@JsDefinition` interface as a method returning [classname]`DomEventFilter`, and pass what the method returns to [methodname]`setFilterExpression()`.
+
+.Declaring a filter and using it with [methodname]`setFilterExpression()`
+[example]
+====
+[source,java]
+----
+@JsDefinition
+public interface KeyFiltersJs extends Serializable {
+
+    @JsExpression("return event.key === $0;")
+    DomEventFilter isKey(String key);
+}
+
+private static final KeyFiltersJs FILTERS = JsSnippets.of(KeyFiltersJs.class);
+
+private void addSubmitOnEnter(Element field) {
+    field.addEventListener("keydown", event -> submit())
+            .setFilterExpression(FILTERS.isKey("Enter"));
+}
+----
+====
 
 
 [discussion-id]`465CAE8B-8B0D-426B-818F-1CF58A9BD034`
