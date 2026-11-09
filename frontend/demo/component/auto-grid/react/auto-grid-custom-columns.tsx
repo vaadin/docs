@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { AutoGrid } from '@vaadin/hilla-react-crud';
-import { GridColumn } from '@vaadin/react-components/GridColumn';
+import { GridColumn } from '@vaadin/react-components/GridColumn.js';
 import type Product from 'Frontend/generated/com/vaadin/demo/fusion/crud/Product';
 import ProductModel from 'Frontend/generated/com/vaadin/demo/fusion/crud/ProductModel';
 import { ProductService } from 'Frontend/generated/endpoints';

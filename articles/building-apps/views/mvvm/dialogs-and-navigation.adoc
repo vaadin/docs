@@ -1,0 +1,127 @@
+---
+title: Handle Dialogs and Navigation
+page-title: How to handle dialogs and navigation in a Vaadin ViewModel
+description: Learn how a ViewModel drives wizard steps, view modes, and dialogs, and how the view guards navigation and reads route parameters.
+meta-description: Handle dialogs and navigation with a Vaadin ViewModel. Keep steps, modes, and questions to the user as state, confirm before leaving, and read route parameters.
+order: 60
+---
+
+
+= Handle Dialogs and Navigation
+:toclevels: 2
+
+Wizards, modes, questions to the user, and navigation are flows: the view moves from one state to another as the user acts. The ViewModel keeps the state of a flow and its rules, and the view handles what only a UI can do, such as opening a dialog or postponing a navigation.
+
+.Part of a Series
+[TIP]
+This is part 6 of the *Structure Views with MVVM* series. It builds on the view from <<bind-view#,Bind the View>>.
+
+
+== Switch Between Steps and Modes
+
+Keep the step of a wizard, or the mode of a view, as an enum in a signal. Derive whether the user can go forward or back from the step, and from the validity of the step's fields:
+
+[source,java]
+----
+enum Step {
+    CUSTOMER, LINES, CONFIRM
+}
+
+private final ValueSignal<Step> step = new ValueSignal<>(Step.CUSTOMER);
+private final Signal<Boolean> canGoNext = Signal.computed(() -> {
+    Step current = step.get();
+    boolean customerValid = customerError.get() == null;
+    boolean linesValid = lines.valid().get();
+    return switch (current) {
+    case CUSTOMER -> customerValid;
+    case LINES -> linesValid;
+    case CONFIRM -> false;
+    };
+});
+private final Signal<Boolean> canGoBack = step.map(s -> s != Step.CUSTOMER);
+
+void next() {
+    if (canGoNext.peek()) {
+        step.update(s -> Step.values()[s.ordinal() + 1]);
+    }
+}
+
+void back() {
+    if (canGoBack.peek()) {
+        step.update(s -> Step.values()[s.ordinal() - 1]);
+    }
+}
+----
+
+The view shows each step with [methodname]`bindVisible()`:
+
+[source,java]
+----
+customerStep.bindVisible(viewModel.step().map(s -> s == Step.CUSTOMER));
+linesStep.bindVisible(viewModel.step().map(s -> s == Step.LINES));
+----
+
+The [methodname]`back()` command changes only the step. Whatever the user entered stays in the draft, and the fields show it again when the user returns to the step.
+
+
+== Ask the User
+
+A question that the ViewModel asks the user is state. In the ticket triage example, the `confirmingDiscard` signal is `true` while the view is waiting for the user to keep or discard their changes. The view opens a dialog from an effect, and wires the dialog's buttons to commands:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/TicketsView.java[tags=dialog,indent=0]
+----
+
+The view owns the effect, not the dialog. A closed dialog isn't attached to the UI, and an effect only runs while its owner is attached.
+
+The dialog closes itself when the user clicks one of its buttons. The command that the button calls makes `confirmingDiscard` `false` at the same time, so the dialog and the ViewModel agree.
+
+
+== Protect Unsaved Changes
+
+The router asks the view before the user navigates away, and it needs the answer at once. The view reads the `dirty` signal of the ViewModel with [methodname]`peek()`, and postpones the navigation if there are unsaved changes:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/TicketsView.java[tags=leave,indent=0]
+----
+
+The postponed navigation is a router object, so it stays in the view, and so does the dialog that continues or cancels it. Always call [methodname]`cancel()` when the user stays. Otherwise, the postponed navigation stays pending, and the links in the application stop working until the user reloads the page.
+
+[methodname]`beforeLeave()` only sees navigation within the application, including the back button of the browser, and a change of a route parameter that keeps the same view. When the user reloads the page or closes the browser tab, the browser can warn instead. <<{articles}/building-apps/forms-data/add-form/unsaved-changes#warning-before-the-page-unloads,Warning Before the Page Unloads>> shows how to turn the warning on and off. With a ViewModel, turn it on and off from an effect:
+
+[source,java]
+----
+Signal.effect(this, () -> setUnloadWarning(viewModel.dirty().get()));
+----
+
+
+== Open an Item from a Route Parameter
+
+When the URL says which item to open, the view reads the route parameter and passes it to a command. The command's result decides whether to show an error instead:
+
+[source,java]
+----
+// In the view
+@Override
+public void setParameter(BeforeEvent event, Long ticketId) {
+    if (!viewModel.open(ticketId)) {
+        event.rerouteToError(NotFoundException.class);
+    }
+}
+----
+
+[source,java]
+----
+// In the ViewModel
+boolean open(long ticketId) {
+    Optional<Ticket> ticket = ticketService.findById(ticketId);
+    ticket.ifPresent(this::open);
+    return ticket.isPresent();
+}
+----
+
+The ViewModel never sees the router. It only knows that the user wants to open a ticket, and reports whether the ticket exists. For more about route parameters, see <<../pass-data/route-parameters#,Route Parameters>>.
+
+Next, <<background-work#,handle background work and changes in the Model>>.
