@@ -271,19 +271,19 @@ To test how the application handles a failure, [methodname]`uploadFailed()` simu
 
 
 [role="since:com.vaadin:vaadin@V25.4"]
-=== Uploads Without Auto Upload
+=== Uploads without Auto Upload
 
-When auto upload is turned off with [methodname]`setAutoUpload(false)`, the browser keeps the files the user picks in the file list and sends each one only when the user clicks its start button. The tester does the same: [methodname]`upload()` and [methodname]`uploadAll()` still check the constraints, but an accepted file waits in the file list with the `PENDING` status and doesn't reach the upload handler. Start it with [methodname]`startUpload()`, by file name, by `File`, or by position in the list:
+When auto upload is turned off with [methodname]`setAutoUpload(false)`, the browser keeps the files the user picks in the file list. It sends each one only when the user clicks its start button. The tester does the same: [methodname]`upload()` and [methodname]`uploadAll()` still check the constraints, but an accepted file waits in the file list with the `PENDING` status and doesn't reach the upload handler. Start it with [methodname]`startUpload()`, by file name, by `File`, or by position in the list:
 
 [source,java]
 ----
 upload.setAutoUpload(false);
 
-test(upload).upload(file);
+window.test(upload).upload(file);
 // Nothing has reached the upload handler yet
 
-test(upload).startUpload(file);
-test(upload).ensureUploaded();
+window.test(upload).startUpload(file);
+window.test(upload).ensureUploaded();
 ----
 
 When several waiting entries share a name, [methodname]`startUpload(String)` starts the most recently added one. Starting a file that isn't waiting throws an [classname]`IllegalArgumentException`.
@@ -300,23 +300,29 @@ The components of the <<{articles}/components/upload/modular-upload#,modular upl
 ----
 manager.setMaxFiles(1);
 
-test(uploadButton).upload(reportFile);
-test(uploadButton).ensureUploaded();
+window.test(uploadButton).upload(reportFile);
+window.test(uploadButton).ensureUploaded();
 
 // The file list is full, so the button can't be used
-Assertions.assertFalse(test(uploadButton).isUsable());
+Assertions.assertFalse(window.test(uploadButton).isUsable());
 
-test(fileList).removeFile(reportFile);
-test(dropZone).drop(otherFile);
+window.test(fileList).removeFile(reportFile);
+window.test(dropZone).drop(otherFile);
 ----
 
 [classname]`UploadButtonTester` simulates the user picking files in the file dialog, and [classname]`UploadDropZoneTester` simulates the user dropping them on the drop zone. Both put the files through the manager's `maxFiles`, `maxFileSize`, and accepted file type checks, in that order. A refused file fires an [classname]`UploadManager.FileRejectedEvent` with the matching [classname]`FileRejectionReason`, never reaches the upload handler, and is reported as `REJECTED`. As with [classname]`UploadTester`, a refused file doesn't make the upload throw, so check the outcome with [methodname]`getLastUploadStatus()`, [methodname]`ensureUploaded()`, or [methodname]`ensureUploadFailed()`.
 
-Both testers also have [methodname]`uploadFailed()` and [methodname]`uploadAborted()`. A failed file stays in the file list and keeps counting toward `maxFiles`. An aborted file is removed from the list, which fires a [classname]`FileRemovedEvent` and frees its slot.
+Both testers also have [methodname]`uploadFailed()` and [methodname]`uploadAborted()`. A failed file stays in the file list and keeps counting toward `maxFiles`. An aborted file is removed from the list, which fires an [classname]`UploadManager.FileRemovedEvent` and frees its slot.
 
-All the components linked to the same manager share one file list. [classname]`UploadFileListTester` reads it with [methodname]`getFiles()`, most recently added file first, and simulates the buttons on its entries: [methodname]`removeFile()` removes a file and frees its slot, and [methodname]`startUpload()` starts a file that waits because auto upload is turned off. Both accept a file name, a `File`, or a position in the list. [methodname]`UploadManager.clearFileList()` empties the list, as it does in the browser.
+All the components linked to the same manager share one file list. [classname]`UploadFileListTester` reads it with [methodname]`getFiles()`, most recently added file first. It also simulates the buttons on its entries: [methodname]`removeFile()` removes a file and frees its slot, and [methodname]`startUpload()` starts a file that waits because auto upload is turned off. Both accept a file name, a `File`, or a position in the list. [methodname]`UploadManager.clearFileList()` empties the list, as it does in the browser.
 
-As in the browser, the button and the drop zone aren't usable when they aren't linked to a manager, when the manager or its owner component is disabled, or when the file list already holds `maxFiles` files. The file list isn't usable when it isn't linked to a manager or when the manager is disabled. The exception thrown for an action on a component that isn't usable tells which of these applies.
+As in the browser, none of the three components is usable in these cases:
+
+* It isn't linked to a manager.
+* The manager's owner component isn't attached.
+* The manager or its owner component is disabled.
+
+The button and the drop zone also aren't usable when the file list already holds `maxFiles` files. The exception thrown for an action on a component that isn't usable tells which of these applies.
 
 
 === Base Methods
