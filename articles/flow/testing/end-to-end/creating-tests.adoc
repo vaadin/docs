@@ -52,25 +52,60 @@ ButtonElement button = $(ButtonElement.class).id("ok");
 
 [source,java]
 ----
-// Find the first label inside the layout with id="content"
+// Find the only span inside the layout with id="content"
 VerticalLayoutElement layout = $(VerticalLayoutElement.class).id("content");
-LabelElement label = layout.$(LabelElement.class).first();
+SpanElement span = layout.$(SpanElement.class).single();
 ----
 
 [NOTE]
 If there is no suitable element class available, you can also use the [methodname]`$("tag-name")` method to find an element of a given type.
 
-You can use the `ElementQuery` instance returned by [methodname]`$()` to refine the search query using one of the available methods:
+You can narrow down the query returned by [methodname]`$()` with filter methods. Each filter returns the query, so you can chain several of them:
 
-- [methodname]`id("some-id")` Returns the element with the given id;
-- [methodname]`attribute("attributeName", "attributeValue")` Adds a filter to include only elements with the given attribute set to the given value;
-- [methodname]`onPage()` Redefines the search context to cover the whole page;
-- [methodname]`first()` Returns the first matching element;
-- [methodname]`waitForFirst()` Returns the first matching element -- if no matches are found, it keeps waiting until there is a matching element;
-- [methodname]`last()` Returns the last matching element;
+- [methodname]`withId("some-id")` Includes only elements with the given id;
+- [methodname]`withAttribute("attributeName", "attributeValue")` Includes only elements with the given attribute set to the given value. Use [methodname]`withAttribute("attributeName")` to match any value, and [methodname]`withAttributeContaining()` or [methodname]`withAttributeContainingWord()` to match part of the value;
+- [methodname]`withoutAttribute()` Excludes elements with the given attribute;
+- [methodname]`withClassName()` and [methodname]`withoutClassName()` Include or exclude elements with the given CSS class names;
+- [methodname]`withTheme()` and [methodname]`withoutTheme()` Include or exclude elements with the given theme;
+- [methodname]`withLabel()` and [methodname]`withLabelContaining()` Include only components with the given label;
+- [methodname]`withPlaceholder()` and [methodname]`withPlaceholderContaining()` Include only components with the given placeholder;
+- [methodname]`withCaption()` and [methodname]`withCaptionContaining()` Include only elements with the given caption: the label, the placeholder, or the text, whichever the element shows first;
+- [methodname]`withText()` and [methodname]`withTextContaining()` Include only elements with the given text;
+- [methodname]`withPropertyValue(getter, value)` Includes only elements for which the given getter, such as `ButtonElement::getText`, returns the given value;
+- [methodname]`withCondition(predicate)` Includes only elements that match the given predicate; and
+- [methodname]`onPage()` Redefines the search context to cover the whole page.
+
+[role="since:com.vaadin:vaadin@V25.4"]
+=== Find by Test ID
+
+To find a component by the test ID set with [methodname]`setTestId()` on the server, use the [methodname]`withTestId()` filter, or the [methodname]`testId()` method that returns the only matching element:
+
+[source,java]
+----
+// Find the button that has setTestId("save") on the server
+ButtonElement save = $(ButtonElement.class).testId("save");
+----
+
+=== Get the Results
+
+A query is executed when you call one of the following methods:
+
+- [methodname]`single()` Returns the only matching element, and fails if there are no matches or more than one;
+- [since:com.vaadin:vaadin@V25.3]#[methodname]`waitForSingle()`# Returns the only matching element -- if there isn't exactly one match, it keeps searching until there is, or until the timeout expires;
+- [methodname]`id("some-id")` Returns the only element with the given id -- a shorthand for `withId("some-id").single()`;
 - [methodname]`get(N)` Returns the Nth matching element;
+- [methodname]`last()` Returns the last matching element;
 - [methodname]`exists()` Returns `true` if the query matches at least one element; and
 - [methodname]`all()` Returns a list of all matching elements.
+
+Prefer [methodname]`single()` and [methodname]`waitForSingle()`: they fail when a query unexpectedly matches several elements, which keeps tests from interacting with the wrong element. Use [methodname]`get()` when picking one of several matches is intentional.
+
+[source,java]
+----
+// Find the only button with the text "Save" inside the dialog
+ButtonElement save = $(DialogElement.class).waitForSingle()
+        .$(ButtonElement.class).withText("Save").single();
+----
 
 
 == Writing Tests
@@ -84,24 +119,24 @@ Using Element Queries and Elements you can now compose test methods like so:
 <source-info group="JUnit 4"></source-info>
 @Test
 public void fillForm() {
-    $(TextFieldElement.class).id("firstName").setValue("John");
-    $(TextFieldElement.class).id("lastName").setValue("Doe");
+    $(TextFieldElement.class).withLabel("First name").single().setValue("John");
+    $(TextFieldElement.class).withLabel("Last name").single().setValue("Doe");
     $(ButtonElement.class).id("ok").click();
-    Assert.assertEquals("Thank you for submitting the form", $(DivElement.class).id("result"))
+    Assert.assertEquals("Thank you for submitting the form",
+            $(DivElement.class).id("result").getText());
 }
 ----
-
-JUnit 5 support is added in Vaadin 24.
 
 [source,java]
 ----
 <source-info group="JUnit 5"></source-info>
 @BrowserTest
 public void fillForm() {
-    $(TextFieldElement.class).id("firstName").setValue("John");
-    $(TextFieldElement.class).id("lastName").setValue("Doe");
+    $(TextFieldElement.class).withLabel("First name").single().setValue("John");
+    $(TextFieldElement.class).withLabel("Last name").single().setValue("Doe");
     $(ButtonElement.class).id("ok").click();
-    Assertions.assertEquals("Thank you for submitting the form", $(DivElement.class).id("result"))
+    Assertions.assertEquals("Thank you for submitting the form",
+            $(DivElement.class).id("result").getText());
 }
 ----
 --
