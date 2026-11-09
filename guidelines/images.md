@@ -2,9 +2,8 @@
 
 How to add diagrams and other images to a page so that they look like the rest
 of the documentation. The palette and the drawing rules below are taken from the
-diagrams in `articles/building-apps` — `architecture/images/request-flow.svg`,
-`architecture/images/layers.svg` and `views/images/mvp.svg` are the reference
-examples. Older diagrams elsewhere (Montserrat text, the cyan and red of an
+diagrams in `articles/building-apps` — `architecture/images/request-flow.svg`
+and `views/images/mvp.svg` are the reference examples. Older diagrams elsewhere (Montserrat text, the cyan and red of an
 earlier Vaadin brand, Mermaid defaults) do not follow these rules; do not copy
 their style.
 
@@ -40,7 +39,7 @@ architecture/
 Reference the PNG from the page, not the SVG:
 
 ```asciidoc
-image::images/request-flow.png[A diagram of a click traveling from a button in the browser to its listener on the server, and the resulting changes traveling back]
+image::images/request-flow.png["A diagram of a click traveling from a button in the browser to its listener on the server, and the resulting changes traveling back"]
 ```
 
 Start the SVG with a comment that holds the command that regenerates the PNG,
