@@ -32,7 +32,7 @@ export class Example extends LitElement {
           Warning
         </vaadin-badge>
         <vaadin-badge theme="error">
-          <vaadin-icon icon="vaadin:exclamation-circle-o" slot="icon"></vaadin-icon>
+          <vaadin-icon icon="vaadin:exclamation-circle" slot="icon"></vaadin-icon>
           Denied
         </vaadin-badge>
       </vaadin-horizontal-layout>

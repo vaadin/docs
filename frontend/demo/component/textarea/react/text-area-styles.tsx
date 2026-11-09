@@ -6,7 +6,7 @@ function Example() {
   return (
     // tag::snippet[]
     <TextArea
-      theme="align-right small helper-above-field"
+      theme="align-right small helper-above-field label-aside"
       label="Label"
       helperText="Helper text"
       value="Value"

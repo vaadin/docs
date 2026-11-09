@@ -65,7 +65,7 @@ The example below shows how to use the [annotationname]`@VaadinSessionScoped` an
 @Route("")
 public class MainLayout extends Div {
     @Inject
-    public MainLayout(SessionService bean){
+    public MainLayout(SessionScopedBean bean){
         setText(bean.getText());
     }
 }
@@ -73,13 +73,13 @@ public class MainLayout extends Div {
 @Route("editor")
 public class Editor extends Div {
     @Inject
-    public Editor(SessionService bean){
+    public Editor(SessionScopedBean bean){
         setText(bean.getText());
     }
 }
 
 @VaadinSessionScoped
-public class SessionService {
+public class SessionScopedBean {
     private String uid = UUID.randomUUID().toString();
 
     public String getText(){
@@ -88,7 +88,7 @@ public class SessionService {
 }
 ----
 
-Because it's session-scoped, the same instance of [classname]`SessionService` is used if the application is accessed from the same Vaadin session.
+Because it's session-scoped, the same instance of [classname]`SessionScopedBean` is used if the application is accessed from the same Vaadin session.
 
 If you open the root target in one tab and the `editor` target in another, the text in both are the same. This is because the session is the same, even though the tabs -- and the [classname]`UI` instances -- are different.
 
@@ -104,7 +104,7 @@ The example below uses the [annotationname]`@NormalUIScoped` annotation on route
 @Route("")
 public class MainLayout extends Div {
     @Inject
-    public MainLayout(UIService bean){
+    public MainLayout(UIScopedBean bean){
         setText(bean.getText());
     }
 }
@@ -112,13 +112,13 @@ public class MainLayout extends Div {
 @Route("editor")
 public class Editor extends Div {
     @Inject
-    public Editor(UIService bean){
+    public Editor(UIScopedBean bean){
         setText(bean.getText());
     }
 }
 
 @NormalUIScoped
-public class UIService {
+public class UIScopedBean {
     private String uid = UUID.randomUUID().toString();
 
     public String getText(){
@@ -127,7 +127,7 @@ public class UIService {
 }
 ----
 
-Because it's UI scoped, the same [classname]`UIService` is used while in the same [classname]`UI`. If you open the root target in one tab and the `editor` target in another, the text are different. This is because the [classname]`UI` instances are different. If you navigate to the `editor` instance via the router or the [classname]`UI` instance -- which delegates navigation to the router -- the text is the same.
+Because it's UI scoped, the same [classname]`UIScopedBean` is used while in the same [classname]`UI`. If you open the root target in one tab and the `editor` target in another, the text are different. This is because the [classname]`UI` instances are different. If you navigate to the `editor` instance via the router or the [classname]`UI` instance -- which delegates navigation to the router -- the text is the same.
 
 In the example here, it navigates to the `editor` target:
 
@@ -160,8 +160,8 @@ public class ParentView extends Div
     @Inject
     public ParentView(
             @RouteScopeOwner(ParentView.class)
-            RouteService routeService) {
-        setText(routeService.getText());
+            RouteScopedBean routeScopedBean) {
+        setText(routeScopedBean.getText());
     }
 }
 
@@ -170,8 +170,8 @@ public class ChildAView extends Div {
     @Inject
     public ChildAView(
             @RouteScopeOwner(ParentView.class)
-            RouteService routeService) {
-        setText(routeService.getText());
+            RouteScopedBean routeScopedBean) {
+        setText(routeScopedBean.getText());
     }
 }
 
@@ -180,14 +180,14 @@ public class ChildBView extends Div {
     @Inject
     public ChildBView(
             @RouteScopeOwner(ParentView.class)
-            RouteService routeService) {
-        setText(routeService.getText());
+            RouteScopedBean routeScopedBean) {
+        setText(routeScopedBean.getText());
     }
 }
 
 @NormalRouteScoped
 @RouteScopeOwner(ParentView.class)
-public class RouteService {
+public class RouteScopedBean {
     private String uid = UUID.randomUUID().toString();
 
     public String getText() {
@@ -196,7 +196,7 @@ public class RouteService {
 }
 ----
 
-[classname]`ParentView`, [classname]`ChildAView`, and [classname]`ChildBView` (paths: `/parent`, `/parent/child-a`, and `/parent/child-b`) use the same [classname]`RouteService` instance while you navigate among them. After navigating away from [classname]`ParentView`, the [classname]`RouteService` is destroyed.
+[classname]`ParentView`, [classname]`ChildAView`, and [classname]`ChildBView` (paths: `/parent`, `/parent/child-a`, and `/parent/child-b`) use the same [classname]`RouteScopedBean` instance while you navigate among them. After navigating away from [classname]`ParentView`, the [classname]`RouteScopedBean` is destroyed.
 
 [annotationname]`@RouteScopeOwner` is a CDI qualifier that you need to define on both the bean and on the injection point. [annotationname]`@RouteScoped` beans are resolved by filtering for matching [annotationname]`@RouteScopeOwner` qualifiers. For example, querying for [annotationname]`@RouteScoped` beans without the qualifier (i.e., implicit [annotationname]`@Default` qualifier) leads to no results.
 
@@ -226,14 +226,14 @@ If you need programmatically to lookup a [annotationname]`RouteScoped` bean, you
 ----
 static abstract class RouteScopeOwnerLiteral extends AnnotationLiteral<RouteScopeOwner> implements RouteScopeOwner {}
 
-RouteService lookupRouteService() {
+RouteScopedBean lookupRouteScopedBean() {
     RouteScopeOwnerLiteral routeScopeQualifier = new RouteScopeOwnerLiteral() {
         @Override
         public Class<? extends HasElement> value() {
             return ParentView.class;
         }
     };
-    return CDI.current().select(RouteService.class, routeScopeQualifier).get();
+    return CDI.current().select(RouteScopedBean.class, routeScopeQualifier).get();
 }
 ----
 

@@ -1,0 +1,33 @@
+---
+title: Security Context in Asynchronous Code
+page-title: How to propagate the Spring Security context in Vaadin
+description: Propagating the Spring Security context to background tasks in a Vaadin application.
+meta-description: Learn how to propagate the Spring Security context to asynchronous tasks in a Vaadin application with the Vaadin-aware SecurityContextHolderStrategy.
+order: 80
+---
+
+
+= Security Context in Asynchronous Code
+
+Code that runs outside a request thread -- such as a task submitted to an executor, or an `@Async` method -- has no security context, unless the context is propagated to it. Without it, checks such as method security in that code see no authenticated user.
+
+Spring Security provides built-in https://docs.spring.io/spring-security/reference/servlet/integrations/concurrency.html[concurrency support] to propagate security contexts across asynchronous operations. One of the key components for this is [classname]`DelegatingSecurityContextExecutor`, which wraps an [classname]`Executor` and ensures that the [classname]`SecurityContext` is properly propagated to background tasks.
+
+Vaadin provides a [interfacename]`SecurityContextHolderStrategy` bean that is aware of the Vaadin session, and installs it in Spring Security's [classname]`SecurityContextHolder` only after all singleton beans have been created. A [classname]`DelegatingSecurityContextExecutor` that is itself defined as a bean is created before that, so it would pick up Spring Security's default strategy. To propagate the security context, inject the strategy into the bean method and wire it into the executor explicitly:
+
+[source,java]
+----
+@Bean
+public DelegatingSecurityContextAsyncTaskExecutor taskExecutor(
+        SecurityContextHolderStrategy strategy) {
+    var delegate = new ThreadPoolTaskExecutor();
+    // Configure the executor
+    delegate.initialize();
+
+    var executor = new DelegatingSecurityContextAsyncTaskExecutor(delegate);
+    executor.setSecurityContextHolderStrategy(strategy);
+    return executor;
+}
+----
+
+This ensures that the correct security context holder is used for asynchronous task execution in a Vaadin application.
