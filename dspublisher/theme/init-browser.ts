@@ -1,4 +1,5 @@
-import { html, LitElement, nothing } from 'lit';
+import { LitElement, html } from 'lit-element';
+import { nothing } from 'lit-html';
 
 if (!localStorage.getItem('vaadin.docsApp.preferredExample')) {
   localStorage.setItem('vaadin.docsApp.preferredExample', 'Java');
