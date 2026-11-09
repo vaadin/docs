@@ -161,6 +161,10 @@ Target `main` unless the change only applies to a released version, in which
 case target that version's branch (`v25.3`, …). Never target `latest`; it is a
 tag.
 
+A pull request to a release branch is labeled `target/main` automatically, so
+that the bot also cherry-picks it to `main`. Remove the label when the change
+applies only to that release.
+
 When a change also applies to the latest stable release — the version the
 published documentation shows by default — add that release's
 `target/v<version>` label to the pull request (for example `target/v25.3`). This
