@@ -15,7 +15,7 @@ import com.vaadin.flow.signals.local.ValueSignal;
 
 @Route("building-apps/background-jobs/report")
 @PermitAll // <1>
-public class ReportView extends VerticalLayout {
+class ReportView extends VerticalLayout {
 
     private final ReportService reportService;
     private final ValueSignal<Boolean> running = new ValueSignal<>(false); // <2>

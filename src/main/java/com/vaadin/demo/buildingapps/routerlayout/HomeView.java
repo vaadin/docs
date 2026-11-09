@@ -7,7 +7,7 @@ import com.vaadin.flow.router.Route;
 // tag::snippet[]
 @Route("building-apps/router-layout/home")
 @Menu(title = "Home", icon = "vaadin:home")
-public class HomeView extends VerticalLayout {
+class HomeView extends VerticalLayout {
 
     HomeView() {
         add("This is the home view");

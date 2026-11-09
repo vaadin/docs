@@ -34,9 +34,9 @@ ValueSignal<String> greetingSignal = new ValueSignal<>("Hello");
 
 Span greetingSpan = new Span();
 greetingSpan.bindText(greetingSignal);
-// Displays "Hello!"
+// Displays "Hello"
 
-name.set("Hi");
+greetingSignal.set("Hi");
 // Automatically updates to "Hi"
 ----
 
@@ -123,7 +123,7 @@ toggleButton.addClickListener(e -> showDetails.update(v -> !v));
 // Clicking toggles panel visibility
 ----
 
-Prefer a binding over calling [methodname]`setVisible()` from listeners whenever visibility follows application state. While a signal is bound, calling [methodname]`setVisible()` on the component throws a [classname]`BindingActiveException`; pass `null` to [methodname]`bindVisible()` to remove the binding. For [methodname]`setVisible()` semantics and how visibility affects the DOM, see <<{articles}/flow/component-internals/visibility#,Component Visibility>>.
+Prefer a binding over calling [methodname]`setVisible()` from listeners whenever visibility follows application state. While a signal is bound, calling [methodname]`setVisible()` on the component throws a [classname]`BindingActiveException`, so change the visibility by updating the signal instead. For [methodname]`setVisible()` semantics and how visibility affects the DOM, see <<{articles}/flow/component-internals/visibility#,Component Visibility>>.
 
 
 === Conditional Visibility
@@ -201,7 +201,7 @@ Use [methodname]`bindValue()` on form fields to create two-way binding. Changes 
 
 [source,java]
 ----
-import com.vaadin.flow.signals.shared.SharedValueSignal;
+import com.vaadin.flow.signals.local.ValueSignal;
 
 ValueSignal<String> username = new ValueSignal<>("");
 
@@ -422,7 +422,7 @@ grid.bindThemeNames(themes);
 themes.set(List.of("row-stripes", "compact", "no-border"));
 ----
 
-These methods are convenience shortcuts for [methodname]`getThemeList().bind()`, the Element-level binding described in <<element-bindings#themelist-binding,ThemeList Binding>>. That one is available on every component, including those that don't implement [interfacename]`HasTheme`. Each theme name binds independently:
+These methods are convenience shortcuts for [methodname]`getElement().getThemeList().bind()`, the Element-level binding described in <<element-bindings#themelist-binding,ThemeList Binding>>. That one is available on every component, including those that don't implement [interfacename]`HasTheme`. Each theme name binds independently:
 
 [source,java]
 ----
@@ -430,8 +430,8 @@ ValueSignal<Boolean> compact = new ValueSignal<>(false);
 ValueSignal<Boolean> rowStripes = new ValueSignal<>(true);
 
 Grid<Person> grid = new Grid<>();
-grid.getThemeList().bind("compact", compact);
-grid.getThemeList().bind("row-stripes", rowStripes);
+grid.getElement().getThemeList().bind("compact", compact);
+grid.getElement().getThemeList().bind("row-stripes", rowStripes);
 ----
 
 [NOTE]
@@ -535,10 +535,11 @@ The factory function runs once per list item. When you modify the list:
 
 == Binding Items to Data Components
 
-Use [methodname]`Signal.effect()` and [classname]`ListSignal` to bind data items to components like [classname]`Grid`, [classname]`ComboBox`, or any component implementing [interfacename]`HasDataView` or [interfacename]`HasDataProvider`. This enables reactive updates to the data without manual data provider management:
+Data components, such as [classname]`Grid` and [classname]`ComboBox`, don't have a method for binding their items to a list signal. Instead, pass a mutable list to [methodname]`setItems()` once. Then use [methodname]`Signal.effect()` to copy the values of the list signal into that list, and to refresh the data view:
 
 [source,java]
 ----
+import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.signals.local.ListSignal;
 
 ListSignal<String> items = new ListSignal<>();
@@ -548,20 +549,39 @@ items.insertLast("Item 2");
 Grid<String> grid = new Grid<>();
 grid.addColumn(item -> item).setHeader("Name");
 
-Signal.effect(grid, () -> grid.setItems(items.getValues().toList()));
+List<String> rows = new ArrayList<>();
+GridListDataView<String> dataView = grid.setItems(rows);
+Signal.effect(grid, () -> {
+    List<String> values = items.getValues().toList();
+    rows.clear();
+    rows.addAll(values);
+    dataView.refreshAll();
+});
 
-// Adding or updating an item triggers a full refresh
+// Adding or updating an item refreshes the grid
 items.insertLast("Item 3");
 items.peek().get(0).set("Updated Item 1");
 ----
 
-This pattern refreshes the entire data set by setting a new list of items when any change occurs to the list signal's structure or an individual item signal. The framework doesn't yet provide a dedicated helper for binding items to data components. Support for more efficient granular item updates and lazy loaded items bindings is planned in future releases.
+The effect reads the list signal and the signal of each item, so it runs again when an item is added, removed, moved, or changed. Each run refreshes the entire data set.
+
+Don't call [methodname]`setItems()` from the effect. Each call replaces the data provider, and replacing the data provider clears the selection. When you bind the selection to a signal, for example with `grid.asSingleSelect().bindValue(selected, selected::set)`, every change to the list then sets that signal to `null` (https://github.com/vaadin/flow-components/issues/10575[flow-components#10575]).
+
+Refreshing the data view keeps the selection of a [classname]`Grid`, a [classname]`ComboBox`, or a [classname]`MultiSelectComboBox`. Components that show each item as a child component, such as [classname]`Select`, [classname]`RadioButtonGroup`, and [classname]`CheckboxGroup`, clear their value on every refresh.
 
 This approach works with both [classname]`ListSignal` (for local, single-user scenarios) and [classname]`SharedListSignal` (for multi-user, real-time scenarios).
 
+
+=== Selected Items in a Grid
+
+A grid's selection preservation mode decides which selected items a refresh keeps. By default, the grid keeps them all, even an item that's removed from the list, and a bound selection signal keeps the removed item, too. To deselect removed items, call `grid.setSelectionPreservationMode(SelectionPreservationMode.PRESERVE_EXISTING)`.
+
+The grid recognizes the selected item by its identity. If an update replaces an item with an unequal object, such as a record with a changed field, the grid no longer shows it as selected. Give the items a stable identity, as described in <<{articles}/flow/binding-data/data-provider#data-binding.data-provider.item-identifiers,Stable & Unique Item Identities>>. You can also set an identifier provider on the data view, for example `dataView.setIdentifierProvider(Person::getId)`.
+
+
 === Difference from bindChildren
 
-Use [methodname]`bindChildren()` when you want to create custom components for each item in a layout container (e.g., [classname]`VerticalLayout`). Use [methodname]`Signal.effect()` with [methodname]`setItems()` when you want to populate a data items component (e.g., [classname]`Grid`, [classname]`VirtualList`) that manages its own rendering.
+Use [methodname]`bindChildren()` when you want to create custom components for each item in a layout container, such as [classname]`VerticalLayout`. Use an effect that refreshes the data view when you want to populate a data component, such as [classname]`Grid` or [classname]`VirtualList`, that manages its own rendering.
 
 
 == Component-Specific Bindings
@@ -572,7 +592,7 @@ For example, bind the selection of a [classname]`Grid` to a signal through the s
 
 [source,java]
 ----
-ValueSignal<Person> selectedPerson = new ValueSignal<>();
+ValueSignal<Person> selectedPerson = new ValueSignal<>(null);
 
 Grid<Person> grid = new Grid<>(Person.class);
 grid.asSingleSelect().bindValue(selectedPerson, selectedPerson::set);
@@ -731,7 +751,7 @@ public class TaskManager extends VerticalLayout {
         Button addButton = new Button("Add Task");
         addButton.bindEnabled(newTaskText.map(t -> !t.isBlank()));
         addButton.addClickListener(e -> {
-            tasks.insertLast(new Task(newTaskText.get(), false));
+            tasks.insertLast(new Task(newTaskText.peek(), false));
             newTaskText.set("");
         });
 

@@ -257,6 +257,22 @@ Make non-modal dialogs draggable so the user can interact with content that migh
 
 Modal dialogs don't benefit from being draggable, as their modality curtain (the dark overlay behind the dialog) obscures the underlying user interface.
 
+ifdef::flow[]
+In Flow, a dialog fires a [classname]`DialogDraggedEvent` when the user has finished dragging it. The event contains the new position, and the dialog also updates its own [methodname]`getTop()` and [methodname]`getLeft()` values. You can use this, for example, to store the position in the user's preferences and restore it when the dialog is created again:
+
+[source,java]
+----
+dialog.addDraggedListener(event -> {
+    savedTop = event.getTop();
+    savedLeft = event.getLeft();
+});
+
+// When creating the dialog again
+newDialog.setTop(savedTop);
+newDialog.setLeft(savedLeft);
+----
+endif::[]
+
 === Constraining a Dialog to the Viewport
 
 By default, dialogs are not constrained to the viewport, which means they can become partially invisible when dragging the dialog or when resizing the viewport. To prevent this, set the `keepInViewport` property to `true` to always keep the dialog fully visible within the viewport. Note that enabling this option may also adjust the dialog's size and position if it can not fit the viewport otherwise.
@@ -474,6 +490,45 @@ ifdef::react[]
 endif::[]
 --
 
+[role="since:com.vaadin:vaadin@V25.4"]
+=== Heading Level
+
+The header title is rendered as a heading. Its default level is 1 for modal dialogs and 2 for non-modal dialogs.
+
+A non-modal dialog is part of the page around it. Set its heading level to fit the heading structure of that page. For example, use level 3 for a dialog that opens from a section with an `<h2>` title.
+
+[.example]
+--
+ifdef::flow[]
+[source,java]
+----
+<source-info group="Flow"></source-info>
+Dialog dialog = new Dialog();
+dialog.setModality(ModalityMode.MODELESS);
+dialog.setHeaderTitle("Notes");
+dialog.setHeadingLevel(3);
+----
+endif::[]
+
+ifdef::react[]
+[source,html]
+----
+<source-info group="React"></source-info>
+<Dialog modeless headingLevel={3} headerTitle="Notes">...</Dialog>
+----
+endif::[]
+
+ifdef::lit[]
+[source,html]
+----
+<source-info group="Lit"></source-info>
+<vaadin-dialog modeless heading-level="3" header-title="Notes">...</vaadin-dialog>
+----
+endif::[]
+--
+
+The heading level applies only to the header title. It does not change a title rendered with a custom element in the header.
+
 
 == Best Practices
 
@@ -503,24 +558,24 @@ See <<../button#buttons-in-dialogs, Buttons in Dialogs>>.
 ifdef::flow[]
 == Technical
 
-=== Multiple Dialogs and Strict Server-side Modality in Flow
+=== Multiple Dialogs and Server-side Modality in Flow
 
-By default, opening multiple Dialog components in Strict modality mode simultaneously in Flow adds each subsequent Dialog as a child of the previous one.
+By default, opening multiple modal Dialog components simultaneously in Flow adds each subsequent Dialog as a child of the previous one.
 
-Due to the <<{articles}/flow/advanced/server-side-modality#server-side-modality,server-side modality mechanism in Flow>>, this means that closing a modal Dialog automatically also closes all its children, that is, any subsequent Dialogs opened after the strictly modal.
+Flow adds a newly opened Dialog under the most recently opened modal Dialog, whether it uses the default [enumname]`ModalityMode.VISUAL` or [enumname]`ModalityMode.STRICT` (see <<{articles}/flow/advanced/server-side-modality#server-side-modality,Server-Side Modality>>). This means that closing a modal Dialog automatically also closes all its children, that is, any subsequent Dialogs opened after it.
 
 This can be avoided by explicitly adding each Dialog to the UI before opening it:
 
 [source,java]
 ----
 Dialog d1 = new Dialog();
-d1.setModality(ModalityMode.STRICT);
 Dialog d2 = new Dialog();
-d2.setModality(ModalityMode.STRICT);
 add(d1, d2);  // Add dialogs to the UI before opening
 d1.open();
 d2.open();
 ----
+
+When the first Dialog is strictly modal, each Dialog added this way has to be strictly modal too, otherwise it can't be interacted with while the first one is open.
 endif::[]
 
 [discussion-id]`EBCF8110-6074-4DAB-BE6B-662C813EDDC9`

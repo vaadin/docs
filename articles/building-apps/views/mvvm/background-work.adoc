@@ -1,0 +1,167 @@
+---
+title: Handle Background Work
+page-title: How to handle background work in a Vaadin ViewModel
+description: Learn how a ViewModel loads data in the background, and how the view keeps it up to date when the Model changes.
+meta-description: Handle background work in a Vaadin ViewModel. Keep pending values in one signal, let the latest request win, cancel on detach, and react to Model changes.
+order: 70
+---
+
+
+= Handle Background Work
+:toclevels: 2
+
+Some state changes without a click: a search that takes seconds to answer, a refresh on a timer, or a change that another user saves. This guide shows how a ViewModel handles values that arrive later, and how the view keeps the ViewModel up to date.
+
+.Part of a Series
+[TIP]
+This is part 7 of the *Structure Views with MVVM* series. It builds on the ViewModel from <<write-viewmodel#,Write a ViewModel>> and the view from <<bind-view#,Bind the View>>.
+
+The example is a product catalog that a slow remote system searches. The service returns a [classname]`CompletableFuture` that completes when the answer arrives:
+
+.CatalogService.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/CatalogService.java[tags=full,indent=0]
+----
+
+For more about running work in the background, see <<{articles}/building-apps/business-logic/background-jobs#,Background Jobs>>.
+
+
+== Keep a Pending Value in One Signal
+
+A value that arrives later is in one of three states: loading, loaded, or failed. Keep all three in one signal, as a sealed interface:
+
+.AsyncState.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/AsyncState.java[tags=full,indent=0]
+----
+
+A single [methodname]`set()` then changes the state, the result, and the error together. Separate signals would need a transaction to change together, and local signals don't support transactions.
+
+
+== Let the Latest Request Win
+
+The ViewModel starts the work, and sets the signal when the answer arrives:
+
+.CatalogViewModel.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/CatalogViewModel.java[tags=full,indent=0]
+----
+
+The callback of the future runs on the thread that completes the future, not in a request of the user. Local signals are thread-safe, so the ViewModel sets the signal there without [methodname]`UI.access()`, and Vaadin updates the UI components that are bound to it. See <<{articles}/flow/ui-state/local-signals#thread-safety,Thread Safety>>.
+
+The ViewModel numbers its requests, and ignores an answer to any request that isn't the latest. Otherwise, a slow answer to an old search could arrive after the answer to a newer search, and replace it.
+
+The [methodname]`cancel()` command makes sure that the answer of the running request is ignored, and cancels its future. Because [classname]`CatalogService` runs the search with [methodname]`CompletableFuture.supplyAsync()`, a search that hasn't started yet then doesn't run at all. A search that has already started finishes on its own thread, because canceling a [classname]`CompletableFuture` doesn't interrupt the work. Stopping work that has already started is up to the service: it can check whether its future has been canceled, as <<{articles}/building-apps/business-logic/background-jobs/interaction/futures#cancelling,Returning Futures>> shows.
+
+The ViewModel has no detach event of its own, so the view calls [methodname]`cancel()` when it's detached.
+
+
+== Bind the State
+
+The view binds to the state, and calls [methodname]`cancel()` when it's detached:
+
+.CatalogView.java
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/buildingapps/mvvm/CatalogView.java[tags=full,indent=0]
+----
+
+For a change made in a background thread to reach the browser without an action of the user, the application needs <<{articles}/building-apps/server-push#enabling-push,server push>>.
+
+
+== Test Background Work
+
+In a ViewModel test, decide when each answer arrives. The following test gives the service an executor that only collects the searches, and runs them in the order that the test chooses:
+
+.CatalogViewModelTest.java
+[source,java]
+----
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+
+class CatalogViewModelTest {
+
+    List<Runnable> searches = new ArrayList<>();
+    CatalogViewModel viewModel = new CatalogViewModel(
+            new CatalogService(searches::add));
+
+    @Test
+    void showsLoadingUntilTheAnswerArrives() {
+        viewModel.search("desk");
+        assertTrue(viewModel.loading().peek());
+
+        searches.get(0).run();
+
+        assertFalse(viewModel.loading().peek());
+        assertEquals(new AsyncState.Loaded<>(List.of("Desk", "Desk lamp")),
+                viewModel.results().peek());
+    }
+
+    @Test
+    void aLateAnswerToAnOlderSearchIsIgnored() {
+        viewModel.search("desk");
+        viewModel.search("monitor");
+
+        searches.get(1).run();
+        searches.get(0).run();
+
+        assertEquals(
+                new AsyncState.Loaded<>(List.of("Monitor", "Monitor arm")),
+                viewModel.results().peek());
+    }
+}
+----
+
+In a browserless test of the view, a signal that another thread sets reaches the UI components only when the test runs the pending signal tasks of the window. Complete the work, then call `window.runPendingSignalsTasks()` before you check the UI. See <<{articles}/building-apps/testing/browserless/test-signals#,Test Signal-Based Views>>.
+
+
+== Refresh on a Timer
+
+A refresh on a timer is the view's job, because the timer has to stop when the view goes away. Start the timer when the view is attached, and stop it when the view is detached, and let the timer call a ViewModel command. Use either [methodname]`UI.setPollInterval()` with a poll listener, or a scheduled task together with server push.
+
+
+== Show Slow Commands as State
+
+A command that takes a while, such as a save that takes seconds, works like a search. Keep a `saving` state in a signal, and derive `canSave` from it, so that the *Save* button disables itself while the save is running. Set the outcome in the signal when the work completes.
+
+
+== React to Changes in the Model
+
+The Model may announce its changes through listeners, for example with a service method such as `addChangeListener()`. Subscribing to them is the view's job, like a timer. The ViewModel has no attach or detach event, and a subscription that outlives the view keeps the view in memory.
+
+The view subscribes when it's attached, unsubscribes when it's detached, and calls a ViewModel command that's named after what happened:
+
+[source,java]
+----
+@Override
+protected void onAttach(AttachEvent attachEvent) {
+    var registration = ticketService.addChangeListener(attachEvent.getUI()
+            .accessLater(event -> viewModel.ticketsChanged(), null));
+    addDetachListener(detachEvent -> {
+        detachEvent.unregisterListener();
+        registration.remove();
+    });
+}
+----
+
+Keep the following in mind:
+
+One Subscription::
+Only the route view subscribes. Child UI components don't subscribe on their own. The route view passes each event to the ViewModel, and the ViewModel decides which parts of the view reload.
+
+The Event Comes from Another Thread::
+The listener often runs in the request of another user, while that user's session is the current one. A local signal throws an exception when it's changed while another session is the current one, so the listener runs the command through [methodname]`UI.accessLater()`. The command then runs with the session of this view locked. See <<{articles}/building-apps/server-push/callbacks#,Callbacks>> for more.
+
+Testing::
+The ViewModel test calls the command directly, in place of the event: `viewModel.ticketsChanged()`.
+
+A shared signal in the Model is the alternative, as in <<lists#refresh-on-changes-by-other-users,Refresh on Changes by Other Users>>. The view then needs no listener, but the Model depends on the signal classes of Vaadin.

@@ -1,7 +1,7 @@
 ---
 title: Persistence
 page-title: Persistence patterns and approaches | Vaadin
-description: How to choose and combine persistence strategies in Vaadin applications.
+description: How to choose and combine persistence strategies in your application.
 meta-description: Learn how to persist data in Vaadin applications using JPA, jOOQ, and other technologies. Understand when to use aggregate-oriented vs table-oriented approaches.
 order: 20
 ---
@@ -10,7 +10,7 @@ order: 20
 = Persistence
 :toclevels: 2
 
-Most Vaadin applications need to store and retrieve data from a database. How you structure this persistence layer affects maintainability, performance, and how naturally your code maps to your problem domain.
+Most business applications need to store and retrieve data from a database. How you structure this persistence layer affects maintainability, performance, and how naturally your code maps to your problem domain.
 
 This section covers the main approaches to persistence and helps you choose between them—or combine them, which is what most real applications end up doing.
 
@@ -19,7 +19,7 @@ If you're starting a new project, you'll also need to set up <<add-flyway#,datab
 
 == Two Approaches
 
-You can think about database access in Java applications in two ways. The difference isn't just technical—it reflects how you model your problem.
+You can think about database access in Java applications in two ways. The difference isn't only technical—it reflects how you model your problem.
 
 
 === Aggregate-Oriented
@@ -71,7 +71,7 @@ Your core domain objects—the ones with important state transitions and busines
 
 But not everything is a state machine. A dashboard showing order counts by region doesn't need to load `Order` aggregates. A bulk operation archiving old records shouldn't instantiate thousands of objects. A search feature returning paginated results is naturally a data transformation, not an aggregate retrieval.
 
-A typical Vaadin application might have:
+A typical business application might have:
 
 - *Aggregate-oriented persistence* for `Order`, `Customer`, `Product`—entities with lifecycles and business rules
 - *Table-oriented queries* for list views, reports, search results, dashboards
@@ -91,7 +91,7 @@ JPA was designed for aggregate-oriented persistence. It manages object state, tr
 
 [source,java]
 ----
-public interface OrderRepository extends JpaRepository<Order, Long> {
+interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByCustomerId(Long customerId);
 }
 ----
@@ -146,7 +146,7 @@ See <<jooq#,jOOQ>> for implementation details.
 
 === Combining JPA and jOOQ
 
-A practical combination used in real Vaadin projects:
+A practical combination used in real projects:
 
 - *JPA* for loading and saving aggregates — your core domain entities with their relationships and business logic
 - *jOOQ* for everything else — list views, search, reports, bulk operations, complex queries
@@ -178,7 +178,7 @@ public class OrderService {
 
 == Practical Guidelines
 
-Some guidelines that have worked well in Vaadin applications:
+Some guidelines that have worked well in business applications:
 
 *Start simple.* If your application is mostly CRUD with simple validation, you don't need complex patterns. Spring Data repositories with JPA entities might be all you need.
 
@@ -198,3 +198,14 @@ Some guidelines that have worked well in Vaadin applications:
 *<<../consistency/transactions#,Transactions>>* — Both approaches require proper transaction management. Spring's `@Transactional` works with both JPA and jOOQ.
 
 *<<../consistency/optimistic-locking#,Optimistic Locking>>* and *<<../consistency/pessimistic-locking#,Pessimistic Locking>>* — Strategies for handling concurrent updates, supported by both JPA and jOOQ.
+
+
+== Auditing & Soft Deletes
+
+These guides don't cover recording who changed what, or keeping deleted rows in the database. For JPA, see the following:
+
+* https://docs.spring.io/spring-data/jpa/reference/auditing.html[Auditing] in the Spring Data JPA documentation, for storing when and by whom an entity was created and last modified.
+* https://docs.hibernate.org/orm/current/userguide/html_single/#envers[Envers] in the Hibernate documentation, for keeping a history of every change to an entity.
+* https://docs.hibernate.org/orm/current/userguide/html_single/#soft-delete[Soft Delete] in the Hibernate documentation, for marking rows as deleted instead of removing them.
+
+Spring Data gets the current user from an `AuditorAware` bean. If yours reads the user from the Spring Security context, it finds no user in background threads, as explained in <<../../architecture/runtime-model#threads-and-the-session-lock,Threads and the Session Lock>>.

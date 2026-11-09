@@ -10,96 +10,14 @@ order: 100
 = Test Multiple Users and Windows
 
 Use this guide when the behavior under test depends on more than one user or window.
-The examples cover the plain Java, Spring, and Quarkus setups; complete the <<{articles}/building-apps/testing/browserless/setup-spring-boot#,Spring>>, <<{articles}/building-apps/testing/browserless/setup-without-spring#,plain Java>>, or <<{articles}/building-apps/testing/browserless/setup-quarkus#,Quarkus>> setup first.
+Every setup guide creates an application context and opens one window for one user; a multi-user test creates more users and windows from the same application context.
+Complete the <<{articles}/building-apps/testing/browserless/setup-spring-boot#,Spring>>, <<{articles}/building-apps/testing/browserless/setup-without-spring#,plain Java>>, or <<{articles}/building-apps/testing/browserless/setup-quarkus#,Quarkus>> setup first.
+The examples use an `app` field for an application context that each test creates in a [annotationname]`@BeforeEach` method and closes in an [annotationname]`@AfterEach` method, which closes all of its users and windows at once.
+In Spring Boot, create it from the Spring application context as described in <<setup-spring-boot#context-per-test,Create an Application Context for Each Test>>, instead of using the shared bean.
 The <<setup-cdi#,Java EE/CDI setup>> supports one user per test, so these examples don't apply to it.
 
 The examples are patterns to adapt: `CartView`, `CheckoutView`, `SharedCounterView`, and `ChatView` represent your application views.
 For security scenarios, reuse the access-control configuration from <<{articles}/building-apps/testing/browserless/test-view-access#,Test View Access Control>>.
-
-== Set Up the Application Context
-
-Each test gets its own application context, created in one of two ways:
-
-* In the test method, with try-with-resources, when only that test uses the context. The plain Java example below does this.
-* In a [annotationname]`@BeforeEach` method, and closed with [methodname]`close()` in an [annotationname]`@AfterEach` method, when every test in the class uses a context. The Spring and Quarkus examples do this.
-
-Closing the application context cascades to every user and window it created.
-
-[methodname]`create()` accepts the packages that contain [annotationname]`@Route`-annotated views, either as package names or as classes whose packages should be scanned. Passing classes plays well with IDE refactoring and is the preferred form.
-
-.Plain Java
-[source,java]
-----
-try (var app = BrowserlessApplicationContext.create(CartView.class)) {
-    var user = app.newUser();
-    var window = user.newWindow();
-    window.navigate(CartView.class);
-    // assertions...
-}
-----
-
-For Spring and Quarkus, dedicated factories pre-wire the framework-specific servlet and lookup initialization:
-
-.Spring
-[source,java]
-----
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import com.vaadin.browserless.BrowserlessApplicationContext;
-import com.vaadin.browserless.SpringBrowserlessApplicationContext;
-
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = ShopTestConfig.class)
-class CartViewMultiUserTest {
-
-    @Autowired
-    private ApplicationContext applicationContext;
-
-    private BrowserlessApplicationContext app;
-
-    @BeforeEach
-    void setUp() {
-        app = SpringBrowserlessApplicationContext.create(applicationContext,
-                CartView.class);
-    }
-
-    @AfterEach
-    void tearDown() {
-        app.close();
-    }
-}
-----
-
-.Quarkus
-[source,java]
-----
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import com.vaadin.browserless.BrowserlessApplicationContext;
-import com.vaadin.browserless.quarkus.QuarkusBrowserlessApplicationContext;
-import io.quarkus.test.junit.QuarkusTest;
-
-@QuarkusTest
-class CartViewMultiUserTest {
-
-    private BrowserlessApplicationContext app;
-
-    @BeforeEach
-    void setUp() {
-        app = QuarkusBrowserlessApplicationContext.create(CartView.class);
-    }
-
-    @AfterEach
-    void tearDown() {
-        app.close();
-    }
-}
-----
 
 
 == Create Users and Windows
@@ -189,7 +107,7 @@ For background updates and write confirmation, see <<{articles}/building-apps/te
 
 == Test Authenticated Users with Spring Security
 
-Create a secured application context, then interleave actions from an administrator and an anonymous user.
+Create a secured application context as in <<{articles}/building-apps/testing/browserless/test-view-access#spring-secured-context,Test View Access Control>>, then interleave actions from an administrator and an anonymous user.
 Assert that the anonymous user is redirected while the administrator retains access.
 The example assumes a `ProtectedView` that requires a logged-in user, and an `AdminRoleView` that requires the `ADMIN` role.
 The context uses the `TestViewSecurityConfig` from <<{articles}/building-apps/testing/browserless/test-view-access#spring,Test View Access Control>>, which registers view access control with a login view.
@@ -261,78 +179,8 @@ For custom credentials, anonymous users, and logout behavior, see <<{articles}/f
 == Test Authenticated Users with Quarkus Security
 
 The Quarkus factory follows the same pattern with [classname]`SecurityIdentity` as the credential type.
-The test uses the `ViewSecurityTestProfile` test profile from <<{articles}/building-apps/testing/browserless/test-view-access#quarkus,Test View Access Control>>, which registers view access control:
-
-.Quarkus Multi-User Test
-[source,java]
-----
-import java.util.Set;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import com.vaadin.browserless.SecuredBrowserlessApplicationContext;
-import com.vaadin.browserless.quarkus.QuarkusBrowserlessApplicationContext;
-import io.quarkus.security.identity.SecurityIdentity;
-import io.quarkus.security.runtime.QuarkusPrincipal;
-import io.quarkus.security.runtime.QuarkusSecurityIdentity;
-import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.TestProfile;
-
-@QuarkusTest
-@TestProfile(ViewSecurityTestProfile.class)
-class MultiUserSecurityTest {
-
-    private SecuredBrowserlessApplicationContext<SecurityIdentity> app;
-
-    @BeforeEach
-    void setUp() {
-        app = QuarkusBrowserlessApplicationContext
-                .createSecured(ProtectedView.class);
-    }
-
-    @AfterEach
-    void tearDown() {
-        app.close();
-    }
-
-    @Test
-    void authenticatedUser_byUsernameAndRoles_seesProtectedView() {
-        var window = app.newUser("john", "USER").newWindow();
-
-        window.navigate(ProtectedView.class);
-        Assertions.assertInstanceOf(ProtectedView.class,
-                window.getCurrentView());
-    }
-
-    @Test
-    void authenticatedUser_byIdentity_seesProtectedView() {
-        SecurityIdentity identity = QuarkusSecurityIdentity.builder()
-                .setPrincipal(new QuarkusPrincipal("john"))
-                .addRoles(Set.of("USER"))
-                .setAnonymous(false)
-                .build();
-
-        var window = app.newUser(identity).newWindow();
-
-        window.navigate(ProtectedView.class);
-        Assertions.assertInstanceOf(ProtectedView.class,
-                window.getCurrentView());
-    }
-
-    @Test
-    void anonymousUser_protectedView_redirectToLogin() {
-        var window = app.newUser().newWindow();
-
-        Assertions.assertThrows(IllegalArgumentException.class,
-                () -> window.navigate(ProtectedView.class));
-        Assertions.assertInstanceOf(LoginView.class,
-                window.getCurrentView());
-    }
-}
-----
-
-As with the Spring factory, [methodname]`newUser()` without arguments creates an anonymous user, and cross-user window switches save and restore the active [classname]`SecurityIdentity` automatically.
+Create the secured context and its users as in <<{articles}/building-apps/testing/browserless/test-view-access#quarkus-secured-context,Test View Access Control>>, then interleave actions from the users' windows as in the Spring example.
+As with the Spring factory, cross-user window switches save and restore the active [classname]`SecurityIdentity` automatically.
 
 == Keep Tests Independent
 
