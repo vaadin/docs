@@ -103,18 +103,19 @@ A signal change made while the component's UI is the current UI -- in an event l
 ----
 ValueSignal<Integer> count = new ValueSignal<>(0);
 Span label = new Span();
-label.bindText(count.map(c -> "Count: " + c));
 add(label);
+Signal.effect(label, () -> System.out.println("Count: " + count.get()));
 
 count.set(5);
-label.getText(); // Returns "Count: 5"
+System.out.println("set() returned");
+// Prints "Count: 0", "Count: 5", "set() returned"
 ----
 
-When one action changes several signals in a row, each change has updated the UI before the next one starts. Code that depends on the order can rely on this, for example code that saves the value of a filter, replaces the choices of the filter field, and then sets the filter back. Shared signals changed inside [methodname]`Signal.runInTransaction()` are an exception: the changes are applied when the transaction commits, so the effects run then. See <<transactions#,Transactions>>.
+When one action changes several signals in a row, the effects and bindings of each change have run before the next change starts. Code that runs after [methodname]`set()` can rely on this: for example, a component whose items an effect updates from the signal already has the new items in the next statement. The browser still receives all the resulting changes together, after the action completes. Shared signals changed inside [methodname]`Signal.runInTransaction()` are an exception: the changes are applied when the transaction commits, so the effects run then. See <<transactions#,Transactions>>.
 
 A change made on any other thread, such as a background thread or a request of another UI or session, doesn't run the effect inline. The effect is queued and runs later through [methodname]`UI.access()`, and [methodname]`EffectContext.isBackgroundChange()` returns `true` for that run. Apart from the first run when they're created, effects and bindings of detached components don't run. When the component is attached again, the effect runs if a dependency has changed in the meantime.
 
-Changes from background threads reach the browser only when server push is enabled. See <<local-signals#,Local Signals>> for updating signals from background threads.
+Without server push, changes from background threads reach the browser only with the next server round trip, for example after the next user interaction. With push enabled, they're sent right away. See <<local-signals#,Local Signals>> for updating signals from background threads.
 
 
 === Building UI Components in an Effect
@@ -128,7 +129,7 @@ Signal.effect(detailLayout, () -> {
     detailLayout.removeAll();
     if (person != null) {
         TextField name = new TextField("Name");
-        // Not a dependency: the binding tracks nameSignal itself
+        // Not a dependency of the effect: the binding tracks nameSignal itself
         name.bindValue(nameSignal, nameSignal::set);
         detailLayout.add(name);
     }
