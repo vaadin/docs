@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { Avatar } from '@vaadin/react-components';
-import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout';
+import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 

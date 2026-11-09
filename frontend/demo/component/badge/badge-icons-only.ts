@@ -24,7 +24,7 @@ export class Example extends LitElement {
           Confirmed
         </vaadin-badge>
         <vaadin-badge theme="error icon-only">
-          <vaadin-icon icon="vaadin:close-small" slot="icon"></vaadin-icon>
+          <vaadin-icon icon="vaadin:close" slot="icon"></vaadin-icon>
           Cancelled
         </vaadin-badge>
         <!-- end::snippet[] -->

@@ -27,7 +27,7 @@ public class ChartTypePolygon extends Div {
         Configuration conf = chart.getConfiguration();
 
         chart.setId("chart");
-        conf.getChart().setZoomType(Dimension.XY);
+        conf.getChart().getZooming().setType(Dimension.XY);
         conf.disableCredits();
         conf.setTitle("Height vs Weight");
         conf.setSubTitle("Polygon series in Vaadin Charts.");

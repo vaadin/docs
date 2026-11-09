@@ -64,7 +64,7 @@ function Example() {
               style={{ height: '1.5rem', minWidth: '1.5rem', margin: '0', padding: '0' }}
               onClick={onClick}
             >
-              <Icon icon="vaadin:close-small" />
+              <Icon icon="vaadin:close" />
             </Button>
           </Badge>
         ))}
