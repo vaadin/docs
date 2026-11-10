@@ -37,9 +37,9 @@ Use Calcite when:
 * your data has no SQL interface, such as a REST API, a gRPC service, or a set of files, or
 * you want the LLM to join, group, and total data from several such sources in one query.
 
-Every query loads the tables it uses into memory. Calcite therefore suits data that fits in the server's memory with room to spare for every user who queries it at the same time. Calcite reads the backend when a query runs, so the grid shows the backend's current data, as fresh as the short cache described later allows. One provider can also combine several backends. Calcite can also pass simple conditions to the backend, as <<#pass-conditions,Pass Conditions to the Backend>> shows.
+Every query loads the tables it uses into memory. Calcite therefore suits data that fits in the server's memory with room to spare for every user who queries it at the same time. Calcite reads the backend when a query runs, so the grid shows the backend's current data, as fresh as the short cache described later allows. One provider can combine several backends, and Calcite can pass simple conditions to the backend, as <<#pass-conditions,Pass Conditions to the Backend>> shows.
 
-For data that is too large to load, Calcite can hand sorting, paging, and grouping to the backend as well, through an adapter that Calcite ships or one that you write. See <<#backend-adapters,Run More of the Query in the Backend>>.
+For data that is too large to load, Calcite can hand sorting, paging, and grouping to the backend as well. This takes an adapter, either one that Calcite ships or one that you write. See <<#backend-adapters,Run More of the Query in the Backend>>.
 
 <<#database-copy,Copy the data into a database>> when the data doesn't fit in memory. A copy is also the simpler choice for data that seldom changes. The database then filters, sorts, pages, and groups the rows, and the grid shows the data as of the last refresh of the copy.
 
@@ -225,7 +225,7 @@ Some details of this class matter:
 * To map another type, add it to [methodname]`sqlType()` and [methodname]`toCalcite()`. For an [classname]`Instant`, for example, return `TIMESTAMP` and [methodname]`toEpochMilli()`. The grid then shows the time in Coordinated Universal Time (UTC).
 * Every column is nullable, so a `null` in a Java object becomes SQL `NULL`.
 * A grid render reads a table several times: for a sample row that decides the columns, for the row count, and for each page. The table keeps the loaded objects for a short time, so a render costs one backend call. Set the duration to how fresh the data has to be.
-* A table with more than `MAX_ROWS` rows fails with a [classname]`ToolException`, whose message tells the LLM that the table is too large. Calcite then doesn't sort, join, or group that many rows in memory. The client has loaded the rows by then, so have the client stop reading shortly after the limit as well.
+* A query on a table with more than `MAX_ROWS` rows fails with a [classname]`ToolException`, whose message tells the LLM that the table is too large. Calcite then doesn't sort, join, or group that many rows in memory. The client has loaded the rows by then, so have the client stop reading when it passes the limit as well.
 
 
 == Implement the Provider
@@ -424,7 +424,7 @@ The text that [methodname]`getSchema()` returns is all the LLM knows about your 
 * Name the dialect. Calcite accepts standard SQL, including `JOIN`, `GROUP BY`, sub-queries, `LIMIT`, and `OFFSET`.
 * Tell the LLM to write dates as `DATE` literals, for example `ordered_on >= DATE '2025-01-01'`, and timestamps as `TIMESTAMP` literals, for example `TIMESTAMP '2025-01-01 00:00:00'`.
 * Avoid column names that are SQL keywords, such as `year`, `month`, `value`, or `order`. Calcite accepts them only in double quotes, and the LLM writes them unquoted unless told otherwise. Rename the column in the table definition, or say in the schema text that the name has to be quoted.
-* The same goes for the column aliases the LLM chooses: `SUM(quantity) AS value` fails to parse, and `value` is a common alias in a chart query. Say in the schema text that an alias that is a keyword has to be in double quotes.
+* This also applies to the column aliases the LLM chooses: `SUM(quantity) AS value` fails to parse, and `value` is a common alias in a chart query. Say in the schema text that an alias that is a keyword has to be in double quotes.
 * With the `lex` setting shown earlier, table and column names are case-insensitive, so the LLM may write them as they appear in the description.
 
 
@@ -447,7 +447,7 @@ The provider needs no LLM to test. A unit test can call [methodname]`executeQuer
 
 == What to Expect at Runtime
 
-Each query reads every table it uses in full, and Calcite filters, joins, sorts, and groups in memory. A sorted or paged grid query reads the whole table as well. The time and memory a query takes therefore grow with the size of the tables it reads, not with the size of its result. The row limit of [classname]`BackendTable` fails the queries on a table that has outgrown this approach. For large tables, pass conditions to the backend as shown in the next section, <<#backend-adapters,run more of the query in the backend>>, or <<#database-copy,copy the data into a database>>.
+Each query reads every table it uses in full, and Calcite filters, joins, sorts, and groups in memory. A sorted or paged grid query reads the whole table as well. The time and memory a query takes therefore grow with the size of the tables it reads, not with the size of its result. The row limit of [classname]`BackendTable` fails the queries on a table that has outgrown this approach. For large tables, <<#pass-conditions,pass conditions to the backend>>, <<#backend-adapters,run more of the query in the backend>>, or <<#database-copy,copy the data into a database>>.
 
 The chart calls [methodname]`executeQuery(String sql)` for each of its series queries and receives the full result. It does so when the LLM proposes the queries, and again every time the chart renders, including after a state restore. A series query that groups its rows returns a small result, and the table cache serves the repeated calls.
 
@@ -575,20 +575,20 @@ What to keep in mind:
 [[backend-adapters]]
 == Run More of the Query in the Backend
 
-The tables of this guide leave sorting, paging, and grouping to Calcite, which does them in memory. When the data is too large for that and a copy in a database is not an option, Calcite can hand these parts of a query to the backend as well, in one of the following ways:
+The tables of this guide leave sorting, paging, and grouping to Calcite, which does them in memory. When the data is too large for that and a database copy isn't an option, Calcite can hand these parts of a query to the backend too. Do so in one of the following ways:
 
-* Use an adapter that Calcite ships. Calcite has https://calcite.apache.org/docs/adapter.html[adapters] for several data stores, such as MongoDB, Elasticsearch, and Cassandra. An adapter replaces the tables you define: you register its schema on the connection, and it translates the conditions, the sort, the limit, and, depending on the adapter, the grouping of a query into the query language of the data store. Test an adapter with the kinds of query the LLM writes before you rely on it, such as date conditions, `<>`, and `LIKE`. An adapter covers only a part of SQL, and a query with a part it doesn't cover can fail or return wrong rows.
-* Write an adapter. For a backend without one, such as a REST API, implement [interfacename]`TranslatableTable` instead of [interfacename]`ScannableTable`. The table then takes part in planning the query: planner rules move a filter, a sort, a limit, or an aggregate into the scan of the table, and the scan sends them to the backend. This is how Calcite's own adapters work, and the https://calcite.apache.org/docs/tutorial.html[Calcite tutorial] introduces the technique. It takes considerably more code than the tables in this guide, and knowledge of Calcite's planner.
+* Use an adapter that Calcite ships. Calcite has https://calcite.apache.org/docs/adapter.html[adapters] for several data stores, such as MongoDB, Elasticsearch, and Cassandra. An adapter replaces the tables you define: you register its schema on the connection. It translates the conditions, the sort, and the limit of a query into the query language of the data store, and some adapters translate the grouping as well. An adapter translates only a part of SQL, and a query with a part it can't translate can fail or return wrong rows. Test an adapter with the kinds of query the LLM writes before you rely on it, such as date conditions, `<>`, and `LIKE`.
+* Write an adapter. For a backend without one, such as a REST API, implement [interfacename]`TranslatableTable` instead of [interfacename]`ScannableTable`. The table then takes part in planning the query. Planner rules that you write move a filter, a sort, a limit, or a grouping into the scan of the table, and the scan sends them to the backend. This is how Calcite's own adapters work, and the https://calcite.apache.org/docs/tutorial.html[Calcite tutorial] introduces the technique. It takes considerably more code than the tables in this guide, and knowledge of Calcite's planner.
 
 
 [[database-copy]]
 == Copy the Data into a Database
 
-Instead of running the LLM's SQL over Java objects, the application can keep a copy of the data in a database and let the database run the SQL. The database filters, sorts, pages, and groups the rows, so this approach suits data that is too large for Calcite to load. The price is freshness: the grid and the chart show the data as of the last refresh of the copy.
+Instead of running the LLM's SQL over Java objects, the application can keep a copy of the data in a database and let the database run the SQL. The database filters, sorts, pages, and groups the rows, so this approach suits data that is too large for Calcite to load. The trade-off is that the grid and the chart show the data as of the last refresh of the copy.
 
 Any database with a JDBC driver can hold the copy, such as a schema of its own in the database the application already uses, or an embedded database. Create the tables of the copy the way the application creates its other tables, for example with a migration tool.
 
-The following Spring service fills the `products` table of the copy and refreshes it every ten minutes. It reads the products one page at a time, which takes a client method such as `List<Product> products(int page, int pageSize)`:
+The following Spring service fills the `products` table of the copy and refreshes it every ten minutes. It reads the products one page at a time, which requires a client method such as `List<Product> products(int page, int pageSize)`:
 
 [source,java]
 ----
@@ -656,7 +656,7 @@ How the service works:
 
 * It reads and inserts one page at a time, so the application never holds all the products in memory.
 * It replaces the rows in one transaction, so a query never reads a half-filled table. Depending on the database, a query that runs during a refresh reads the previous copy or waits for the refresh to finish. A refresh that fails leaves the previous copy in place.
-* Spring calls the [annotationname]`@Scheduled` method when the application starts and then again each time ten minutes have passed since the previous call ended. Scheduling requires [annotationname]`@EnableScheduling` on a configuration class. When a call fails, Spring logs the exception and calls the method again after the delay. In an application without Spring, schedule the refresh with a [classname]`ScheduledExecutorService`, and catch the exceptions of the refresh in the scheduled task, because the executor stops repeating a task that throws one.
+* Spring calls the [annotationname]`@Scheduled` method when the application starts and then again each time ten minutes have passed since the previous call ended. Scheduling requires [annotationname]`@EnableScheduling` on a configuration class. When a call fails, Spring logs the exception and calls the method again after the delay. In an application without Spring, schedule the refresh with a [classname]`ScheduledExecutorService`. Catch the exceptions of the refresh in the scheduled task, because the executor stops repeating a task that throws one.
 * Choose the delay by how old the data may be and by how much load a full read puts on the backend.
 
 Query the copy with a JDBC provider like the one on the <<{articles}/flow/ai-support/controllers#database-provider,Controllers>> page, and describe the tables of the copy in its [methodname]`getSchema()`. Give the provider a database account that can only read the copy, as that page advises.
