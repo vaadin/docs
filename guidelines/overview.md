@@ -30,4 +30,4 @@ remain the source of truth and are not repeated here:
 | [Writing](writing.md)                                     | What reviewers ask for beyond the style guide: precision, staleness, scope. |
 | [Code Examples](code-examples.md)                         | Compiled versus inline examples, snippet tags, hidden lines, rendering.      |
 | [Component Pages](component-pages.md)                     | The structure of a page under `articles/components`.                        |
-| [Versions & Lifecycle](versions-and-lifecycle.md)         | `since` badges, feature flags, moving and removing pages, Hilla with Lit.    |
+| [Versions & Lifecycle](versions-and-lifecycle.md)         | `since` badges, feature flags, moving and removing pages.                   |
