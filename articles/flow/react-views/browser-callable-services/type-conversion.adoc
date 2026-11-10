@@ -1,0 +1,321 @@
+---
+title: Type Conversion
+page-title: Type conversion between Java and TypeScript | Vaadin
+description: How the Java types of browser-callable services map to TypeScript types, and how their values travel as JSON.
+meta-description: Reference for Vaadin browser-callable services - how Java types map to TypeScript, and how Jackson converts numbers, dates, objects, and enums to JSON.
+order: 30
+---
+
+
+= Type Conversion
+:toclevels: 2
+
+The arguments and the return values of browser-callable services travel between the browser and the server as JSON. On the server, Vaadin converts them with https://github.com/FasterXML/jackson[Jackson]. For each Java type, Vaadin generates the TypeScript type that describes its JSON form. Which of these types can be `undefined` is described in <<type-nullability#,Type Nullability>>.
+
+section_outline::[]
+
+
+[[type-mapping]]
+== Type Mapping
+
+The Java types map to TypeScript types as follows:
+
+[cols="2,2,3"]
+|===
+|Java |TypeScript |JSON value
+
+|`boolean`, `Boolean`
+|`boolean`
+|
+
+|`String`, `char`, `Character`
+|`string`
+|
+
+|`byte`, `short`, `int`, `long`, `float`, `double`, their wrapper classes, `BigDecimal`, `BigInteger`
+|`number`
+|See <<#numbers,Numbers>>.
+
+|`Date`, `Instant`, `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetDateTime`, `ZonedDateTime`
+|`string`
+|ISO 8601. See <<#dates-and-times,Dates and Times>>.
+
+|`Duration`
+|`unknown`
+|ISO 8601, such as `PT1H30M`.
+
+|`UUID`
+|`string`
+|
+
+|Enums
+|An `enum` with the same constants
+|The name of the constant.
+
+|Arrays and collections, such as `List` and `Set`
+|`Array`
+|`byte[]` is an array of numbers, too.
+
+|`Map<K, V>`
+|`Record<string, V>`
+|The keys are strings.
+
+|`Optional<T>`
+|The type of `T`, which can be `undefined`
+|
+
+|Beans and records
+|An interface
+|See <<#objects,Objects>>.
+
+|`JsonNode`, `Object`
+|`unknown`
+|Any JSON value.
+
+|Spring Data `Page<T>`
+|`Array`
+|The content of the page.
+
+|Spring Data `Pageable`, `Sort`, `Sort.Order`
+|An interface
+|
+
+|`MultipartFile`
+|`File`
+|Only as a method parameter. See <<{articles}/hilla/guides/uploads-downloads#,Uploads & Downloads>>.
+|===
+
+Vaadin generates a TypeScript type for each bean, record, and enum that a service method uses, directly or through other types. The generated files are in [filename]`src/main/frontend/generated`, in directories named after the Java package. For example, the type of `com.example.application.Person` is in [filename]`com/example/application/Person.ts`.
+
+A method that returns a `Flux` returns a subscription in the browser instead of a `Promise`. See <<reactive-services#,Reactive Services>>. A method that returns a shared signal returns a signal in the browser. See <<{articles}/hilla/guides/full-stack-signals#,Full-Stack Signals>>.
+
+
+[[null-and-undefined]]
+== Null & Undefined
+
+JSON has `null`, but the generated types use `undefined` for missing values. The client sends an `undefined` argument as `null`. In a return value, it turns every `null` into `undefined`, so that a property whose value is `null` is missing from the object in the browser.
+
+A parameter of a primitive type, such as `int`, gets its default value, such as `0`, when the argument is `null`.
+
+
+[[numbers]]
+== Numbers
+
+All Java number types become the TypeScript `number`, which is a 64-bit floating-point number. It represents the integers up to `Number.MAX_SAFE_INTEGER`, which is 2^53^ &minus; 1, without rounding. Larger `long` values lose precision in the browser. For example, `9007199254740993` arrives as `9007199254740992`. `BigDecimal` and `BigInteger` values lose precision in the same way. To keep such values exact, convert them to `String` in the service.
+
+When the browser sends a number with a fraction to an integer parameter, Jackson drops the fraction: `100.9` becomes `100`. A number that is outside the range of the Java type, such as `2147483648` for an `int`, fails the call with an `EndpointValidationError`. As an exception, a `byte` also accepts the values from 128 to 255, and wraps them to negative values.
+
+JSON can't represent `NaN` or infinity. The browser sends them as `null`. The server sends them as the strings `"NaN"`, `"Infinity"`, and `"-Infinity"`, even though the TypeScript type is `number`.
+
+
+[[dates-and-times]]
+== Dates & Times
+
+Dates and times are strings in ISO 8601 format. The server sends them in these forms, and also accepts the other forms listed:
+
+[cols="1,2,3"]
+|===
+|Java |Sent by the server |Also accepted from the browser
+
+|`Date`
+|`2019-01-01T00:00:00.000Z`
+|A time with an offset, such as `2019-01-01T02:00:00+02:00`, a date such as `2019-01-01`, and milliseconds since the epoch as a number.
+
+|`Instant`
+|`2019-01-01T00:00:00Z`
+|A time with an offset, and seconds since the epoch as a number.
+
+|`LocalDate`
+|`2019-01-01`
+|
+
+|`LocalTime`
+|`12:34:00`
+|`12:34` and `12:34:56.789`.
+
+|`LocalDateTime`
+|`2019-01-01T12:34:00`
+|`2019-01-01T12:34` and `2019-01-01T12:34:56.789`.
+
+|`OffsetDateTime`, `ZonedDateTime`
+|`2019-01-01T00:00:00+02:00`
+|
+|===
+
+When the browser sends an `OffsetDateTime` or a `ZonedDateTime`, Jackson converts it to Coordinated Universal Time (UTC), so the value loses its offset and its time zone. A `ZonedDateTime` sent by the server doesn't include the name of its time zone either. Send the time zone as a separate value when the view needs it.
+
+To get a JavaScript `Date` from the string of an `Instant`, a `Date`, or an `OffsetDateTime`, pass the string to the `Date` constructor. The [methodname]`toISOString()` method of a JavaScript `Date` gives a string that a `Date` or an `Instant` parameter accepts.
+
+
+[[enums]]
+== Enums
+
+An enum becomes a TypeScript `enum` with the same constants, and its values travel as the names of the constants:
+
+[source,java]
+----
+public enum Priority {
+    LOW, NORMAL, HIGH
+}
+----
+
+[source,typescript]
+----
+enum Priority {
+  LOW = 'LOW',
+  NORMAL = 'NORMAL',
+  HIGH = 'HIGH',
+}
+----
+
+The fields and the methods of the enum don't become part of the TypeScript type. A name that doesn't match a constant fails the call with an `EndpointValidationError`. The names are case-sensitive.
+
+
+[[objects]]
+== Objects
+
+Jackson decides the properties of a bean: its public fields, and the properties that it has getters or setters for. A private field without a getter or a setter isn't a property. For a record, the properties are its components. The generated interface has the same properties as the JSON.
+
+When an object from the browser lacks a property, the Java object gets the default value of its type, such as `null` or `0`. Jackson ignores the properties that the Java class doesn't have.
+
+
+[[jackson-annotations]]
+=== Jackson Annotations
+
+The Jackson annotations of a class change its JSON, and the generated interface follows them. The annotations are in the `com.fasterxml.jackson.annotation` package:
+
+[source,java]
+----
+@JsonIgnoreProperties(value = { "password" }, allowSetters = true) // <1>
+public class Account {
+
+    @JsonProperty("username") // <2>
+    private String name;
+
+    private String password;
+
+    @JsonIgnore // <3>
+    private String note;
+
+    // Getters and setters
+}
+----
+<1> The server accepts a `password` from the browser, but never sends it.
+<2> The property is called `username` in JSON and TypeScript.
+<3> The property isn't in the JSON at all.
+
+The generated interface only has the properties that the server sends:
+
+[source,typescript]
+----
+interface Account {
+  username?: string;
+}
+----
+
+[annotationname]`@JsonIgnoreType` on a class leaves out all the properties of that type. See the https://github.com/FasterXML/jackson-annotations[Jackson Annotations] project for the other annotations.
+
+
+[[single-value-types]]
+=== Single-Value Types
+
+A class with a [annotationname]`@JsonValue` method travels as the value that the method returns. A constructor or a factory method annotated with [annotationname]`@JsonCreator` creates it from that value. The TypeScript type is the type of the value:
+
+[source,java]
+----
+public class EmailAddress {
+    private final String value;
+
+    @JsonCreator
+    public EmailAddress(String value) {
+        this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+        return value;
+    }
+}
+----
+
+Every `EmailAddress` in a service method is a `string` in TypeScript. This suits domain primitives, as described in <<{articles}/building-apps/forms-data/consistency/domain-primitives#,Domain Primitives>>.
+
+
+[[polymorphic-types]]
+=== Polymorphic Types
+
+When a class or an interface has subtypes, annotate it with [annotationname]`@JsonTypeInfo` and [annotationname]`@JsonSubTypes`. Jackson then adds a property to the JSON, which tells which subtype the object is:
+
+[source,java]
+----
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "@type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = Circle.class, name = "circle"),
+        @JsonSubTypes.Type(value = Square.class, name = "square") })
+public sealed interface Shape permits Circle, Square {
+}
+
+public record Circle(double radius) implements Shape {
+}
+
+public record Square(double side) implements Shape {
+}
+----
+
+Vaadin generates an interface for each subtype, in which the property has the name of the subtype as its type. It also generates a union of the subtypes, named after the base type with the `Union` suffix:
+
+[source,typescript]
+----
+interface Circle {
+  radius: number;
+  '@type': 'circle';
+}
+
+type ShapeUnion = Circle | Square;
+----
+
+The generated functions use the interface of the base type, which has no properties. Cast the value to the union, and check the property to get the subtype:
+
+[source,typescript]
+----
+import type ShapeUnion from 'Frontend/generated/com/example/application/ShapeUnion';
+
+const shape = (await ShapeService.getShape()) as ShapeUnion;
+if (shape['@type'] === 'circle') {
+  console.log(shape.radius);
+}
+----
+
+When the browser sends a `Shape`, the property must be there. Without it, the call fails with an `EndpointValidationError`.
+
+
+[[object-mapper]]
+== Customizing the Object Mapper
+
+By default, Vaadin creates the Jackson [classname]`ObjectMapper` for browser-callable services with [classname]`JacksonObjectMapperFactory.Json`. It's separate from the object mapper of Spring Boot, so the `spring.jackson` properties don't affect it.
+
+To change the object mapper, declare a [classname]`JacksonObjectMapperFactory` bean with the `endpointMapperFactory` qualifier. The following example makes calls fail when an object from the browser has a property that the Java class lacks:
+
+[source,java]
+----
+@Configuration
+public class EndpointMapperConfiguration {
+
+    @Bean
+    @Qualifier(EndpointController.ENDPOINT_MAPPER_FACTORY_BEAN_QUALIFIER)
+    JacksonObjectMapperFactory endpointMapperFactory() {
+        return new JacksonObjectMapperFactory.Json() {
+            @Override
+            public ObjectMapper build() {
+                return super.build().rebuild()
+                        .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                        .build();
+            }
+        };
+    }
+}
+----
+
+Extend [classname]`JacksonObjectMapperFactory.Json`, so that the defaults described on this page stay in place. A factory that builds its object mapper from scratch must register [classname]`ByteArrayModule` to send `byte[]` values as arrays of numbers.
+
+The code generator doesn't use this object mapper. A change that adds, removes, or renames properties, or that changes the form of a value, makes the generated types disagree with the JSON. Use Jackson annotations on the classes for such changes instead.
