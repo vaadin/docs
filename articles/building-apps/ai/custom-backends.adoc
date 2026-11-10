@@ -1,8 +1,8 @@
 ---
 title: Custom Backends
 page-title: Custom Backends for AI-Powered Grids and Charts | Vaadin
-description: Give the LLM a SQL view of a REST API, a service, or any other data source with Apache Calcite.
-meta-description: Expose a REST API or any other backend without SQL to Vaadin's AI-powered Grid and Chart by running the LLM's queries over Java objects with Apache Calcite.
+description: Give the LLM a SQL view of a REST API, a service, or files, either by running its queries over Java objects with Apache Calcite or by copying the data into a database.
+meta-description: Expose a REST API or another backend without SQL to Vaadin's AI-powered Grid and Chart, with Apache Calcite over Java objects or with a copy in a database.
 order: 30
 section-nav: badge-preview
 ---
@@ -18,7 +18,7 @@ include::{articles}/_preview-banner.adoc[opts=optional]
 
 The <<{articles}/flow/ai-support/ai-powered-grid#,AI-powered Grid>> and <<{articles}/flow/ai-support/ai-powered-chart#,Chart>> let users explore data in natural language. The LLM reads a schema description, writes SQL, and a <<{articles}/flow/ai-support/controllers#database-provider,[classname]`DatabaseProvider`>> runs the query. When your data lives behind a REST API, in a service, or in files, no database runs that SQL for you.
 
-This guide shows how to run it yourself with https://calcite.apache.org[Apache Calcite], a Java library that parses SQL and executes it over tables you define in Java. The LLM keeps writing standard SQL, and your provider answers from any data you can load into Java objects. You don't need prior experience with Calcite.
+This guide shows two ways to run it. The first is https://calcite.apache.org[Apache Calcite], a Java library that parses SQL and executes it over tables you define in Java. The LLM keeps writing standard SQL, and your provider answers from any data you can load into Java objects. You don't need prior experience with Calcite. The second is to copy the data into a database, which then runs the SQL.
 
 
 == Prerequisites
@@ -28,16 +28,18 @@ This guide shows how to run it yourself with https://calcite.apache.org[Apache C
 * A Java client for your backend that returns the data as Java objects, for example a class that wraps Spring's [classname]`RestClient`. This guide calls it [classname]`CatalogClient`.
 
 
-== When to Use Calcite
+== Choose an Approach
+
+A data source that has a JDBC driver needs neither approach of this guide. Query it with a JDBC provider like the one on the <<{articles}/flow/ai-support/controllers#database-provider,Controllers>> page.
 
 Use Calcite when:
 
 * your data has no SQL interface, such as a REST API, a gRPC service, or a set of files, or
 * you want the LLM to join, group, and total data from several such sources in one query.
 
-Every query loads the tables it uses into memory. Calcite therefore suits data that fits in the server's memory with room to spare for every user who queries it at the same time.
+Every query loads the tables it uses into memory. Calcite therefore suits data that fits in the server's memory with room to spare for every user who queries it at the same time. Calcite reads the backend when a query runs, so the grid shows the backend's current data, as fresh as the short cache described later allows. One provider can also combine several backends. Calcite can also pass simple conditions to the backend, as <<#pass-conditions,Pass Conditions to the Backend>> shows.
 
-The alternative is to copy the data into a database and query it with a JDBC provider like the one on the <<{articles}/flow/ai-support/controllers#database-provider,Controllers>> page. The copy is simpler when the data is small and seldom changes, and it is the only option when the data doesn't fit in memory. Calcite reads the backend when a query runs, so the grid shows the backend's current data, as fresh as the short cache described later allows. One provider can also combine several backends. Calcite can also pass simple conditions to the backend, as the last section shows.
+<<#database-copy,Copy the data into a database>> when the data doesn't fit in memory. A copy is also the simpler choice for data that seldom changes. The database then filters, sorts, pages, and groups the rows, and the grid shows the data as of the last refresh of the copy.
 
 
 == Add the Dependency
@@ -432,13 +434,14 @@ The provider needs no LLM to test. A unit test can call [methodname]`executeQuer
 
 == What to Expect at Runtime
 
-Each query reads every table it uses in full, and Calcite filters, joins, sorts, and groups in memory. A sorted or paged grid query reads the whole table as well. The time and memory a query takes therefore grow with the size of the tables it reads, not with the size of its result. For large tables, pass conditions to the backend as shown in the next section, or copy the data into a database.
+Each query reads every table it uses in full, and Calcite filters, joins, sorts, and groups in memory. A sorted or paged grid query reads the whole table as well. The time and memory a query takes therefore grow with the size of the tables it reads, not with the size of its result. For large tables, pass conditions to the backend as shown in the next section, or <<#database-copy,copy the data into a database>>.
 
 The chart calls [methodname]`executeQuery(String sql)` for each of its series queries and receives the full result. It does so when the LLM proposes the queries, and again every time the chart renders, including after a state restore. A series query that groups its rows returns a small result, and the table cache serves the repeated calls.
 
 Calcite can't change data through these tables. A `DELETE` or `UPDATE` fails before anything runs, so the provider is read-only by construction. The advice on the Controllers page about keeping secrets out of the schema text and error messages still applies.
 
 
+[[pass-conditions]]
 == Pass Conditions to the Backend
 
 When your backend can filter, such as a REST endpoint with query parameters, let Calcite hand it the conditions of the `WHERE` clause. Implement [interfacename]`FilterableTable` instead of [interfacename]`ScannableTable`. Its [methodname]`scan()` receives the conditions as a list: you take the ones the backend understands and remove them from the list, and Calcite applies the rest itself. The following table passes `column = value` conditions to the loader as a map. It reuses [classname]`Column` and the helpers of [classname]`BackendTable`:
@@ -554,3 +557,81 @@ What to keep in mind:
 * Calcite rewrites some conditions before they reach the table: an `IN` list arrives as a search over a set of values, and `discontinued = TRUE` arrives as the column on its own. [methodname]`equality()` recognizes neither, so both stay with Calcite.
 * `ORDER BY`, `LIMIT`, and `OFFSET` don't reach the table. The backend returns every matching row, and Calcite sorts and cuts the page.
 * This table has no cache, so a grid render calls the backend once for the sample row, once for the count, and once per page. If you add a cache, key it by the conditions, since each set of conditions loads different rows.
+
+
+[[database-copy]]
+== Copy the Data into a Database
+
+Instead of running the LLM's SQL over Java objects, the application can keep a copy of the data in a database and let the database run the SQL. The database filters, sorts, pages, and groups the rows, so this approach suits data that is too large for Calcite to load. The price is freshness: the grid and the chart show the data as of the last refresh of the copy.
+
+Any database with a JDBC driver can hold the copy, such as a schema of its own in the database the application already uses, or an embedded database. Create the tables of the copy the way the application creates its other tables, for example with a migration tool.
+
+The following Spring service fills the `products` table of the copy and refreshes it every ten minutes. It reads the products one page at a time, which takes a client method such as `List<Product> products(int page, int pageSize)`:
+
+[source,java]
+----
+import java.sql.SQLException;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import javax.sql.DataSource;
+
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+@Service
+public class CatalogCopy {
+
+    private static final int PAGE_SIZE = 500;
+
+    private final CatalogClient client;
+    private final DataSource dataSource;
+
+    public CatalogCopy(CatalogClient client, DataSource dataSource) {
+        this.client = client;
+        this.dataSource = dataSource;
+    }
+
+    @Scheduled(fixedDelay = 10, timeUnit = TimeUnit.MINUTES)
+    public void refresh() throws SQLException {
+        try (var connection = dataSource.getConnection()) {
+            connection.setAutoCommit(false);
+            try (var delete = connection.createStatement();
+                    var insert = connection.prepareStatement("""
+                            INSERT INTO products
+                            (id, name, category, price, discontinued)
+                            VALUES (?, ?, ?, ?, ?)""")) {
+                delete.executeUpdate("DELETE FROM products");
+                List<Product> page;
+                int pageNumber = 0;
+                do {
+                    page = client.products(pageNumber++, PAGE_SIZE);
+                    for (var product : page) {
+                        insert.setInt(1, product.id());
+                        insert.setString(2, product.name());
+                        insert.setString(3, product.category());
+                        insert.setBigDecimal(4, product.price());
+                        insert.setBoolean(5, product.discontinued());
+                        insert.addBatch();
+                    }
+                    insert.executeBatch();
+                } while (page.size() == PAGE_SIZE);
+                connection.commit();
+            } catch (SQLException | RuntimeException e) {
+                // Queries keep reading the previous copy
+                connection.rollback();
+                throw e;
+            }
+        }
+    }
+}
+----
+
+How the service works:
+
+* It reads and inserts one page at a time, so the application never holds all the products in memory.
+* It replaces the rows in one transaction, so a query never reads a half-filled table. Depending on the database, a query that runs during a refresh reads the previous copy or waits for the refresh to finish. A refresh that fails leaves the previous copy in place.
+* Spring calls the [annotationname]`@Scheduled` method when the application starts and then again each time ten minutes have passed since the previous call ended. Scheduling requires [annotationname]`@EnableScheduling` on a configuration class. When a call fails, Spring logs the exception and calls the method again after the delay. In an application without Spring, schedule the refresh with a [classname]`ScheduledExecutorService`, and catch the exceptions of the refresh in the scheduled task, because the executor stops repeating a task that throws one.
+* Choose the delay by how old the data may be and by how much load a full read puts on the backend.
+
+Query the copy with a JDBC provider like the one on the <<{articles}/flow/ai-support/controllers#database-provider,Controllers>> page, and describe the tables of the copy in its [methodname]`getSchema()`. Give the provider a database account that can only read the copy, as that page advises.
