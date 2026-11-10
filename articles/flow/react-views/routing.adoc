@@ -1,0 +1,298 @@
+---
+title: Routing
+page-title: How file-based routing works for React views | Vaadin
+description: File naming conventions, layouts, view configuration, and the router configuration of React views.
+meta-description: Reference for the file-based router of Vaadin React views - the file naming conventions, layouts, the ViewConfig options, menus, and the routes.tsx file.
+order: 10
+---
+
+
+= Routing
+:toclevels: 2
+
+React views use file-based routing: the router derives the route of each view from the path of its file in [filename]`src/main/frontend/views`. This page calls that directory `views`.
+
+The router builds on https://reactrouter.com/[React Router]. Links, programmatic navigation, and the hooks that read parameters come from the `react-router` package: `<NavLink>`, `useNavigate()`, `useParams()`, and `useSearchParams()`. For examples of these, see <<{articles}/building-apps/react/navigate#,Navigation and Layouts>>.
+
+
+== View Files
+
+A view is a `.tsx` or `.jsx` file in `views` whose default export is a React component. Its route is the path of the file relative to `views`, without the extension. For example, the route of [filename]`views/customers/list.tsx` is `/customers/list`.
+
+Some file and directory names have a special meaning:
+
+[cols="1,3"]
+|===
+|Name |Meaning
+
+|`@index.tsx`
+|The view for the path of the directory itself. The route of [filename]`views/@index.tsx` is `/`, and the route of [filename]`views/customers/@index.tsx` is `/customers`.
+
+|`@layout.tsx`
+|A layout that wraps the other views of the directory and its subdirectories. See <<#layouts,Layouts>>.
+
+|`{name}`
+|A required route parameter. It can be a file, such as [filename]`{id}.tsx`, or a directory, such as [filename]`{id}/edit.tsx`.
+
+|`{{name}}`
+|An optional route parameter.
+
+|`{...name}`
+|A wildcard parameter. It matches the rest of the path, including several segments.
+
+|`_` at the start
+|Ignored by the router. This applies to both files and directories, so use it for components and utilities that aren't views.
+|===
+
+The router also follows these rules:
+
+- Names other than `@index` and `@layout` that start with `@` are an error.
+- A directory can't contain a file and a subdirectory with the same name. Put an [filename]`@index.tsx` file in the subdirectory instead.
+- A directory that contains an optional parameter can't have an [filename]`@index.tsx` file.
+- The router ignores a file that doesn't contain `export default`, and logs an error. It ignores empty files without an error.
+- The router ignores `.ts` and `.js` files in `views`, and logs a warning for each. Keep such files elsewhere, or start their names with `_`.
+
+
+== Route Parameters
+
+The `useParams()` hook of React Router returns the parameter values of the current route. Each parameter has the name given in the braces, except a wildcard parameter: React Router always names it `*`, whatever the file name says.
+
+[source,tsx]
+.[filename]`views/docs/{...path}.tsx`
+----
+import { useParams } from 'react-router';
+
+export default function DocsView() {
+  const { '*': path } = useParams();
+  return <h1>Document: {path}</h1>;
+}
+----
+
+A wildcard view also takes the routes of the Flow views under its directory: the router shows the wildcard view instead of those Flow views. In an application with Flow views, don't put a wildcard view directly in `views`. To customize the page that's shown when no view matches the path, replace the not-found view of Flow, as described in <<{articles}/flow/routing/exceptions#custom-exception-handlers,Custom Exception Handlers>>.
+
+
+[[layouts]]
+== Layouts
+
+A [filename]`@layout.tsx` file wraps the views of its directory and of its subdirectories. The layout component renders the `<Outlet />` component of React Router where the view goes. Layouts nest: the layout of a subdirectory renders inside the layout of its parent directory.
+
+The router loads most views only when they are first shown, as described for the `lazy` option below. Wrap the outlet in a `<Suspense>` boundary to show something while a view loads:
+
+[source,tsx]
+.[filename]`views/@layout.tsx`
+----
+import { Suspense } from 'react';
+import { Outlet } from 'react-router';
+import { ProgressBar } from '@vaadin/react-components/ProgressBar.js';
+
+export default function MainLayout() {
+  return (
+    <main>
+      <Suspense fallback={<ProgressBar indeterminate />}>
+        <Outlet />
+      </Suspense>
+    </main>
+  );
+}
+----
+
+A view with the `skipLayouts` option renders without any layout. A Flow layout can also wrap React views. See <<flow-interop#layouts,Flow Layouts Around React Views>>.
+
+
+[[view-configuration]]
+== View Configuration
+
+A view file can export a `config` object of the type `ViewConfig`, which configures the route, the title, the menu item, and the access rules of the view:
+
+[source,tsx]
+.[filename]`views/customers/@index.tsx`
+----
+import type { ViewConfig } from '@vaadin/hilla-file-router/types.js';
+
+export const config: ViewConfig = {
+  title: 'Customers',
+  menu: { order: 1, icon: 'vaadin:users' },
+  rolesAllowed: ['ADMIN'],
+};
+
+export default function CustomersView() {
+  return <h1>Customers</h1>;
+}
+----
+
+The router reads the `config` object when it builds the route list, without running the rest of the file. Write it as an object literal whose values are literals: it can't refer to constants, functions, or imports. The only exception is the `key` tag for translation keys, described in <<{articles}/hilla/guides/i18n#file-router-integration,the i18n guide>>.
+
+All the options are optional:
+
+`title`::
+The title of the view. Menu items use it unless the menu item has a title of its own, and `useViewConfig()` returns it. Without it, the title comes from the name of the component, with `View` removed and a space before each capital letter. For example, the title of `CustomerListView` is `Customer List`. The router doesn't set the title of the browser page. A layout can do that with `useViewConfig()`.
+
+`route`::
+Replaces the part of the route that comes from the file name, using the path syntax of React Router. For example, with `route: 'hi'`, the route of [filename]`views/greeting/hello.tsx` is `/greeting/hi`.
+
+`menu`::
+The menu item of the view, with these options:
++
+--
+`title`:::
+The title of the menu item. Defaults to the title of the view.
+
+`order`:::
+The position of the item in the menu, in ascending order. Items without an order come after the items that have one. Items with the same order are sorted by their path.
+
+`icon`:::
+The icon of the menu item. The router passes it on as it is, so it can be an icon name, such as `vaadin:users`, or the path to an image.
+
+`exclude`:::
+If `true`, the view isn't in the menu.
+--
+
+`loginRequired`::
+If `true`, only an authenticated user can open the view.
+
+`rolesAllowed`::
+The roles that can open the view. The user needs at least one of them.
+
+`skipLayouts`::
+If `true`, neither React nor Flow layouts wrap the view. This suits a login view, for example.
+
+`flowLayout`::
+Whether a Flow layout annotated with [annotationname]`@Layout` wraps the view. Defaults to `true` when such a layout covers the route of the view. See <<flow-interop#layouts,Flow Layouts Around React Views>>.
+
+`lazy`::
+If `true`, the browser loads the code of the view only when the view is first shown. Defaults to `true` for all views except the views with the routes `/` and `/login`, which load with the application.
+
+`detail`::
+Any further data about the view, for example for rendering the menu. Its type is the type parameter of `ViewConfig`.
+
+The `loginRequired` and `rolesAllowed` options control navigation in the browser, and which views the menu shows. They don't protect any data. Protect the browser-callable services that the view calls on the server. See <<{articles}/building-apps/react/security#,Secure React Views>>.
+
+
+=== Reading the Configuration
+
+The `useViewConfig()` hook returns the configuration of the view that's shown, or `undefined` while the router shows a Flow view. A layout can use it to show the title of the current view:
+
+[source,tsx]
+.[filename]`views/@layout.tsx`
+----
+import { useViewConfig } from '@vaadin/hilla-file-router/runtime.js';
+import { Outlet } from 'react-router';
+
+export default function MainLayout() {
+  const title = useViewConfig()?.title;
+
+  return (
+    <>
+      <header>{title}</header>
+      <Outlet />
+    </>
+  );
+}
+----
+
+
+[[menu]]
+=== Creating Menu Items
+
+The `createMenuItems()` function returns the items for a navigation menu. Each item has the properties `to`, `title`, `icon`, and `detail`. The `to` property is the path of the view, and the others come from its configuration.
+
+The server sends the list of views when the browser loads the page. It leaves out the views that the user isn't allowed to open. The function then leaves out layouts, the views that have the `exclude` option, and the views whose route has a parameter. The list also contains the Flow views annotated with [annotationname]`@Menu`, as described in <<flow-interop#menu,Flow Views in the Menu>>.
+
+Give `ViewConfig` and `createMenuItems()` the same type parameter to type the `detail` data:
+
+[source,tsx]
+----
+import { createMenuItems } from '@vaadin/hilla-file-router/runtime.js';
+import type { ViewConfig } from '@vaadin/hilla-file-router/types.js';
+import { NavLink } from 'react-router';
+
+type ViewDetail = { description: string };
+
+// In a view file:
+export const config: ViewConfig<ViewDetail> = {
+  detail: { description: 'Browse the product catalog' },
+};
+
+// In the layout:
+export function MainMenu() {
+  return (
+    <nav>
+      {createMenuItems<ViewDetail>().map(({ to, title, detail }) => (
+        <NavLink to={to} key={to} title={detail?.description}>
+          {title}
+        </NavLink>
+      ))}
+    </nav>
+  );
+}
+----
+
+The `useViewConfig()` hook takes the type of the whole configuration as its type parameter, such as `useViewConfig<ViewConfig<ViewDetail>>()`.
+
+For a menu built with the Side Navigation component, see <<{articles}/building-apps/react/navigate#building-a-navigation-menu,Building a Navigation Menu>>.
+
+
+[[routes-file]]
+== The Route Configuration File
+
+The file [filename]`routes.tsx` configures the router. By default, Vaadin generates it in [filename]`src/main/frontend/generated` with this content:
+
+[source,tsx]
+----
+import { RouterConfigurationBuilder } from '@vaadin/hilla-file-router/runtime.js';
+import Flow from 'Frontend/generated/flow/Flow';
+import fileRoutes from 'Frontend/generated/file-routes';
+
+export const { router, routes } = new RouterConfigurationBuilder()
+  .withFileRoutes(fileRoutes)
+  .withFallback(Flow)
+  .protect()
+  .build();
+----
+
+To change the configuration, copy the file to [filename]`src/main/frontend` and edit the copy. Vaadin uses it instead of the generated file. Restart the application after adding the file. After that, Vaadin picks up changes to it while the application runs.
+
+The `RouterConfigurationBuilder` class has these methods:
+
+`withFileRoutes(fileRoutes)`::
+Adds the views in `views`. The argument is the default export of the generated [filename]`file-routes.ts` file.
+
+`withReactRoutes(routes)`::
+Adds the given React Router route objects. The builder merges them with the other routes by path. The `handle` property of a route object holds its view configuration, such as `handle: { title: 'Log In' }`.
+
+`withFallback(component, config)`::
+Adds a route for the paths that no other route matches, in every branch of the route tree. With the `Flow` component, the server handles those paths and shows the Flow view with the route. This method also calls `withLayout()` with the same component. The `config` argument is optional. Only the first call has an effect.
+
+`withLayout(component)`::
+Wraps the views that have the `flowLayout` option in the given component, such as `Flow`. Only the first call has an effect.
+
+`protect(redirectPath)`::
+Checks the `loginRequired` and `rolesAllowed` options in the browser. When the user can't open a view, the router goes to `redirectPath` instead, or to `/login` without an argument. It gets the user from the authentication context. See <<{articles}/building-apps/react/security#,Secure React Views>>.
+
+`build(options)`::
+Returns an object with the `router` and the `routes`. The optional `options` are passed to the `createBrowserRouter()` function of React Router.
+
+The following example adds a login view that isn't in `views`, so that it can be outside the layouts, and sends users who can't open a view to it:
+
+[source,tsx]
+.[filename]`src/main/frontend/routes.tsx`
+----
+import { RouterConfigurationBuilder } from '@vaadin/hilla-file-router/runtime.js';
+import Flow from 'Frontend/generated/flow/Flow';
+import fileRoutes from 'Frontend/generated/file-routes';
+import LoginView from 'Frontend/components/LoginView';
+
+export const { router, routes } = new RouterConfigurationBuilder()
+  .withFileRoutes(fileRoutes)
+  .withReactRoutes([{ path: '/login', element: <LoginView />, handle: { title: 'Log In' } }])
+  .withFallback(Flow)
+  .protect('/login')
+  .build();
+----
+
+Vaadin checks the file when it builds the frontend, and the build fails unless:
+
+- the file exports `router` and `routes`, and
+- in an application with Flow views, the file passes the `Flow` component from [filename]`Frontend/generated/flow/Flow` to `withFallback()`, or adds the `serverSideRoutes` exported by the same file to its routes.
+
+Without a call to `withFileRoutes()`, the router doesn't use the files in `views`. Vaadin still processes them as views, so don't keep other `.tsx` and `.jsx` files there.
