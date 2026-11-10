@@ -39,6 +39,8 @@ Use Calcite when:
 
 Every query loads the tables it uses into memory. Calcite therefore suits data that fits in the server's memory with room to spare for every user who queries it at the same time. Calcite reads the backend when a query runs, so the grid shows the backend's current data, as fresh as the short cache described later allows. One provider can also combine several backends. Calcite can also pass simple conditions to the backend, as <<#pass-conditions,Pass Conditions to the Backend>> shows.
 
+For data that is too large to load, Calcite can hand sorting, paging, and grouping to the backend as well, through an adapter that Calcite ships or one that you write. See <<#backend-adapters,Run More of the Query in the Backend>>.
+
 <<#database-copy,Copy the data into a database>> when the data doesn't fit in memory. A copy is also the simpler choice for data that seldom changes. The database then filters, sorts, pages, and groups the rows, and the grid shows the data as of the last refresh of the copy.
 
 
@@ -445,7 +447,7 @@ The provider needs no LLM to test. A unit test can call [methodname]`executeQuer
 
 == What to Expect at Runtime
 
-Each query reads every table it uses in full, and Calcite filters, joins, sorts, and groups in memory. A sorted or paged grid query reads the whole table as well. The time and memory a query takes therefore grow with the size of the tables it reads, not with the size of its result. The row limit of [classname]`BackendTable` fails the queries on a table that has outgrown this approach. For large tables, pass conditions to the backend as shown in the next section, or <<#database-copy,copy the data into a database>>.
+Each query reads every table it uses in full, and Calcite filters, joins, sorts, and groups in memory. A sorted or paged grid query reads the whole table as well. The time and memory a query takes therefore grow with the size of the tables it reads, not with the size of its result. The row limit of [classname]`BackendTable` fails the queries on a table that has outgrown this approach. For large tables, pass conditions to the backend as shown in the next section, <<#backend-adapters,run more of the query in the backend>>, or <<#database-copy,copy the data into a database>>.
 
 The chart calls [methodname]`executeQuery(String sql)` for each of its series queries and receives the full result. It does so when the LLM proposes the queries, and again every time the chart renders, including after a state restore. A series query that groups its rows returns a small result, and the table cache serves the repeated calls.
 
@@ -568,6 +570,15 @@ What to keep in mind:
 * Calcite rewrites some conditions before they reach the table: an `IN` list arrives as a search over a set of values, and `discontinued = TRUE` arrives as the column on its own. [methodname]`equality()` recognizes neither, so both stay with Calcite.
 * `ORDER BY`, `LIMIT`, and `OFFSET` don't reach the table. The backend returns every matching row, and Calcite sorts and cuts the page.
 * This table has no cache, so a grid render calls the backend once for the sample row, once for the count, and once per page. If you add a cache, key it by the conditions, since each set of conditions loads different rows.
+
+
+[[backend-adapters]]
+== Run More of the Query in the Backend
+
+The tables of this guide leave sorting, paging, and grouping to Calcite, which does them in memory. When the data is too large for that and a copy in a database is not an option, Calcite can hand these parts of a query to the backend as well, in one of the following ways:
+
+* Use an adapter that Calcite ships. Calcite has https://calcite.apache.org/docs/adapter.html[adapters] for several data stores, such as MongoDB, Elasticsearch, and Cassandra. An adapter replaces the tables you define: you register its schema on the connection, and it translates the conditions, the sort, the limit, and, depending on the adapter, the grouping of a query into the query language of the data store. Test an adapter with the kinds of query the LLM writes before you rely on it, such as date conditions, `<>`, and `LIKE`. An adapter covers only a part of SQL, and a query with a part it doesn't cover can fail or return wrong rows.
+* Write an adapter. For a backend without one, such as a REST API, implement [interfacename]`TranslatableTable` instead of [interfacename]`ScannableTable`. The table then takes part in planning the query: planner rules move a filter, a sort, a limit, or an aggregate into the scan of the table, and the scan sends them to the backend. This is how Calcite's own adapters work, and the https://calcite.apache.org/docs/tutorial.html[Calcite tutorial] introduces the technique. It takes considerably more code than the tables in this guide, and knowledge of Calcite's planner.
 
 
 [[database-copy]]
