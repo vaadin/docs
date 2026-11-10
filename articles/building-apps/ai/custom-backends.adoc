@@ -263,6 +263,7 @@ public class CatalogDatabaseProvider implements DatabaseProvider {
                 orders.product_id refers to products.id.
                 Dialect: Apache Calcite, standard SQL. JOIN, GROUP BY, sub-queries, LIMIT and OFFSET are supported.
                 Compare DATE columns with DATE literals, for example ordered_on >= DATE '2025-01-01'.
+                Put a column alias that is a SQL keyword, such as value or year, in double quotes: SUM(quantity) AS "value".
                 """;
     }
 
@@ -287,7 +288,7 @@ public class CatalogDatabaseProvider implements DatabaseProvider {
         var paged = withoutTrailingSemicolon(sql);
         if (!page.sortOrders().isEmpty()) {
             // The grid's sort replaces an ORDER BY the LLM wrote
-            paged = "SELECT * FROM (" + sql + ") AS page ORDER BY "
+            paged = "SELECT * FROM (" + paged + "\n) AS page ORDER BY "
                     + page.sortOrders().stream()
                             .map(order -> "\""
                                     + order.getSorted().replace("\"", "\"\"")
@@ -297,13 +298,16 @@ public class CatalogDatabaseProvider implements DatabaseProvider {
                                             : "ASC"))
                             .collect(Collectors.joining(", "));
         }
+        // The line breaks keep a comment at the end of the LLM's SQL from
+        // swallowing what follows it
         return executeQuery(
-                paged + " LIMIT " + page.limit() + " OFFSET " + page.offset());
+                paged + "\nLIMIT " + page.limit() + " OFFSET " + page.offset());
     }
 
     @Override
     public int count(String sql) {
-        return DatabaseProvider.super.count(withoutTrailingSemicolon(sql));
+        return DatabaseProvider.super.count(
+                withoutTrailingSemicolon(sql) + "\n");
     }
 
     private CalciteConnection connection() throws SQLException {
@@ -394,8 +398,8 @@ How the parts work together:
 * [methodname]`executeQuery()` is `synchronized`. It creates the connection on first use, and Calcite doesn't document its connections as safe for concurrent use. The grid can load a page while the LLM validates its next query, so both can run at the same time.
 * Calcite returns dates as [classname]`java.sql.Date` and timestamps as [classname]`java.sql.Timestamp`. The provider converts them to [classname]`LocalDate` and [classname]`LocalDateTime`, which the grid renders with its date renderers.
 * Calcite's parse and validation errors name the problem in the SQL the LLM wrote, such as an unknown column. The provider relays them in a [classname]`ToolException`, so the LLM can correct its query. Every other failure, including the unchecked exceptions Calcite throws while a query runs, becomes a [classname]`ToolException` with a generic message.
-* Calcite rejects a statement that ends with a semicolon, and LLMs often write one. The provider removes a trailing semicolon before it runs or wraps a query, so the LLM doesn't spend a turn on correcting it.
-* The grid loads rows one page at a time through [methodname]`executeQuery(String sql, QueryPage page)` and [methodname]`count(String sql)`. Their default implementations wrap the query in sub-queries, and Calcite drops an `ORDER BY` from a sub-query that has no `LIMIT` of its own. With the defaults, the grid loses a sort the user applies, and also an `ORDER BY` the LLM wrote, for example to show the ten most expensive products. The override in the listing handles both cases. When the grid has no sort of its own, it appends `LIMIT` and `OFFSET` to the LLM's query. Otherwise it wraps the query, so that the grid's sort replaces the LLM's. The grid instructs the LLM not to write `LIMIT` or `OFFSET`. When a query has one anyway, the validation of the query fails, and the parse error tells the LLM why. The default [methodname]`count()` works as it is.
+* Calcite rejects a statement that ends with a semicolon, and LLMs often write one. The provider removes a trailing semicolon before it runs or wraps a query, so the LLM doesn't spend a turn on correcting it. It also starts what it adds after the LLM's SQL on a new line, so that a `--` comment at the end of the SQL doesn't swallow it.
+* The grid loads rows one page at a time through [methodname]`executeQuery(String sql, QueryPage page)` and [methodname]`count(String sql)`. Their default implementations wrap the query in sub-queries, and Calcite drops an `ORDER BY` from a sub-query that has no `LIMIT` of its own. With the defaults, the grid loses a sort the user applies, and also an `ORDER BY` the LLM wrote, for example to list the most expensive products first. The override in the listing handles both cases. When the grid has no sort of its own, it appends `LIMIT` and `OFFSET` to the LLM's query. Otherwise it wraps the query, so that the grid's sort replaces the LLM's. The grid instructs the LLM not to write `LIMIT` or `OFFSET`. When a query has one anyway, the validation of the query fails, and the parse error tells the LLM why. The default [methodname]`count()` works as it is.
 
 
 == Describe the Schema for the LLM
@@ -405,6 +409,7 @@ The text that [methodname]`getSchema()` returns is all the LLM knows about your 
 * Name the dialect. Calcite accepts standard SQL, including `JOIN`, `GROUP BY`, sub-queries, `LIMIT`, and `OFFSET`.
 * Tell the LLM to write dates as `DATE` literals, for example `ordered_on >= DATE '2025-01-01'`, and timestamps as `TIMESTAMP` literals, for example `TIMESTAMP '2025-01-01 00:00:00'`.
 * Avoid column names that are SQL keywords, such as `year`, `month`, `value`, or `order`. Calcite accepts them only in double quotes, and the LLM writes them unquoted unless told otherwise. Rename the column in the table definition, or say in the schema text that the name has to be quoted.
+* The same goes for the column aliases the LLM chooses: `SUM(quantity) AS value` fails to parse, and `value` is a common alias in a chart query. Say in the schema text that an alias that is a keyword has to be in double quotes.
 * With the `lex` setting shown earlier, table and column names are case-insensitive, so the LLM may write them as they appear in the description.
 
 
