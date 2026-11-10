@@ -21,10 +21,29 @@ const client = new ConnectClient({ prefix: 'connect' });
 export default client;
 ----
 
-Change the default client by setting its properties, rather than by editing the generated file:
+Don't edit the generated file, because Vaadin overwrites it.
+
+
+[[custom-client]]
+== A Client of Your Own
+
+To configure the client, create [filename]`src/main/frontend/connect-client.ts`, with the client as its default export. When this file exists, the generated modules use its client, and Vaadin doesn't generate [filename]`connect-client.default.ts`:
+
+.[filename]`src/main/frontend/connect-client.ts`
+[source,typescript]
+----
+import { ConnectClient } from '@vaadin/hilla-frontend';
+import { logMiddleware } from './log-middleware';
+
+const client = new ConnectClient({ prefix: 'connect', middlewares: [logMiddleware] });
+
+export default client;
+----
+
+The constructor takes these options:
 
 `prefix`::
-The path of the services, relative to the base URL of the application. It must match the server, as described in <<index#service-urls,Service URLs>>.
+The path of the services, relative to the base URL of the application. It must match the server, as described in <<index#service-urls,Service URLs>>. Defaults to `connect`.
 
 `middlewares`::
 The <<#middleware,middleware>> that intercepts the calls.
@@ -32,7 +51,7 @@ The <<#middleware,middleware>> that intercepts the calls.
 
 == Calls Without a Generated Module
 
-The generated functions call the [methodname]`call()` method of the client, which a view can also call directly. It takes the service name, the method name, an object with the arguments by parameter name, and the optional <<index#request-options,request options>>. It returns a `Promise` of the return value:
+The generated functions call the [methodname]`call()` method of the client, which a view can also call directly. It takes the service name, the method name, an object with the arguments by parameter name, and the optional <<index#request-options,request options>>. It returns a `Promise` of the return value. Import the client from [filename]`Frontend/connect-client` when the application has a client of its own:
 
 [source,typescript]
 ----
@@ -77,17 +96,7 @@ export async function logMiddleware(context: MiddlewareContext, next: Middleware
 }
 ----
 
-Add the middleware to the `middlewares` array of the client. Calls use the array as it is when they start, so set it before the first call:
-
-[source,typescript]
-----
-import client from 'Frontend/generated/connect-client.default';
-import { logMiddleware } from './log-middleware';
-
-client.middlewares = [logMiddleware];
-----
-
-The middleware runs in the order of the array. A middleware can also be an object with an [methodname]`invoke(context, next)` method.
+Give the middleware to the client of your own, as shown in <<#custom-client,A Client of Your Own>>. The middleware runs in the order of the array. A call uses the middleware that the client has when the call starts. A middleware can also be an object with an [methodname]`invoke(context, next)` method.
 
 To change the request, replace `context.request` before calling `next`. The following middleware sends the calls of one service to another server:
 
