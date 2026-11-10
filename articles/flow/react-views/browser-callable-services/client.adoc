@@ -1,0 +1,121 @@
+---
+title: TypeScript Client
+page-title: The TypeScript client of browser-callable services | Vaadin
+description: The ConnectClient that sends the calls of React views to browser-callable services, and the middleware that intercepts them.
+meta-description: Reference for the Vaadin TypeScript client of browser-callable services - the default ConnectClient, calls without generated modules, and client middleware.
+order: 20
+---
+
+
+= TypeScript Client
+:toclevels: 2
+
+The generated modules of browser-callable services send their calls through a [classname]`ConnectClient` from the `@vaadin/hilla-frontend` package. Vaadin generates a default client in [filename]`src/main/frontend/generated/connect-client.default.ts`, which all the generated modules share:
+
+[source,typescript]
+----
+import { ConnectClient } from '@vaadin/hilla-frontend';
+
+const client = new ConnectClient({ prefix: 'connect' });
+
+export default client;
+----
+
+Change the default client by setting its properties, rather than by editing the generated file:
+
+`prefix`::
+The path of the services, relative to the base URL of the application. It must match the server, as described in <<index#service-urls,Service URLs>>.
+
+`middlewares`::
+The <<#middleware,middleware>> that intercepts the calls.
+
+
+== Calls Without a Generated Module
+
+The generated functions call the [methodname]`call()` method of the client, which a view can also call directly. It takes the service name, the method name, an object with the arguments by parameter name, and the optional <<index#request-options,request options>>. It returns a `Promise` of the return value:
+
+[source,typescript]
+----
+import client from 'Frontend/generated/connect-client.default';
+
+const result = await client.call('CounterService', 'addOne', { number: 1 });
+----
+
+The [methodname]`subscribe()` method does the same for <<reactive-services#,reactive services>>, and returns a `Subscription`.
+
+
+[[middleware]]
+== Middleware
+
+Middleware intercepts each call of the client. It can, for example, log or time the calls, add headers, or return a response without calling the server. Middleware is an `async` function that takes these arguments:
+
+`context`::
+The call. Its `endpoint`, `method`, and `params` properties are the arguments of [methodname]`call()`. Its `request` property is the Fetch API https://developer.mozilla.org/en-US/docs/Web/API/Request[`Request`] that the client sends.
+
+`next`::
+A function that passes the context on to the next middleware, or sends the request, and returns the https://developer.mozilla.org/en-US/docs/Web/API/Response[`Response`].
+
+Middleware gets the response before the client checks it, so it sees responses with an error status as well. The client turns the response into a return value or an <<index#errors,error>> after all the middleware has run. Middleware doesn't intercept the values of <<reactive-services#,reactive services>>.
+
+The following middleware logs each call:
+
+.[filename]`log-middleware.ts`
+[source,typescript]
+----
+import type { MiddlewareContext, MiddlewareNext } from '@vaadin/hilla-frontend';
+
+export async function logMiddleware(context: MiddlewareContext, next: MiddlewareNext): Promise<Response> {
+  const { endpoint, method, params } = context;
+  console.log(`Calling ${endpoint}.${method} with ${JSON.stringify(params)}`);
+
+  const response = await next(context);
+
+  // Clone the response before reading its body
+  const body = await response.clone().text();
+  console.log(`Received ${response.status}: ${body}`);
+  return response;
+}
+----
+
+Add the middleware to the `middlewares` array of the client. Calls use the array as it is when they start, so set it before the first call:
+
+[source,typescript]
+----
+import client from 'Frontend/generated/connect-client.default';
+import { logMiddleware } from './log-middleware';
+
+client.middlewares = [logMiddleware];
+----
+
+The middleware runs in the order of the array. A middleware can also be an object with an [methodname]`invoke(context, next)` method.
+
+To change the request, replace `context.request` before calling `next`. The following middleware sends the calls of one service to another server:
+
+[source,typescript]
+----
+import type { MiddlewareContext, MiddlewareNext } from '@vaadin/hilla-frontend';
+
+export async function dispatchMiddleware(context: MiddlewareContext, next: MiddlewareNext): Promise<Response> {
+  if (context.endpoint === 'ExternalService') {
+    const url = context.request.url.replace('https://my-app.example.com', 'https://external.example.com');
+    context.request = new Request(url, context.request);
+  }
+  return next(context);
+}
+----
+
+To answer a call without calling the server, return a `Response` instead of calling `next`:
+
+[source,typescript]
+----
+import type { MiddlewareContext, MiddlewareNext } from '@vaadin/hilla-frontend';
+
+export async function stubMiddleware(context: MiddlewareContext, next: MiddlewareNext): Promise<Response> {
+  if (context.endpoint === 'StubService') {
+    return new Response('{}');
+  }
+  return next(context);
+}
+----
+
+The `@vaadin/hilla-frontend` package also has an `InvalidSessionMiddleware`, which handles calls that fail because the session of the user has expired. See <<{articles}/hilla/guides/security/session-expiration#,Handling Session Expiration>>.

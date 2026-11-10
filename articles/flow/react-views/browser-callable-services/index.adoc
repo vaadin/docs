@@ -1,0 +1,315 @@
+---
+title: Browser-Callable Services
+page-title: Browser-callable services for React views | Vaadin
+description: Java services whose public methods React views call through generated TypeScript modules.
+meta-description: Reference for Vaadin browser-callable services - creating them, the generated TypeScript modules, service URLs, request options, validation, and errors.
+order: 40
+---
+
+
+= Browser-Callable Services
+:toclevels: 2
+
+A browser-callable service is a Java class whose public methods React views can call. Vaadin generates a TypeScript module for each service, with a function for each method, so that views call the methods in a type-safe way. For a step-by-step guide, see <<{articles}/building-apps/react/call-services#,Call Java Services from React Views>>.
+
+Browser-callable services need the Hilla Spring Boot starter, as described in <<../index#enabling,Enabling React Views>>. They also rely on the Spring MVC auto-configuration of Spring Boot. If an application turns that auto-configuration off with [annotationname]`@EnableWebMvc`, the requests to its services don't reach them.
+
+section_outline::[]
+
+
+[[creating]]
+== Creating a Service
+
+pass:[<!-- vale Vaadin.BrowserCallableService = NO -->]
+
+Annotate the service class with [annotationname]`@BrowserCallable`. The annotation also makes the class a Spring bean, so the class can get its dependencies through its constructor:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/accessingbackend/CounterService.java[tags=snippet]
+----
+
+Access to services is denied by default. Give the class or each method an access annotation, such as [annotationname]`@AnonymousAllowed`, [annotationname]`@PermitAll`, or [annotationname]`@RolesAllowed`. See <<{articles}/building-apps/react/security#,Secure React Views>>.
+
+The [annotationname]`@Endpoint` annotation is an alias for [annotationname]`@BrowserCallable`. Its optional `value` sets the name of the service, which is otherwise the simple name of the class. The generated module and the requests use that name.
+
+pass:[<!-- vale Vaadin.BrowserCallableService = YES -->]
+
+
+[[inherited-methods]]
+=== Inherited Methods
+
+Vaadin generates TypeScript functions for the methods declared in the service class, and for the methods of its superclasses and interfaces that are annotated with [annotationname]`@EndpointExposed`:
+
+[source,java]
+----
+@EndpointExposed
+public class ExposedClass {
+    public String fromExposedClass() { // <1>
+        return "Hello from ExposedClass";
+    }
+}
+
+public class NonExposedClass extends ExposedClass {
+    public String fromNonExposedClass() { // <2>
+        return "Hello from NonExposedClass";
+    }
+}
+
+@BrowserCallable
+@AnonymousAllowed
+public class ServiceClass extends NonExposedClass {
+    public String fromServiceClass() { // <3>
+        return "Hello from ServiceClass";
+    }
+}
+----
+<1> Gets a function, because its class is annotated.
+<2> Gets no function, because its class isn't annotated.
+<3> Gets a function, because it's declared in the service class.
+
+The annotation only controls which functions Vaadin generates. A request can call every public method of the service, including a method without a function, such as [methodname]`fromNonExposedClass()` in the example. The access annotations of the service class apply to the inherited methods. Don't inherit public methods that the browser mustn't call.
+
+
+[[generated-modules]]
+== Generated Modules
+
+For each service, Vaadin generates a TypeScript module in [filename]`src/main/frontend/generated`, named after the service. The module exports a function for each method. Each function takes the parameters of the method, followed by an optional argument with <<#request-options,request options>>, and returns a `Promise` of the return value. The generator copies the Javadoc of the service to the module, so code completion in an IDE shows it.
+
+The generated module for the service in <<#creating,Creating a Service>> is as follows:
+
+.[filename]`CounterService.ts`
+[source,typescript]
+----
+include::{root}/frontend/generated/CounterService.ts[]
+----
+
+Import the service from the [filename]`endpoints.ts` module, which exports all the services:
+
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/application/accessing-backend/ts-imports/barrel.ts[]
+----
+
+You can also import a module of one service as an object, or import single functions from it:
+
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/application/accessing-backend/ts-imports/asterisk.ts[]
+----
+
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/application/accessing-backend/ts-imports/method.ts[]
+----
+
+The `Frontend/` prefix of the imports is an alias for the [filename]`src/main/frontend` directory.
+
+For the Java types used in the parameters and return values of the methods, Vaadin generates TypeScript interfaces. For example, this service returns a list of `City` objects:
+
+.[filename]`City.java`
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/accessingbackend/City.java[]
+----
+
+.[filename]`CountryService.java`
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/accessingbackend/CountryService.java[]
+----
+
+Vaadin generates this interface for `City`:
+
+.[filename]`City.ts`
+[source,typescript]
+----
+include::{root}/frontend/generated/com/vaadin/demo/fusion/accessingbackend/City.ts[]
+----
+
+How Java types map to TypeScript types, and which of them can be `undefined`, is described in <<{articles}/hilla/reference/type-conversion#,Type Conversion>> and <<{articles}/hilla/reference/type-nullability#,Type Nullability>>.
+
+
+[[request-options]]
+== Request Options
+
+The last argument of a generated function is an optional object with these options:
+
+`signal`::
+An https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal[`AbortSignal`] that cancels the request. A cancelled call rejects with a `DOMException` named `AbortError`. One `AbortController` can cancel several calls when they get the same signal.
+
+`mute`::
+If `true`, the call doesn't show the <<{articles}/flow/advanced/loading-indicator#,loading indicator>>.
+
+For example:
+
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/options/request-options.ts[tag=abort,indent=0]
+----
+
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/options/request-options.ts[tag=mute,indent=0]
+----
+
+The functions of <<reactive-services#,reactive services>> have no request options.
+
+
+[[service-urls]]
+== Service URLs
+
+A generated function sends a `POST` request to `connect/{service}/{method}`, relative to the base URL of the application. The body is a JSON object with the arguments by parameter name. The service and method names in the URL aren't case-sensitive. Call the services through the generated functions rather than through these URLs.
+
+To serve the services under another prefix than `connect`, set the `vaadin.endpoint.prefix` property, for example in [filename]`application.properties`:
+
+[source,properties]
+----
+vaadin.endpoint.prefix=/api
+----
+
+The generated client still uses `connect`. Set the same prefix on it, without the leading slash, before the first call:
+
+[source,typescript]
+----
+import client from 'Frontend/generated/connect-client.default';
+
+client.prefix = 'api';
+----
+
+Without this, the calls get the HTML page of the application instead of a JSON response, and fail with a `SyntaxError`. For more about the client, see <<client#,TypeScript Client>>.
+
+
+[[validation]]
+== Parameter Validation
+
+Before calling a method, Vaadin checks its arguments with Jakarta Bean Validation. It checks the constraints on the parameters of the method, and the constraints on the fields of objects passed as arguments:
+
+[source,java]
+----
+public class Account {
+
+    @Positive
+    private Long id;
+
+    @NotEmpty(message = "Each account must have a non-empty username")
+    private String username;
+
+    // Getters and setters
+}
+
+@BrowserCallable
+@AnonymousAllowed
+public class AccountService {
+
+    public void save(Account account, @NotNull String destination) {
+        // ...
+    }
+}
+----
+
+When an argument can't be converted to its Java type, or a constraint fails, the call fails with an `EndpointValidationError`. Vaadin checks the constraints on the parameters only after the arguments are converted and the objects pass their own constraints. The `validationErrorData` property of the error lists the problems found, with these properties for each:
+
+`parameterName`::
+Where the problem is. For a constraint on a parameter, it's the method name and the parameter name, such as `save.destination`. For a constraint on a field of an object, it's the path of the field in the object, such as `username`.
+
+`message`::
+A description of the problem.
+
+`validatorMessage`::
+The message of the failed constraint, if a constraint failed.
+
+The following example catches a value that can't be converted to a `LocalDate`:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/errorhandling/DateService.java[]
+----
+
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/errorhandling/catch-invalid-args.ts[]
+----
+
+A method can also fail a call with an `EndpointValidationError` by throwing an [classname]`EndpointValidationException`. Vaadin also checks the constraints on the return value. When the return value fails them, the call fails as described in <<#errors,Errors>>.
+
+When a form bound with the `useForm` hook submits its value to a service method, the form shows the validation errors of the call in its fields. See <<{articles}/hilla/guides/forms/binder-validation#,Form Validation>>.
+
+
+[[errors]]
+== Errors
+
+A call that fails rejects with one of the errors below. The error classes come from `@vaadin/hilla-frontend`. `EndpointValidationError` and `EndpointResponseError` extend `EndpointError`, and `UnauthorizedResponseError` and `ForbiddenResponseError` extend `EndpointResponseError`.
+
+[cols="3,1,3"]
+|===
+|Cause |Status |Error
+
+|The method throws an [classname]`EndpointException`.
+|400
+|`EndpointError`
+
+|An argument can't be converted or fails validation.
+|400
+|`EndpointValidationError`
+
+|The call has the wrong number of arguments.
+|400
+|`EndpointResponseError`
+
+|Access is denied to a user who isn't logged in, or the request has no valid CSRF token.
+|401
+|`UnauthorizedResponseError`
+
+|Access is denied to a logged-in user.
+|403
+|`ForbiddenResponseError`
+
+|The service or the method doesn't exist.
+|404
+|`EndpointResponseError`
+
+|The method throws another exception, or its return value fails validation.
+|500
+|`EndpointResponseError`
+
+|The request is cancelled.
+|—
+|`DOMException` named `AbortError`
+
+|The server can't be reached.
+|—
+|`TypeError`, from the Fetch API
+|===
+
+An `EndpointResponseError` has the HTTP response in its `response` property, and the status code in `status`. For a status of 500, the message only says that the method failed. The server logs the exception, but doesn't send its details to the browser.
+
+To send the details of a failure to the browser, throw an [classname]`EndpointException`, or a subclass of it. The `EndpointError` then has these properties:
+
+`message`::
+The message of the exception.
+
+`type`::
+The fully qualified class name of the exception, or of its cause when the exception was created with one.
+
+`detail`::
+The `detail` argument of the exception, converted to JSON. Use it for data that the view needs to handle the error.
+
+For example:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/pwa/offline/DataService.java[]
+----
+
+[source,typescript]
+----
+include::{root}/frontend/demo/fusion/errorhandling/catch-error.ts[]
+----
+
+When the server can't be reached, the error isn't an `EndpointError`. A view that should work offline can return fallback data in that case:
+
+[source,typescript]
+----
+include::{root}/frontend/demo/pwa/offline/ts-view-with-service.ts[]
+----
