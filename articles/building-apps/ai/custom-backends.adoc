@@ -412,48 +412,6 @@ How the parts work together:
 * Calcite can't change data through these tables. A `DELETE` or `UPDATE` fails before anything runs, so the provider is read-only by construction. The advice on the Controllers page about keeping secrets out of the schema text and error messages still applies.
 
 
-[[paging]]
-=== Page and Sort the Rows
-
-The grid loads rows one page at a time through [methodname]`executeQuery(String sql, QueryPage page)`, and counts them through [methodname]`count(String sql)`. The chart calls neither method. Both have default implementations that wrap the LLM's query in sub-queries, as the <<{articles}/flow/ai-support/controllers#database-provider,Controllers>> page describes.
-
-The default [methodname]`count()` works with Calcite as it is, and handles a trailing semicolon or comment at the end of the query by itself. The default paging doesn't work, because Calcite drops an `ORDER BY` from a sub-query that has no `LIMIT` of its own. The grid then loses a sort the user applies, and also an `ORDER BY` the LLM wrote, for example to list the most expensive products first. Add the following override to the provider:
-
-[source,java]
-----
-@Override
-public List<Map<String, Object>> executeQuery(String sql,
-        QueryPage page) {
-    var paged = withoutTrailingSemicolon(sql);
-    if (!page.sortOrders().isEmpty()) {
-        // The grid's sort replaces an ORDER BY the LLM wrote
-        paged = "SELECT * FROM (" + paged + "\n) AS page ORDER BY "
-                + page.sortOrders().stream()
-                        .map(order -> "\""
-                                + order.getSorted().replace("\"", "\"\"")
-                                + "\" "
-                                + (order.getDirection() == SortDirection.DESCENDING
-                                        ? "DESC"
-                                        : "ASC"))
-                        .collect(Collectors.joining(", "));
-    }
-    // The line breaks keep a comment at the end of the LLM's SQL from
-    // swallowing what follows it
-    return executeQuery(
-            paged + "\nLIMIT " + page.limit() + " OFFSET " + page.offset());
-}
-----
-
-The override uses [classname]`QueryPage` from the `com.vaadin.flow.component.ai.common` package, [classname]`SortDirection` from `com.vaadin.flow.data.provider`, and [classname]`Collectors` from `java.util.stream`.
-
-How the override works:
-
-* When the grid has no sort of its own, it appends `LIMIT` and `OFFSET` to the LLM's query, which keeps an `ORDER BY` the LLM wrote.
-* When the user sorts a column, it wraps the query, so that the grid's sort replaces the LLM's.
-* It starts what it adds after the LLM's SQL on a new line, so that a `--` comment at the end of the SQL doesn't swallow it.
-* The grid instructs the LLM not to write `LIMIT` or `OFFSET`. When a query has one anyway, the validation of the query fails, and the parse error tells the LLM why.
-
-
 === Describe the Schema for the LLM
 
 The text that [methodname]`getSchema()` returns is all the LLM knows about your data. The general advice on the <<{articles}/flow/ai-support/controllers#database-provider,Controllers>> page applies. Some points are specific to Calcite:
@@ -615,7 +573,7 @@ The tables of this guide leave sorting, paging, and grouping to Calcite, which d
 * Use an adapter that Calcite ships. Calcite has https://calcite.apache.org/docs/adapter.html[adapters] for several data stores, such as MongoDB, Elasticsearch, and Cassandra. An adapter replaces the tables you define: you register its schema on the connection. It translates the conditions, the sort, and the limit of a query into the query language of the data store, and some adapters translate the grouping as well. An adapter translates only a part of SQL, and a query with a part it can't translate can fail or return wrong rows. Test an adapter with the kinds of query the LLM writes before you rely on it, such as date conditions, `<>`, and `LIKE`.
 * Write an adapter. For a backend without one, such as a REST API, implement [interfacename]`TranslatableTable` instead of [interfacename]`ScannableTable`. The table then takes part in planning the query. Planner rules that you write move a filter, a sort, a limit, or a grouping into the scan of the table, and the scan sends them to the backend. This is how Calcite's own adapters work, and the https://calcite.apache.org/docs/tutorial.html[Calcite tutorial] introduces the technique. It takes considerably more code than the tables in this guide, and knowledge of Calcite's planner.
 
-With either kind of adapter, keep the provider of this guide, including its <<#paging,paging override>>. The override puts the sort, the limit, and the offset on the top level of one statement, which an adapter can hand to the backend as a whole. With the default paging, Calcite drops the sort, so the backend receives the limit without it and returns the wrong rows.
+With either kind of adapter, the provider of this guide stays as it is. The statement for each page of the grid has the sort, the limit, and the offset on its top level. An adapter can hand such a statement to the backend as a whole.
 
 The grid also counts the rows of every query. The default [methodname]`count()` wraps the query in `SELECT COUNT(*)`, which the adapter has to translate as well. Otherwise, Calcite reads every matching row from the backend to count them.
 
