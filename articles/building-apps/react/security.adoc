@@ -45,7 +45,7 @@ public class UserInfoService {
     }
 
     @PermitAll // <2>
-    public @NonNull UserInfo getUserInfo() {
+    public UserInfo getUserInfo() {
         var auth = securityContextHolderStrategy.getContext().getAuthentication(); // <3>
         var authorities = auth.getAuthorities()
             .stream()
@@ -64,10 +64,18 @@ Vaadin has no built-in user-information type, so define your own. Add any extra 
 
 [source,java]
 ----
-public record UserInfo(
-    @NonNull String name,
-    @NonNull Collection<String> authorities
-) {}
+public record UserInfo(String name, List<String> roles) {}
+----
+
+Annotate the package of both classes with [annotationname]`@NullMarked`, so that the generated TypeScript types don't allow `undefined` values. See <<{articles}/flow/react-views/browser-callable-services/type-nullability#,Type Nullability>>.
+
+[source,java]
+.package-info.java
+----
+@NullMarked
+package com.example.application.security;
+
+import org.jspecify.annotations.NullMarked;
 ----
 
 === Set Up the Authentication Context
@@ -208,19 +216,9 @@ To grant access based on roles, first expose the current user's roles to the aut
 
 === Expose Roles to the Context
 
-Pass a `getRoles` function as a second argument to `configureAuth`:
+The authentication context reads the roles of the user from the `roles` property of the user information, so the [classname]`UserInfo` record already exposes them. The roles are the user's granted authorities with their `ROLE_` prefix, such as `ROLE_USER` and `ROLE_ADMIN`.
 
-[source,typescript]
-.frontend/security/auth.ts
-----
-const auth = configureAuth(UserInfoService.getUserInfo, {
-    getRoles: (user) => user.authorities
-        .filter(s => s.startsWith("ROLE_")) // <1>
-        .map(s => s.substring(5)) // <2>
-});
-----
-<1> Keep only role authorities. In Spring Security, roles use the `ROLE_` prefix by default.
-<2> Strip the prefix to get the role name.
+If your user information has the roles in another property, pass a `getRoles` function to `configureAuth()`, as described in <<{articles}/flow/security/react-views/authentication#configure-auth,Authentication Context>>.
 
 === Declare Required Roles
 
@@ -231,10 +229,10 @@ Add `rolesAllowed` to a view's or layout's `ViewConfig`:
 ----
 export const config: ViewConfig = {
     loginRequired: true,
-    rolesAllowed: [ "ADMIN" ] // <1>
+    rolesAllowed: [ "ROLE_ADMIN" ] // <1>
 };
 ----
-<1> An array of role names.
+<1> The roles that can open the view. Write them with the `ROLE_` prefix, as the granted authorities have it. Otherwise, the server denies access when the user reloads the page or opens its URL directly. See <<{articles}/flow/security/react-views/view-access-control#role-names,Role Names>>.
 
 === Check Access Programmatically
 
@@ -247,7 +245,7 @@ import { useAuth } from "Frontend/security/auth";
 
 export default function AccountView() {
     const auth = useAuth();
-    const isAdmin = auth.hasAccess({ rolesAllowed: [ "ADMIN" ] });
+    const isAdmin = auth.hasAccess({ rolesAllowed: [ "ROLE_ADMIN" ] });
 
     return (
         <main>
