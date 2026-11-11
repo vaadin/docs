@@ -49,18 +49,38 @@ public record Order(Integer id, Integer productId, Integer quantity,
 
 == Choose an Approach
 
-A data source that has a JDBC driver needs neither approach of this guide. Query it with a JDBC provider like the one on the <<{articles}/flow/ai-support/controllers#database-provider,Controllers>> page.
+A data source that has a JDBC driver needs neither approach of this guide. Query it with a JDBC provider like the one on the <<{articles}/flow/ai-support/controllers#database-provider,Controllers>> page. The same applies to a data source that runs SQL through an API of its own, without a JDBC driver. Implement [classname]`DatabaseProvider` with its client, and override [methodname]`executeQuery(String sql, QueryPage page)` and [methodname]`count(String sql)` when it pages or counts in its own way.
 
-Use Calcite when:
+For data without a SQL interface, such as a REST API, a gRPC service, or a set of files, the two approaches differ as follows:
 
-* your data has no SQL interface, such as a REST API, a gRPC service, or a set of files, or
-* you want the LLM to join, group, and total data from several such sources in one query.
+[cols="1,2,2",options="header"]
+|===
+| |Calcite |Database Copy
 
-Every query loads the tables it uses into memory. Calcite therefore suits data that fits in the server's memory with room to spare for every user who queries it at the same time. Calcite reads the backend when a query runs, so the grid shows the backend's current data, as fresh as the short cache described later allows. One provider can combine several backends, and Calcite can pass simple conditions to the backend, as <<#pass-conditions,Pass Conditions to the Backend>> shows.
+|Data size
+|Every query loads the tables it uses into memory, so the data has to fit there for every user who queries it at the same time
+|Any size that the database handles, because the database filters, sorts, pages, and groups the rows
 
-For data that is too large to load, Calcite can hand sorting, paging, and grouping to the backend as well. This takes an adapter, either one that Calcite ships or one that you write. See <<#backend-adapters,Run More of the Query in the Backend>>.
+|Freshness
+|The backend's current data, as fresh as a short cache allows
+|The data as of the last refresh of the copy
 
-<<#database-copy,Copy the data into a database>> when the data doesn't fit in memory. A copy is also the simpler choice for data that seldom changes. The database then filters, sorts, pages, and groups the rows, and the grid shows the data as of the last refresh of the copy.
+|Access rights
+|The client can call the backend as the current user, so the backend decides which rows each user gets
+|One account fills the copy, and every user can query all its rows
+
+|Several sources
+|One provider combines several backends, so the LLM can join, group, and total their data in one query
+|Tables that are copied from several sources can be joined in the database
+
+|What you maintain
+|Table classes, a provider, and a library with many dependencies
+|A scheduled job that fills the copy, and a JDBC provider
+|===
+
+Use <<#calcite,Calcite>> when users need the backend's current data, or when the backend decides which rows each user may see, and the data fits in memory. <<#database-copy,Copy the data into a database>> when the data doesn't fit in memory. A copy is also the simpler choice for data that seldom changes and that every user may see.
+
+Calcite can reduce what it loads by passing simple conditions to the backend, as <<#pass-conditions,Pass Conditions to the Backend>> shows. For data that is too large to load, it can hand sorting, paging, and grouping to the backend as well. This takes an adapter, either one that Calcite ships or one that you write. See <<#backend-adapters,Run More of the Query in the Backend>>.
 
 
 [[calcite]]
@@ -589,6 +609,8 @@ The grid also counts the rows of every query. The default [methodname]`count()` 
 == Copy the Data into a Database
 
 Instead of running the LLM's SQL over Java objects, the application can keep a copy of the data in a database and let the database run the SQL. The database filters, sorts, pages, and groups the rows, so this approach suits data that is too large for Calcite to load. The trade-off is that the grid and the chart show the data as of the last refresh of the copy.
+
+The copy doesn't carry over the access rights of the backend either. One account reads the backend to fill the copy, and every user of the grid or the chart can query all its rows. Copy only data that all these users may see.
 
 Any database with a JDBC driver can hold the copy, such as a schema of its own in the database the application already uses, or an embedded database. Create the tables of the copy the way the application creates its other tables, for example with a migration tool.
 
