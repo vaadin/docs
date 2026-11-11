@@ -1,0 +1,134 @@
+---
+title: Type Nullability
+page-title: Nullable types of browser-callable services | Vaadin
+description: How the Java types and their nullability annotations decide which generated TypeScript types allow undefined.
+meta-description: Reference for Vaadin browser-callable services - how JSpecify and other nullability annotations decide which generated TypeScript types allow undefined.
+order: 40
+---
+
+
+= Type Nullability
+:toclevels: 2
+
+In the generated TypeScript code, a type either allows `undefined` or it doesn't. Vaadin decides this for each type from the Java type and its nullability annotations. A nullable parameter or return value has a type such as `string | undefined`. A nullable property is optional in its interface, such as `name?: string`.
+
+section_outline::[]
+
+
+[[defaults]]
+== Defaults
+
+Without nullability annotations, the types are as follows:
+
+* Primitive types, such as `int` and `boolean`, are non-nullable.
+* All other types are nullable. This includes the items of collections and the values of maps.
+* `Optional<T>` is always nullable, whatever its annotations.
+
+For example:
+
+[source,java]
+----
+public class Person {
+    public long id;
+    public String name;
+    public List<String> tags;
+    public int[] scores;
+}
+----
+
+[source,typescript]
+----
+interface Person {
+  id: number;
+  name?: string;
+  tags?: Array<string | undefined>;
+  scores?: Array<number>;
+}
+----
+
+
+[[null-marked]]
+== Non-Nullable Packages
+
+To make the types non-nullable by default, annotate the packages of your services and data classes with the https://jspecify.dev/[JSpecify] [annotationname]`@NullMarked` annotation, in [filename]`package-info.java`:
+
+.[filename]`package-info.java`
+[source,java]
+----
+@NullMarked
+package com.example.application;
+
+import org.jspecify.annotations.NullMarked;
+----
+
+The types in the package are then non-nullable, including the items of collections and the values of maps. Mark the exceptions with [annotationname]`@Nullable`:
+
+[source,java]
+----
+public record Person(String name, @Nullable String nickname, List<String> tags,
+        List<@Nullable String> notes) {
+}
+----
+
+[source,typescript]
+----
+interface Person {
+  name: string;
+  nickname?: string;
+  tags: Array<string>;
+  notes: Array<string | undefined>;
+}
+----
+
+The annotation of the package that contains a service applies to the methods of the service. The annotation of the package that contains a bean or a record applies to its properties.
+
+Vaadin reads [annotationname]`@NullMarked` only on packages. It ignores the annotation on classes and modules. The annotation of a package doesn't apply to its sub-packages, so each package needs a [filename]`package-info.java` of its own.
+
+The fields of JPA entities that are annotated with [annotationname]`@Id` or [annotationname]`@Version` stay nullable, because a new entity doesn't have them yet.
+
+
+[[annotations]]
+== Annotations
+
+To change the nullability of a single type, annotate the parameter, the method, the field, or the type argument with [annotationname]`@NonNull` or [annotationname]`@Nullable`. An annotation on the type overrides the default of the package. For example, in a package without [annotationname]`@NullMarked`:
+
+[source,java]
+----
+public @NonNull List<@NonNull String> findTags(@NonNull String category) {
+    // ...
+}
+----
+
+The generated function takes a `category` of the type `string`, and returns a `Promise<Array<string>>`.
+
+Vaadin recognizes these annotations:
+
+[cols="1,3"]
+|===
+|Effect |Annotations
+
+|Non-nullable
+|`org.jspecify.annotations.NonNull`, `jakarta.annotation.Nonnull`, `javax.annotation.Nonnull`, `org.springframework.lang.NonNull`
+
+|Nullable
+|`org.jspecify.annotations.Nullable`, `jakarta.annotation.Nullable`, `org.springframework.lang.Nullable`
+
+|Non-nullable package
+|`org.jspecify.annotations.NullMarked`, `org.springframework.lang.NonNullApi`
+|===
+
+Use the JSpecify annotations. Spring has deprecated its own nullability annotations in favor of them.
+
+In Kotlin, Vaadin uses the nullable types of Kotlin, when `kotlin-reflect` is on the class path.
+
+
+[[runtime]]
+== Null Values at Runtime
+
+The types only describe the values. When a value doesn't match its type, the following happens:
+
+Arguments::
+A view must pass every argument, also for a nullable parameter. To pass `null`, pass `undefined`. The server doesn't check the arguments against their nullability. A method can get `null` for a non-nullable parameter, for example from a call that doesn't use the generated function. To reject such calls, add a [annotationname]`@NotNull` constraint, as described in <<index#validation,Parameter Validation>>.
+
+Return values::
+When the return type of a method is non-nullable, the server checks the return value. When the value is `null`, the call fails with an `EndpointResponseError` with the status 500. The server also checks the items of collections and arrays, the values of maps, and the properties of beans that have getters. It doesn't check the components of records. The check of the items ignores annotations on type arguments, so a `null` item fails the call, even when the item type is [annotationname]`@Nullable`.

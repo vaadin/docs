@@ -95,7 +95,7 @@ When a system property and a servlet parameter have the same name, the system pr
 [[properties]]
 == List of Properties
 
-The following list contains the properties that are defined in the [classname]`com.vaadin.server.DeploymentConfiguration`, [classname]`com.vaadin.flow.server.Constants` and [classname]`com.vaadin.flow.server.InitParameters` classes. They're listed in alphabetical order. If you use Spring Boot, you should add the `vaadin.` prefix to them (e.g., change `brotli` to `vaadin.brotli`).
+The following list contains the properties that are defined in the [classname]`com.vaadin.flow.function.DeploymentConfiguration`, [classname]`com.vaadin.flow.server.Constants` and [classname]`com.vaadin.flow.server.InitParameters` classes. They're listed in alphabetical order. If you use Spring Boot, you should add the `vaadin.` prefix to them (e.g., change `brotli` to `vaadin.brotli`).
 
 Each property defines a "mode", which is either **Development**, **Production**, **Runtime**, **Build**, or **Bundle**.
 Development and production parameters are used in execution of the application in these modes.
@@ -138,7 +138,7 @@ Default: `false` +
 Mode: Runtime
 
 `**csp**`::
-[since:com.vaadin:vaadin@V25.4]#Runs the application under a strict, nonce-based Content Security Policy.# The value `off` behaves as if no strict policy is in use. With `warn`, every call that wouldn't work under a strict policy, such as [methodname]`executeJs()`, is logged as a warning. With `strict`, Vaadin sends a nonce-based `Content-Security-Policy` header in production mode, and calls that need `eval` throw an exception. The `strict` mode isn't usable for applications yet, because Vaadin itself still makes such calls, for example for the event data of click listeners. Use `warn` to find the calls in your application. Values are case-insensitive. See <<{articles}/flow/security/advanced-topics/strict-csp#,Content Security Policy>>. +
+[since:com.vaadin:vaadin@V25.4]#Runs the application under a strict, nonce-based Content Security Policy.# The value `off` behaves as if no strict policy is in use. With `warn`, every call that wouldn't work under a strict policy, such as [methodname]`executeJs()`, is logged as a warning. With `strict`, Vaadin sends a nonce-based `Content-Security-Policy` header in production mode, and calls that need `eval` throw an exception. The `strict` mode isn't usable for applications yet, because Vaadin itself still makes such calls, for example for the event data of click listeners. Use `warn` to find the calls in your application. Values are case-insensitive. See <<{articles}/flow/security/protections/content-security-policy#,Content Security Policy>>. +
 Default: `off` +
 Mode: Runtime
 
@@ -153,7 +153,7 @@ Default: `true` +
 Mode: Development
 
 `**devmode.frontendExtraFileExtensions**`::
-Define additional frontend file extensions to copy from jar files to the application `frontend/generated/jar-resources`. Default extension copied are `.js`, `.js.map`, `.ts`, `.ts.map`, `.tsx`, `.tsx.map`, `.css`, and `.css.map`. +
+Defines additional frontend file extensions, such as `.scss`, whose files are taken into account in the frontend bundle. Vaadin computes hashes of these files to detect whether the bundle must be rebuilt. The extensions included by default are `.js`, `.js.map`, `.ts`, `.ts.map`, `.tsx`, `.tsx.map`, `.css`, and `.css.map`. +
 Default: `""` +
 Mode: Development
 
@@ -168,9 +168,9 @@ Default: `true` +
 Mode: Development
 
 `**devmode.optimizeBundle**`::
-Optimizes frontend resource bundles. All frontend resources in the classpath are included by default in the generated bundle in development mode. When set to `true`, the frontend build creates an optimized bundle by including only frontend resources that are used from the application entry points. It uses bytecode scanning, which increases application start-up time. Set to `false` to skip the optimization in production mode. +
-Default: `false` +
-Mode: Build
+Optimizes the frontend resource bundle in development mode. By default, all frontend resources in the classpath are included in the development bundle. When set to `true`, only frontend resources that are used from the application entry points are included. It uses bytecode scanning, which increases application start-up time. For production builds, configure the `optimizeBundle` plugin property, or set this property as a system property when running the build. +
+Default: `false` for development mode; `true` for production builds +
+Mode: Development, Build
 
 `**devmode.output.pattern.timeout**`::
 Defines the time to wait for the frontend build tool to output either the success or error string for completion. +
@@ -268,7 +268,7 @@ Default: `null` +
 Mode: Build
 
 `**npm.excludeWebComponents**`::
-Excludes all Vaadin professional and core components from [filename]`package.json`. Lumo theme is not excluded. Excluded packages aren't installed by npm, which makes development bundles smaller. This property alone doesn't remove any Maven and Gradle dependencies. Supported also as a Vaadin Plugin property, `npmExcludeWebComponents`. See <<development-mode/index.adoc#exclude-vaadin-components, Optimize Bundle>> for more information. +
+Excludes all Vaadin free and commercial components from [filename]`package.json`. Lumo theme is not excluded. Excluded packages aren't installed by npm, which makes development bundles smaller. This property alone doesn't remove any Maven and Gradle dependencies. Supported also as a Vaadin Plugin property, `npmExcludeWebComponents`. See <<development-mode/index.adoc#exclude-vaadin-components, Optimize Bundle>> for more information. +
 Default: `false` +
 Mode: Build
 
@@ -338,7 +338,7 @@ Default: `true` for development mode; `false` for production mode +
 Mode: Runtime
 
 `**require.home.node**`::
-Skip global Node.js lookup and use only Vaadin-managed installations in `~/.vaadin/`. When set to `true`, the global `PATH` is not checked and Node.js is resolved from version-specific directories under `~/.vaadin/` (e.g., `~/.vaadin/node-v24.14.0/`). If a suitable version isn't found, it's downloaded and installed automatically. +
+Skip global Node.js lookup and use only Vaadin-managed installations in `~/.vaadin/`. When set to `true`, the global `PATH` is not checked and Node.js is resolved from version-specific directories under `~/.vaadin/` (e.g., `~/.vaadin/node-v<version>/`). If a suitable version isn't found, it's downloaded and installed automatically. +
 Default: `false` +
 Mode: Build
 
@@ -350,6 +350,11 @@ Mode: Runtime
 `**syncIdCheck**`::
 Enables synchronized ID checking. The synchronized ID is used to handle situations in which the client sends a message to a connector that has been removed from the server. It's set to `true`, by default. You should only disable it if your application doesn't need to stay synchronized, and suffers from a bad network connection. +
 Default: `true` +
+Mode: Runtime
+
+`**themedHtml**`::
+Makes the Aura and Lumo themes style plain HTML tables across the whole application, however they were created -- a component, a template, or raw HTML. Other native HTML elements aren't styled by the themes yet, but future releases can extend this setting to them. Enabling it adds the `vaadin-themed-html` class to the page's `<body>`. Regardless of this setting, an individual table or a subtree can opt in on its own with the same class name, and a table under a themed ancestor can opt back out with the `vaadin-unthemed-html` class name. Both class names are available as `Constants.THEMED_HTML_CLASS_NAME` and `Constants.UNTHEMED_HTML_CLASS_NAME`. +
+Default: `false` +
 Mode: Runtime
 
 `**webComponentDisconnect**`::
@@ -394,7 +399,7 @@ Mode: Build
 
 `**frontendIgnoreVersionChecks**`::
 Makes Flow skip node and npm/pnpm/bun version checks during bundle build and development server startup. Note that disabling frontend tools version checking can cause failing builds and other issues that are difficult to debug. +
-Default: +
+Default: `false` +
 Mode: Development, Bundle
 
 `**javaSourceFolder**`::
@@ -404,7 +409,7 @@ Mode: Development
 
 `**javaResourceFolder**`::
 Resources source folder used for component scanning during development mode. +
-Default: `${project.basedir}/src/main/java` +
+Default: `${project.basedir}/src/main/resources` +
 Mode: Development
 
 `**npmFolder**`::
@@ -427,7 +432,7 @@ Directory to place resources that are not served from the application. +
 Default: `${project.build.outputDirectory}/META-INF/VAADIN/` +
 Mode: Build
 
-`**webpackOutputDirectory**`::
+`**frontendOutputDirectory**`::
 Directory to generate served resources as [filename]`index.js` and other generated files. +
 Default: `${project.build.outputDirectory}/META-INF/VAADIN/webapp/` +
 Mode: Build

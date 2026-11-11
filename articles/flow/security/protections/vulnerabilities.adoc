@@ -1,0 +1,222 @@
+---
+title: Common Vulnerabilities
+page-title: How to address vulnerabilities in Vaadin applications
+description: Descriptions of common vulnerabilities such as SQL injections, cross-site request forgeries, cross-site scripting.
+meta-description: Understand common vulnerabilities and how to mitigate them in Vaadin applications.
+order: 20
+---
+
+
+= Common Vulnerabilities
+
+This page describes how Vaadin Flow protects applications against common web vulnerabilities, and what remains the responsibility of the application.
+
+
+== SQL Injections
+
+Vaadin doesn't access databases itself: the persistence framework, such as Spring Data or JPA, is the application's choice. Protecting against SQL injections is therefore the responsibility of the application. Pass user input to queries as parameters, never by concatenating it into the SQL string. Persistence frameworks do this when you use their query methods and parameter binding.
+
+If you use plain JDBC, use prepared statements. The following example uses the value of a `TextField` in a prepared statement:
+
+[source,java]
+----
+new TextField("Set new username:", valueChangeEvent -> {
+
+    String value = valueChangeEvent.getValue();
+    // 'value' can contain malicious content.
+
+    // This is the correct way:
+    String sql = "UPDATE app_users SET name=? WHERE id=?";
+
+    try {
+        // Use prepared statement to safely call the DB:
+        PreparedStatement ps = dbConnection.prepareStatement(sql);
+
+        ps.setString(1, value);
+        ps.setLong(2, user.getId());
+        ps.executeUpdate();
+    } catch (SQLException e) {
+        throw new RuntimeException(e);
+    }
+
+    // This is the incorrect way. Don't use.
+    // sql = "UPDATE app_users SET name='" + value + "' WHERE id="
+    //         + user.getId();
+});
+----
+
+
+== Cross-Site Request Forgery (CSRF)
+
+Vaadin protects all communication between the browser and the server against cross-site request forgery with CSRF tokens. It handles the tokens itself, so you don't have to include or verify them in your code. Vaadin follows the link:https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#synchronizer-token-pattern[Synchronizer Token Pattern].
+
+Vaadin uses two tokens: `Vaadin-Security-Key` protects UIDL requests -- the messages that the Flow client engine sends when the user interacts with the page -- and `Vaadin-Push-ID` protects push connections. The server sends both to the browser in the bootstrap response, which is the initial HTML page. For example, with other data omitted:
+
+[source,json]
+----
+{
+  "appConfig": {
+    "uidl": {
+      "Vaadin-Security-Key": "f0ef03d7-0cf4-4f32-834d-47b88a1034b7",
+      "Vaadin-Push-ID": "ad3744de-2280-4531-84df-6a70a5fe958e"
+    }
+  }
+}
+----
+
+
+=== UIDL Requests
+
+`Vaadin-Security-Key` is generated per UI instance, which corresponds to a browser tab. The server sends it to the browser only once, in the bootstrap response. When the user reloads the page or opens a new tab, Vaadin generates a new key.
+
+The client engine includes the key in every UIDL message that it sends -- for example, when the user performs actions on the page or navigates to another route -- in the `csrfToken` field of the message, regardless of whether the message is sent in an HTTP request or as a WebSocket frame:
+
+[source,json]
+----
+{
+  "csrfToken": "0bd61cf8-0231-455b-b39a-434f054352c5",
+  "rpc": [
+    {
+      "type": "mSync",
+      "node": 5,
+      "feature": 1,
+      "property": "invalid",
+      "value": false
+    }
+  ],
+  "syncId": 0,
+  "clientId": 0
+}
+----
+
+The server rejects a UIDL request whose token doesn't match the key of the UI.
+
+
+=== Push Connections
+
+`Vaadin-Push-ID` is generated per user session. When the browser opens a WebSocket connection for push, the server checks that the push ID in the request matches the push ID of the session. If the ID is missing, the request is ignored and the connection is closed.
+
+
+=== Uploads & Heartbeat Requests
+
+Upload and heartbeat requests aren't UIDL messages, so they don't carry `Vaadin-Security-Key`. An upload is protected by its own random token in the request path. A heartbeat request doesn't change the application state, so it doesn't need protection.
+
+
+=== React Views
+
+Requests that React views send to browser-callable services aren't UIDL requests, so they're protected by Spring Security's CSRF protection instead. Vaadin adds Spring Security's CSRF token to the page, and the client sends it in the HTTP header that Spring Security expects, by default `X-CSRF-TOKEN`. This token is a different one from the `Vaadin-Security-Key`.
+
+An application without Spring Security's CSRF protection uses the link:https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#alternative-using-a-double-submit-cookie-pattern[Double-Submit Cookie Pattern] instead. When the browser loads the page, the server sets a random token in the `csrfToken` cookie, which the browser code can read. The client sends the token of the cookie in the `X-CSRF-Token` header of every call, and the server checks that the header and the cookie match. A site on another domain can't read the cookie, so it can't send the header.
+
+The server rejects a call with a missing or wrong token with `401 Unauthorized`.
+
+
+=== Disabling the Check
+
+The CSRF token check for UIDL requests can be disabled with the `disable-xsrf-protection` configuration parameter. The parameter also disables the check of the `csrfToken` cookie for browser-callable services, but not Spring Security's CSRF protection. See <<{articles}/flow/configuration/properties#,Configuration Properties>>. You might do this, for example, to enable repeatable load test scripts that use Gatling or similar tools. This is strongly discouraged, though, when running in production.
+
+
+[[xss]]
+== Cross-Site Scripting
+
+Vaadin has built-in protection against cross-site scripting (XSS) attacks. Vaadin uses browser APIs that make the browser render content as text instead of HTML (e.g., using `innerText` instead of `innerHTML`). This negates the chance of inserting, for example, `<script>` tags into the DOM by binding insecure string values.
+
+Some Vaadin components explicitly allow HTML content for certain attributes. As a result, you need to ensure that your application's data doesn't contain XSS payloads. Allowing insecure HTML content is never the default: it's an explicit choice by developers. Vaadin recommends using, for example, `jsoup` for sanitation and escaping.
+
+Here are a few examples of built-in escaping, and some in which escaping is left to the developer:
+
+[source,java]
+----
+Div div = new Div();
+
+// These are safe as they treat the content as plain text:
+div.setText("<b>This won't be bolded.</b>");
+div.getElement().setText("<b>This won't be bolded either.</b>");
+div.setTitle("<b>This won't be bolded either.</b>");
+
+// These aren't safe:
+div.getElement().setProperty("innerHTML", "<b>This IS bolded.</b>");
+div.add(new Html("<b>This IS bolded.</b>"));
+----
+
+You can use helpers to mitigate the risk when data isn't trusted. Here's an example that transforms data which might have dangerous HTML to a safe format:
+
+[source,java]
+----
+String safeHtml = Jsoup.clean(dangerousText, Safelist.relaxed());
+Div div = new Div();
+div.add(new Html(safeHtml));
+----
+
+The [classname]`Html` component can also [since:com.vaadin:vaadin@V25.2]#do the sanitization itself#. The constructors that take a [classname]`SerializableSupplier<Safelist>` clean the initial content -- and any content applied later -- with the supplied jsoup [classname]`Safelist`:
+
+[source,java]
+----
+Div div = new Div();
+div.add(new Html(dangerousText, Safelist::relaxed));
+----
+
+Pass a method reference or a lambda that builds the [classname]`Safelist`, rather than capturing a pre-built instance: jsoup's [classname]`Safelist` isn't serializable, and capturing one in the supplier breaks session serialization. Also note that the safelist must permit the root element of the fragment.
+
+
+[role="since:com.vaadin:vaadin@V25.2"]
+=== Unsafe URL Schemes
+
+URLs using a script-capable scheme, such as `javascript:`, are another common XSS vector. Vaadin validates URLs passed to [methodname]`Anchor.setHref(String)`, [methodname]`IFrame.setSrc(String)`, and [methodname]`Page.open(String)` against a list of safe schemes, and these methods throw an [classname]`IllegalArgumentException` if the scheme isn't considered safe. By default, the `http`, `https`, `mailto`, `tel`, and `ftp` schemes are accepted. Relative URLs have no scheme and are always accepted.
+
+The set of safe schemes can be customized with the `safeUrlSchemes` configuration parameter, which takes a comma-separated list of schemes. An entry of `*` marks every scheme as safe, disabling the validation. See <<{articles}/flow/configuration/properties#,Configuration Properties>> for how to set the parameter.
+
+If a URL is fully under your control and known to be safe, you can bypass the validation for that URL with the dedicated unsafe setters: [methodname]`Anchor.setUnsafeHref(String)`, [methodname]`IFrame.setUnsafeSrc(String)`, and [methodname]`Page.openUnsafe(String)`.
+
+
+=== Running Custom JavaScript
+
+Sometimes you may need to run custom scripts inside the application. Running any script is an inherently unsafe operation. Scripts have full access to the entire client side. It's especially dangerous if the script is stored somewhere other than in the application code and loaded dynamically:
+
+[source,java]
+----
+// The script below can do whatever it wants, so use with care:
+UI.getCurrentOrThrow().getPage().executeJs("window.alert('This method is inherently unsafe');");
+
+// This is especially dangerous since you can't be sure
+// what the script contains, nor can you make it safe:
+String script = getExternalScript();
+UI.getCurrentOrThrow().getPage().executeJs(script);
+----
+
+Scripts can't be escaped automatically since any escaping would cause the script not to work. Vaadin can't know which scripts are dangerous and which are not. It's up to you to make sure the scripts are safe. However, you can safely pass parameters to JS execution by using the following syntax:
+
+[source,java]
+----
+// If the script is known:
+String script = "window.alert($0)";
+
+// These parameters are treated in a safe way:
+String scriptParam = getScriptParamFromDB();
+UI.getCurrentOrThrow().getPage().executeJs(script, scriptParam);
+----
+
+
+=== Using Templates
+
+When using client-side templates, such as Lit templates, in Vaadin applications, you need to be extra careful when inserting data into the DOM, as well as when using JavaScript. Values that the server sets as element properties are safe as long as the template renders them as text. However, the framework has no control over what you do when using HTML or JavaScript inside the template itself. An example would be binding a `TextField` with a JavaScript value directly to client-side logic: there's no guarantee that the input is safe; it should be sanitized before use.
+
+Reading property values synchronized from the client and receiving Remote Procedure Calls (RPC) in server-side methods has the same caveats as described in <<index#data-validation,Data Validation>>: never trust values sent from the client.
+
+
+[[clickjacking]]
+== Clickjacking
+
+In a clickjacking attack, a malicious page shows the application inside a frame, and tricks users into interacting with it. The `X-Frame-Options` HTTP header tells the browser whether the page may be shown inside a frame.
+
+Vaadin [since:com.vaadin:vaadin@V25.2]#sends the `X-Frame-Options: SAMEORIGIN` header by default# with the application page, so that the application can only be shown in frames on the same origin. The header value can be changed with the `frameOptions` configuration parameter, for example to `DENY` to forbid framing entirely. Applications that are meant to be embedded in a frame on another origin must set the parameter to an empty value to disable the header. See <<{articles}/flow/configuration/properties#,Configuration Properties>> for how to set the parameter.
+
+Vaadin only sets the header if the response doesn't already contain an `X-Frame-Options` header. A header set by other means -- for example, by Spring Security or a servlet filter -- isn't overwritten.
+
+
+== Java Serialization Vulnerability
+
+If an application deserializes Java objects from an untrusted source -- for example, with Java serialization, Remote Method Invocation (RMI), or Java Management Extensions (JMX) -- an attacker can send a payload that runs arbitrary code when it's deserialized. This is a general issue of the Java platform, which Vaadin can't fix. The appendices of the https://vaadin.com/security/2018-11-13[Vaadin security alert] describe how to mitigate the risk.
+
+
+[discussion-id]`CB8041B3-5938-419F-A6C1-999F713A2A99`

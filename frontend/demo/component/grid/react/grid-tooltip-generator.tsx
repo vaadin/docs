@@ -38,7 +38,7 @@ function Example() {
     let text = '';
 
     const { column, item } = context;
-    if (column && item) {
+    if (column?.path && item) {
       switch (column.path) {
         case 'birthday':
           text = `Age: ${differenceInYears(Date.now(), parseISO(item.birthday))}`;

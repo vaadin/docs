@@ -50,7 +50,7 @@ Vaadin Framework reference documentation. Technical, code-centric, unopinionated
 
 ### articles/hilla
 
-Hilla framework documentation (discontinued). Relevant content should be migrated to articles/flow as features merge into Vaadin. The rules for the deprecated `articles/hilla/lit` sub-tree are in [Versions & Lifecycle](versions-and-lifecycle.md#hilla-with-lit).
+Hilla framework documentation (discontinued). Relevant content should be migrated to articles/flow as features merge into Vaadin.
 
 ### articles/components
 
