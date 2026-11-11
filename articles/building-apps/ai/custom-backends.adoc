@@ -25,7 +25,26 @@ This guide shows two ways to run it. The first is https://calcite.apache.org[Apa
 
 * An application with an AI-powered Grid or Chart, set up as described on <<{articles}/flow/ai-support/ai-powered-grid#,AI-Powered Grid>> or <<{articles}/flow/ai-support/ai-powered-chart#,AI-Powered Chart>>. The two controllers belong to the commercial `vaadin-ai-extensions-flow` module and require a commercial Vaadin subscription. [classname]`DatabaseProvider` itself belongs to the open-source `vaadin-ai-core-flow` module.
 * The `com.vaadin.experimental.aiComponents` <<{articles}/flow/configuration/feature-flags#,feature flag>> enabled: add `com.vaadin.experimental.aiComponents=true` to [filename]`src/main/resources/vaadin-featureflags.properties`.
-* A Java client for your backend that returns the data as Java objects, for example a class that wraps Spring's [classname]`RestClient`. This guide calls it [classname]`CatalogClient`.
+* A Java client for your backend that returns the data as Java objects, for example a class that wraps Spring's [classname]`RestClient`.
+
+The examples in this guide use a [classname]`CatalogClient`, which stands for the client of your REST API or service. It returns the products and orders of a catalog as records:
+
+[source,java]
+----
+public interface CatalogClient {
+    List<Product> products();
+
+    List<Order> orders();
+}
+
+public record Product(Integer id, String name, String category,
+        BigDecimal price, Boolean discontinued) {
+}
+
+public record Order(Integer id, Integer productId, Integer quantity,
+        LocalDate orderedOn) {
+}
+----
 
 
 == Choose an Approach
@@ -73,26 +92,7 @@ Calcite runs SQL over tables that you define in Java. A table tells Calcite two 
 * its row type: the column names and their SQL types, and
 * how to read its rows: a method that returns every row as an `Object[]`.
 
-This guide exposes the products and orders of a [classname]`CatalogClient`, which stands for the client of your REST API or service. The client returns records like these:
-
-[source,java]
-----
-public interface CatalogClient {
-    List<Product> products();
-
-    List<Order> orders();
-}
-
-public record Product(Integer id, String name, String category,
-        BigDecimal price, Boolean discontinued) {
-}
-
-public record Order(Integer id, Integer productId, Integer quantity,
-        LocalDate orderedOn) {
-}
-----
-
-The following reusable classes turn such a list of objects into a Calcite table. They and the provider belong to one package. A [classname]`Column` describes one column with a name, a Java type, and a function that reads the value from an object:
+The following reusable classes turn a list of objects from the client, such as its products, into a Calcite table. They and the provider belong to one package. A [classname]`Column` describes one column with a name, a Java type, and a function that reads the value from an object:
 
 [source,java]
 ----
