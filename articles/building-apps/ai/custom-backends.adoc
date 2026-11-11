@@ -574,6 +574,10 @@ The tables of this guide leave sorting, paging, and grouping to Calcite, which d
 * Use an adapter that Calcite ships. Calcite has https://calcite.apache.org/docs/adapter.html[adapters] for several data stores, such as MongoDB, Elasticsearch, and Cassandra. An adapter replaces the tables you define: you register its schema on the connection. It translates the conditions, the sort, and the limit of a query into the query language of the data store, and some adapters translate the grouping as well. An adapter translates only a part of SQL, and a query with a part it can't translate can fail or return wrong rows. Test an adapter with the kinds of query the LLM writes before you rely on it, such as date conditions, `<>`, and `LIKE`.
 * Write an adapter. For a backend without one, such as a REST API, implement [interfacename]`TranslatableTable` instead of [interfacename]`ScannableTable`. The table then takes part in planning the query. Planner rules that you write move a filter, a sort, a limit, or a grouping into the scan of the table, and the scan sends them to the backend. This is how Calcite's own adapters work, and the https://calcite.apache.org/docs/tutorial.html[Calcite tutorial] introduces the technique. It takes considerably more code than the tables in this guide, and knowledge of Calcite's planner.
 
+With either kind of adapter, keep the provider of this guide, including its paging override. The override puts the sort, the limit, and the offset on the top level of one statement, which an adapter can hand to the backend as a whole. With the default paging, Calcite drops the sort, so the backend receives the limit without it and returns the wrong rows.
+
+The grid also counts the rows of every query. The default [methodname]`count()` wraps the query in `SELECT COUNT(*)`, which the adapter has to translate as well. Otherwise, Calcite reads every matching row from the backend to count them.
+
 
 [[database-copy]]
 == Copy the Data into a Database
