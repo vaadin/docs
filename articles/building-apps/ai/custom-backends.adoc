@@ -44,7 +44,13 @@ For data that is too large to load, Calcite can hand sorting, paging, and groupi
 <<#database-copy,Copy the data into a database>> when the data doesn't fit in memory. A copy is also the simpler choice for data that seldom changes. The database then filters, sorts, pages, and groups the rows, and the grid shows the data as of the last refresh of the copy.
 
 
-== Add the Dependency
+[[calcite]]
+== Run the Queries with Calcite
+
+With this approach, the application runs the LLM's SQL itself. You describe the data as tables in Java, and a provider hands each query to Calcite, which reads the rows through the tables.
+
+
+=== Add the Dependency
 
 Add `calcite-core` to your project:
 
@@ -60,7 +66,7 @@ Add `calcite-core` to your project:
 Calcite shares libraries with Vaadin, such as SLF4J and the Jackson annotations, and declares older versions of them. The Vaadin BOM aligns the SLF4J version in every project. In a Spring Boot project, Spring Boot's dependency management aligns the Jackson annotations as well, so the dependency needs no exclusions. In a project without Spring Boot, exclude `com.fasterxml.jackson.core:jackson-annotations` from Calcite, so that its older version doesn't replace the one Vaadin's Jackson uses. Calcite brings many other transitive dependencies. The command `mvn dependency:tree` lists them.
 
 
-== Describe the Data as Tables
+=== Describe the Data as Tables
 
 Calcite runs SQL over tables that you define in Java. A table tells Calcite two things:
 
@@ -228,7 +234,7 @@ Some details of this class matter:
 * A query on a table with more than `MAX_ROWS` rows fails with a [classname]`ToolException`, whose message tells the LLM that the table is too large. Calcite then doesn't sort, join, or group that many rows in memory. The client has loaded the rows by then, so have the client stop reading when it passes the limit as well.
 
 
-== Implement the Provider
+=== Implement the Provider
 
 The provider opens a Calcite connection, registers the tables under a schema name, and runs each query through plain JDBC:
 
@@ -411,7 +417,7 @@ How the parts work together:
 * The grid loads rows one page at a time through [methodname]`executeQuery(String sql, QueryPage page)` and [methodname]`count(String sql)`. Their default implementations wrap the query in sub-queries, and Calcite drops an `ORDER BY` from a sub-query that has no `LIMIT` of its own. With the defaults, the grid loses a sort the user applies, and also an `ORDER BY` the LLM wrote, for example to list the most expensive products first. The override in the listing handles both cases. When the grid has no sort of its own, it appends `LIMIT` and `OFFSET` to the LLM's query. Otherwise it wraps the query, so that the grid's sort replaces the LLM's. The grid instructs the LLM not to write `LIMIT` or `OFFSET`. When a query has one anyway, the validation of the query fails, and the parse error tells the LLM why. The default [methodname]`count()` works as it is, and handles a trailing semicolon or comment at the end of the query by itself.
 
 
-== Describe the Schema for the LLM
+=== Describe the Schema for the LLM
 
 The text that [methodname]`getSchema()` returns is all the LLM knows about your data. The general advice on the <<{articles}/flow/ai-support/controllers#database-provider,Controllers>> page applies. Some points are specific to Calcite:
 
@@ -422,7 +428,7 @@ The text that [methodname]`getSchema()` returns is all the LLM knows about your 
 * With the `lex` setting shown earlier, table and column names are case-insensitive, so the LLM may write them as they appear in the description.
 
 
-== Use the Provider
+=== Use the Provider
 
 Create the provider in the view and pass it to a [classname]`GridAIController` or a [classname]`ChartAIController` like any other [classname]`DatabaseProvider`:
 
@@ -439,7 +445,7 @@ A provider created in the view belongs to one user: its connection, its cached r
 The provider needs no LLM to test. A unit test can call [methodname]`executeQuery()` with hand-written SQL against a fake client and check the rows. This catches mistakes in the schema text, the type mapping, and the quoting before a model is involved.
 
 
-== What to Expect at Runtime
+=== What to Expect at Runtime
 
 Each query reads every table it uses in full, and Calcite filters, joins, sorts, and groups in memory. A sorted or paged grid query reads the whole table as well. The time and memory a query takes therefore grow with the size of the tables it reads, not with the size of its result. The row limit of [classname]`BackendTable` fails the queries on a table that has outgrown this approach. For large tables, <<#pass-conditions,pass conditions to the backend>>, <<#backend-adapters,run more of the query in the backend>>, or <<#database-copy,copy the data into a database>>.
 
@@ -449,7 +455,7 @@ Calcite can't change data through these tables. A `DELETE` or `UPDATE` fails bef
 
 
 [[pass-conditions]]
-== Pass Conditions to the Backend
+=== Pass Conditions to the Backend
 
 When your backend can filter, such as a REST endpoint with query parameters, let Calcite hand it the conditions of the `WHERE` clause. Implement [interfacename]`FilterableTable` instead of [interfacename]`ScannableTable`. Its [methodname]`scan()` receives the conditions as a list: you take the ones the backend understands and remove them from the list, and Calcite applies the rest itself. The following table passes `column = value` conditions to the loader as a map. It reuses [classname]`Column` and the helpers of [classname]`BackendTable`:
 
@@ -567,7 +573,7 @@ What to keep in mind:
 
 
 [[backend-adapters]]
-== Run More of the Query in the Backend
+=== Run More of the Query in the Backend
 
 The tables of this guide leave sorting, paging, and grouping to Calcite, which does them in memory. When the data is too large for that and a database copy isn't an option, Calcite can hand these parts of a query to the backend too. Do so in one of the following ways:
 
