@@ -1,0 +1,94 @@
+---
+title: Upload and Download Files
+page-title: How to upload and download files in Vaadin React views
+description: Upload files from a React view with the Upload component, and let users download them, through a Spring controller.
+meta-description: Upload and download files in Vaadin React views with the Upload component and a Spring controller, protected by Spring Security, with CSRF and size limits.
+order: 60
+---
+
+
+= Upload and Download Files
+:toclevels: 2
+
+This guide shows how to upload files from a React view with the <<{articles}/components/upload#,Upload>> component, and how to let users download them. Both go through a Spring controller: the Upload component sends each file in a request of its own, and a browser downloads a file from a URL.
+
+
+== Creating the Controller
+
+Create a Spring controller with one method that receives an uploaded file, and one that sends a file back. The following controller keeps the files in memory and gives each one an ID:
+
+[source,java]
+.[filename]`FileController.java`
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/files/FileController.java[tags=snippet,indent=0]
+----
+
+The [methodname]`upload()` method returns the ID of the file as the response text. The [methodname]`download()` method sends the file with a `Content-Disposition` header, which makes the browser save it under its original name. [classname]`ContentDisposition` encodes names that contain other than ASCII characters.
+
+Keep the controller's path apart from the routes of your views, for example under `/api`. That way, the security rule for the controller doesn't apply to a view.
+
+
+== Allowing Access to the Controller
+
+Vaadin's security configuration denies the requests that no rule allows, so add a rule for the controller. The following rule lets logged-in users upload and download files:
+
+[source,java]
+----
+@Bean
+SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http.authorizeHttpRequests(auth -> auth
+            .requestMatchers("/api/files/**").authenticated());
+    http.with(VaadinSecurityConfigurer.vaadin(), configurer -> {
+        configurer.loginView("/login");
+    });
+    return http.build();
+}
+----
+
+For the other options, see <<{articles}/flow/security/spring/security-configuration#,Security Configuration>> in the reference.
+
+
+== Uploading Files
+
+Point the `target` of the Upload component to the controller, and send the files as multipart form data. By default, the component sends the raw content of the file, which a [classname]`MultipartFile` parameter doesn't accept:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/fusion/files/files-view.tsx[tags=upload,indent=0]
+----
+
+Spring Security rejects a `POST` request without a CSRF token. Vaadin adds the token to the page in `<meta>` tags, and the `onUploadRequest` handler copies it to each upload request:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/fusion/files/files-view.tsx[tags=csrf,indent=0]
+----
+
+The handler reads the token for each request, because the token changes when the user logs in.
+
+When the upload succeeds, `xhr.responseText` holds the response of the controller, here the ID of the file. A relative `target`, without a leading slash, also works when the application has a context path.
+
+
+=== Limiting the File Size
+
+Spring Boot accepts files of up to 1 MB by default. For a larger file, the server answers with status 413, and the Upload component shows that the file is too large. To accept larger files, set the limits in [filename]`application.properties`:
+
+[source,properties]
+----
+spring.servlet.multipart.max-file-size=10MB
+spring.servlet.multipart.max-request-size=10MB
+----
+
+To reject a large file before it's uploaded, also set the `maxFileSize` property of the Upload component, in bytes.
+
+
+== Downloading Files
+
+To let users download a file, link to the download URL of the controller, and add the `download` attribute to the link:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/fusion/files/files-view.tsx[tags=download,indent=0]
+----
+
+The router ignores links that have the `download` attribute, so the browser downloads the file instead of opening a view.
