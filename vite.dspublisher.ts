@@ -24,6 +24,7 @@ const vaadin = vaadinConfig({
 }) as UserConfig;
 
 const endpointMocks = resolve(__dirname, 'frontend', 'demo', 'services', 'mocks.js');
+const reactSignals = resolve(__dirname, 'frontend', 'demo', 'services', 'react-signals.js');
 
 // Use newer target to support top-level await in Hilla dependencies
 const target = ['safari15', 'es2022'];
@@ -44,7 +45,7 @@ const config: UserConfig = {
       'all-flow-imports-or-empty':
         process.env.DOCS_IMPORT_EXAMPLE_RESOURCES === 'true' ? allFlowImportsPath : 'lit',
       // Workaround https://github.com/preactjs/signals/issues/414
-      '@vaadin/hilla-react-signals': '@preact/signals-react',
+      '@vaadin/hilla-react-signals': reactSignals,
     },
   },
   server: {
