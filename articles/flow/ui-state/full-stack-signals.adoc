@@ -54,6 +54,8 @@ include::{root}/src/main/java/com/vaadin/demo/fusion/signals/MeetingService.java
 
 The value of a shared signal is stored as JSON. Use a type that converts to JSON, preferably an immutable one, such as a record. See <<shared-signals#,Shared Signals>>. Vaadin generates a TypeScript type for the value type, like for the other types that a service uses.
 
+The generated types follow the nullability of the method and of the value type, as described in <<{articles}/flow/react-views/browser-callable-services/type-nullability#,Type Nullability>>. Without `@NullMarked`, the function returns `ListSignal<AgendaItem | undefined> | undefined` for the agenda, for example. The package of the example service has the annotation, so its signals and values aren't nullable.
+
 The parameters of the method become parameters of the generated function. The browser sends the arguments when it connects to the signal. Return the same instance for the same arguments, so that the browsers that pass them share the signal. In the example above, all the browsers that pass `YES` get the same signal.
 
 
@@ -67,7 +69,7 @@ The generated function returns the signal right away, not a `Promise`. Each call
 include::{root}/frontend/demo/fusion/signals/meeting-view.tsx[tags=signals,indent=0]
 ----
 
-The generated function of a value signal takes an optional options object. Its `defaultValue` is the value of the signal until the first value arrives from the server. Without it, the value is the default of the type, such as an empty string for a `String`. A `NumberSignal` starts at `0`, and a `ListSignal` starts with an empty array.
+The generated function of a value signal takes an optional options object, after the parameters of the method. Its `defaultValue` is the value of the signal until the first value arrives from the server. Without it, a non-nullable type starts with its default value, such as an empty string for a `String`. A nullable type starts with `undefined`. A `NumberSignal` starts at `0`, and a `ListSignal` starts with an empty array.
 
 Read the value with the `value` property. A component that reads it renders again when the value changes, because Vaadin compiles React views with the signals transform of `@preact/signals-react`.
 
@@ -86,7 +88,7 @@ The current value. Assigning a value changes the signal, like [methodname]`set()
 Changes the value. The browser shows the new value right away. The server replaces its value with it, whatever the other browsers changed in the meantime: the last change wins.
 
 `error`::
-A signal that holds an error when the server fails to apply a change, for example because the access annotations of the service method deny it. Otherwise, it's `undefined`.
+A signal that holds an error when the server fails to apply a change, for example because the access annotations of the service method deny it. Otherwise, it's `undefined`. For a change to an item of a list signal, the `error` of the list holds the error.
 
 The following text field shows the topic of the example service, and changes it when the user edits the field:
 
@@ -154,4 +156,4 @@ Code on the server can read and change the shared signal like any other shared s
 
 The access annotations of the service method apply when a browser connects to the signal, and to each change that the browser sends. See <<{articles}/flow/security/react-views/service-access-control#,Service Access Control>>.
 
-When access is denied on connecting, the browser gets no value, and the signal keeps its default value. When access to a change is denied, the server doesn't apply it, and the `error` property of the signal holds the error.
+When access is denied on connecting, the browser gets no value, and the signal keeps its default value. When access to a change is denied, the server doesn't apply it, and the `error` property of the signal holds the error. For a change to an item, the `error` property of the list signal holds it.
