@@ -12,6 +12,7 @@ function addCsrfHeader(xhr: XMLHttpRequest) {
 }
 // end::csrf[]
 
+// tag::view[]
 type StoredFile = { id: string; name: string };
 
 export default function FilesView() {
@@ -19,7 +20,6 @@ export default function FilesView() {
 
   return (
     <>
-      {/* tag::upload[] */}
       <Upload
         target="api/files"
         uploadFormat="multipart"
@@ -29,7 +29,6 @@ export default function FilesView() {
           files.value = [...files.value, { id: xhr.responseText, name: file.name }];
         }}
       />
-      {/* end::upload[] */}
       {/* tag::download[] */}
       <ul>
         {files.value.map((file) => (
@@ -44,3 +43,4 @@ export default function FilesView() {
     </>
   );
 }
+// end::view[]
