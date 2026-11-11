@@ -3,6 +3,9 @@
 // with every step shown. This script turns it into one step at a time, with Back and Next, and the arrow
 // keys while it has focus. "Show all steps" switches back to the list.
 //
+// A [.walkthrough] block without a list is one clip on its own, for a page that has a section for each: it
+// plays while it's in view.
+//
 // Each clip has a dark-theme twin next to it, named with a -dark suffix (01-edit-mode-dark.mp4). The
 // script shows the one that matches the docs theme, and switches when the theme changes.
 //
@@ -49,11 +52,57 @@ function applyTheme(block: HTMLElement) {
   }
 }
 
+/** Our own Pause, instead of the browser's controls: the clips loop, and a looping video needs a way to stop it. */
+function setUpVideos(block: HTMLElement) {
+  for (const video of block.querySelectorAll('video')) {
+    video.controls = false;
+    video.muted = true;
+    video.playsInline = true;
+    video.autoplay = false;
+    video.preload = 'none';
+    video.addEventListener('click', () => togglePlay(video));
+    const pause = document.createElement('button');
+    pause.type = 'button';
+    pause.className = 'walkthrough-pause';
+    const sync = () => {
+      pause.textContent = video.paused ? 'Play' : 'Pause';
+      pause.classList.toggle('paused', video.paused);
+    };
+    pause.addEventListener('click', () => togglePlay(video));
+    video.addEventListener('play', sync);
+    video.addEventListener('pause', sync);
+    video.parentElement!.append(pause);
+    sync();
+  }
+}
+
+const inView = new IntersectionObserver(
+  (entries) => {
+    for (const { target, isIntersecting } of entries) {
+      const video = target as HTMLVideoElement;
+      if (!isIntersecting) {
+        video.pause();
+      } else if (!REDUCED_MOTION.matches) {
+        video.preload = 'auto';
+        video.play().catch(() => {});
+      }
+    }
+  },
+  { threshold: 0.5 }
+);
+
 function enhance(block: HTMLElement) {
   const list = block.querySelector('ol');
   const steps = list ? ([...list.children] as HTMLElement[]) : [];
+  if (!list) {
+    block.classList.add(ENHANCED);
+    setUpVideos(block);
+    applyTheme(block);
+    for (const video of block.querySelectorAll('video')) inView.observe(video);
+    return;
+  }
   if (steps.length < 2) return;
-  block.classList.add(ENHANCED);
+  block.classList.add(ENHANCED, 'walkthrough-steps');
   block.tabIndex = -1;
   let at = 0;
   // Set below, once the controls it updates exist.
@@ -103,30 +152,10 @@ function enhance(block: HTMLElement) {
   const header = document.createElement('div');
   header.className = 'walkthrough-header';
   header.append(progress, toggle);
-  list!.before(header, label);
-  list!.after(nav);
+  list.before(header, label);
+  list.after(nav);
 
-  for (const video of block.querySelectorAll('video')) {
-    // The page's own Pause: the clips loop, and a looping video needs a way to stop it.
-    video.controls = false;
-    video.muted = true;
-    video.playsInline = true;
-    video.autoplay = false;
-    video.preload = 'none';
-    video.addEventListener('click', () => togglePlay(video));
-    const pause = document.createElement('button');
-    pause.type = 'button';
-    pause.className = 'walkthrough-pause';
-    const sync = () => {
-      pause.textContent = video.paused ? 'Play' : 'Pause';
-      pause.classList.toggle('paused', video.paused);
-    };
-    pause.addEventListener('click', () => togglePlay(video));
-    video.addEventListener('play', sync);
-    video.addEventListener('pause', sync);
-    video.parentElement!.append(pause);
-    sync();
-  }
+  setUpVideos(block);
 
   show = (i: number) => {
     at = Math.max(0, Math.min(steps.length - 1, i));
