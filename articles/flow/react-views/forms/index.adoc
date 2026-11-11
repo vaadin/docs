@@ -1,0 +1,93 @@
+---
+title: Forms
+page-title: Bind form fields to Java types in React views | Vaadin
+description: Bind the fields of a React view to a Java type, validate them with Bean Validation, and save the value with a browser-callable service.
+meta-description: Reference for Vaadin form binding in React views - the useForm hook, generated form models, binding fields, loading values, submitting, and server-side errors.
+order: 50
+---
+
+
+= Forms
+:toclevels: 2
+
+The [methodname]`useForm()` hook from `@vaadin/hilla-react-form` binds the fields of a React view to a Java type. It keeps the value of the form, validates it with the Bean Validation constraints of the Java type, and submits it to a <<../browser-callable-services#,browser-callable service>>.
+
+section_outline::[]
+
+
+[[models]]
+== Form Models
+
+For each Java type that a browser-callable service uses, Vaadin generates a form model next to its TypeScript type. For example, the model of `Person` is in [filename]`PersonModel.ts`, beside [filename]`Person.ts`. See <<../browser-callable-services/code-generation#generated-files,Generated Files>>.
+
+A model describes the properties of the type and their constraints. It doesn't contain a value. The examples on these pages use this record and service:
+
+.[filename]`Person.java`
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/forms/person/Person.java[tags=snippet,indent=0]
+----
+
+.[filename]`PersonService.java`
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/forms/person/PersonService.java[tags=snippet,indent=0]
+----
+
+The package of the records is annotated with [annotationname]`@NullMarked`, so their properties are non-nullable, except `birthDate`. See <<../browser-callable-services/type-nullability#,Type Nullability>>.
+
+
+[[binding-fields]]
+== Binding Fields
+
+Pass the generated model to [methodname]`useForm()`. Then spread the result of [methodname]`field()` on each field component, with the model of its property as the argument:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/fusion/forms/person/person-form.tsx[tags=snippet,indent=0]
+----
+
+The [methodname]`field()` function connects the component to the form. It sets the `name`, the value, the `required` state, the `invalid` state, and the error message of the component. It updates the value of the form when the user changes the value of the component. The components that it supports are listed in <<field-components#,Field Components>>.
+
+The `model` of the form has a model for each property of the type, such as `model.firstName`. A property that is an object has models for its own properties, such as `model.address.street`. See <<nested-objects-arrays#,Nested Objects & Arrays>>.
+
+
+[[loading]]
+== Loading a Value
+
+The [methodname]`read()` function sets the value of the form, for example the value that a service returns. It also makes the value the default value of the form, and clears the validation errors. Passing `null` or `undefined` clears the form.
+
+The form has a value before [methodname]`read()` is called: each property has the default value of its model, such as an empty string for a `String` property.
+
+Two more functions change the whole value:
+
+[methodname]`reset()`::
+Sets the value back to the default value, which is the value last read or submitted.
+
+[methodname]`clear()`::
+Sets the value, and the default value, to the default values of the model.
+
+
+[[submitting]]
+== Submitting
+
+To save the value, pass an `onSubmit` callback to [methodname]`useForm()`, and call [methodname]`submit()`, for example when the user clicks a button. The [methodname]`submit()` function first validates the whole form. When the form is valid, it calls the callback with the value of the form, and resolves with what the callback returns. While the promise of the callback is pending, the `submitting` property of the form is `true`.
+
+When the validation fails, [methodname]`submit()` doesn't call the callback. It rejects with a [classname]`ValidationError` from `@vaadin/hilla-lit-form`, and the fields show the errors. Catch the error, so that it doesn't become an unhandled rejection:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/fusion/forms/person/person-form.tsx[tags=save,indent=0]
+----
+
+Other errors of the callback, such as an `EndpointError`, reject [methodname]`submit()` as they are.
+
+After the form calls the callback, it uses the submitted value as its default value. This happens also when the callback fails, for example when the server rejects the value. The form is then no longer dirty, and [methodname]`reset()` returns to the submitted value. A submit that fails the validation in the browser doesn't change the default value.
+
+
+[[server-validation]]
+== Server-Side Validation
+
+The service validates its arguments again, as described in <<../browser-callable-services#validation,Parameter Validation>>. When an object from the form fails the validation, the call rejects with an `EndpointValidationError`. Then [methodname]`submit()` shows each error in the field whose path matches the property of the error, such as `address.street` or `phoneNumbers.0.number`, and rejects with a [classname]`ValidationError`.
+
+An error that matches no field is only in the `errors` property of the [classname]`ValidationError`, and the form stays valid. The errors of constraints on the method parameters themselves, rather than on the properties of the object, don't match any field. A service can also report errors of its own, as described in <<validation#server-errors,Errors from the Service>>.

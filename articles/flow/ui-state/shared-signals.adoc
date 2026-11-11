@@ -98,13 +98,14 @@ SharedValueSignal<String> first = items.insertFirst("First").signal();
 SharedValueSignal<String> last = items.insertLast("Last").signal();
 
 // Insert after a specific entry
-items.insertAt("After First", ListPosition.after(first));
+SharedValueSignal<String> afterFirst =
+    items.insertAt("After First", ListPosition.after(first)).signal();
 
 // Insert before a specific entry
 items.insertAt("Before Last", ListPosition.before(last));
 
 // Insert between two adjacent entries (requires the two to be adjacent)
-items.insertAt("Between", ListPosition.between(first, last));
+items.insertAt("Between", ListPosition.between(first, afterFirst));
 
 // Equivalent to insertFirst / insertLast
 items.insertAt("New First", ListPosition.first());
@@ -275,7 +276,7 @@ String optimistic = signal.peek();
 String confirmed = signal.peekConfirmed();
 ----
 
-Shared signals currently support asynchronously confirmed updates only in single JVM environments but don't yet provide an  implementation for asynchronous updates and confirmations in a cluster environment.
+Shared signals currently support asynchronously confirmed updates only in single JVM environments but don't yet provide an implementation for asynchronous updates and confirmations in a cluster environment.
 
 In single JVM deployments, `peekConfirmed()` typically returns the same value as `peek()`. In clustered environments, there may be a brief delay between optimistic local updates and cluster confirmation.
 
@@ -318,7 +319,7 @@ counter.incrementBy(1); // Atomic operation, UI updates automatically
 
 == Signal Scope Patterns
 
-Signals can be composed into beans that use any Vaadin scope annotation, such as `@VaadinSessionScope`, `@VaadinUIScope`, or `@VaadinRouteScope`. The scope annotation determines the lifetime and sharing behavior of the signal holder bean.
+Signals can be composed into beans that use any Vaadin scope annotation, such as `@VaadinSessionScope`, `@UIScope`, or `@RouteScope`. The scope annotation determines the lifetime and sharing behavior of the signal holder bean.
 
 
 === Session-Scoped Signals
@@ -389,7 +390,7 @@ public class DashboardView extends VerticalLayout {
     public DashboardView() {
         Button increment = new Button("Increment");
         increment.addClickListener(e ->
-            counterSignal.set(counterSignal.get() + 1));
+            counterSignal.update(count -> count + 1));
 
         Span counter = new Span();
         counter.bindText(counterSignal.map(count -> "Count: " + count));
@@ -512,7 +513,7 @@ field.bindValue(value, value::set);
 // Changes sync both ways: field to signal and signal to field
 ----
 
-Note that you need to <<{articles}/flow/advanced/server-push#push.configuration.enabling,enable push>> for your application to ensure changes are pushed out for all users immediately when one user makes a change.
+Note that you need to <<{articles}/building-apps/server-push#enabling-push,enable push>> for your application to ensure changes are pushed out for all users immediately when one user makes a change.
 ====
 
 
@@ -527,3 +528,29 @@ SharedValueSignal<String> readOnlyName = name.asReadonly();
 
 // readOnlyName.set("new") would throw an exception
 ----
+
+
+[[validators]]
+== Validating Changes
+
+The [methodname]`withValidator()` method returns a new instance of the signal that checks each change made through it with a [classname]`CommandValidator`. The new instance shares the value of the original. The original instance still accepts all changes.
+
+The validator gets each change as a [classname]`SignalCommand`, such as [classname]`SignalCommand.IncrementCommand`, and returns `true` to accept it. When it returns `false`, the method that made the change throws an [classname]`UnsupportedOperationException`, and the value stays the same:
+
+[source,java]
+----
+SharedNumberSignal votes = new SharedNumberSignal();
+SharedNumberSignal singleVotes = votes.withValidator(command ->
+        command instanceof SignalCommand.IncrementCommand increment
+                && Math.abs(increment.delta()) == 1);
+
+singleVotes.incrementBy(1); // Accepted
+singleVotes.incrementBy(5); // Throws UnsupportedOperationException
+votes.incrementBy(5); // Accepted, because the original has no validator
+----
+
+The validator applies also to changes made through the child signals of the instance, such as the entries of a list signal. In a transaction, the validator checks each change, and a rejected change fails the whole transaction. Commands that only check a condition, such as the one that [methodname]`verifyValue()` submits, are always accepted.
+
+Calling [methodname]`withValidator()` on an instance that already has a validator returns an instance that needs both validators to accept a change. The [methodname]`and()` method of [classname]`CommandValidator` combines two validators in the same way. The [methodname]`asReadonly()` method uses the validator [classname]`CommandValidator.REJECT_ALL`, which rejects all changes.
+
+[discussion-id]`4ED29fCD-42B1-4A1D-8B9E-BE87F8862ED1`

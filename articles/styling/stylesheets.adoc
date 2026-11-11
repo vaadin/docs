@@ -112,9 +112,69 @@ CSS class names are identifier-attributes applied to HTML elements that scope CS
 
 Stylesheets can also be <<{articles}/styling/advanced/dynamic-stylesheets#, loaded and unloaded dynamically>> through Java code.
 
+[role="since:com.vaadin:vaadin@V25.4"]
+== Loading into a CSS Cascade Layer
+
+By default, a stylesheet's rules compete with your application's other styles based on selector specificity. To load a stylesheet, such as a theme, so that its styles always lose to your application's own styles regardless of specificity, put it in a CSS cascade layer using the `layer` attribute of [annotationname]`@StyleSheet`.
+
+[source,java]
+----
+@StyleSheet(value = Aura.STYLESHEET, layer = "aura")
+@StyleSheet("styles.css")
+public class Application implements AppShellConfigurator {
+ ...
+}
+----
+
+The layer name follows the CSS `<layer-name>` syntax: one or more identifiers separated by dots, such as `theme` or `theme.base`. Leaving `layer` unset, the default, loads the stylesheet without a layer.
+
+A stylesheet is loaded only once per URL. If the same URL is declared with more than one layer, it is loaded into the first layer declared.
+
+[[react-views]]
+== Stylesheets in React Views
+
+The stylesheets that the [annotationname]`@StyleSheet` annotations of the application shell class load apply to React views as well.
+
+A React view can also import a stylesheet from its TypeScript file. Place the stylesheet in the [filename]`src/main/frontend` folder, for example next to the view. Vaadin bundles it with the code of the view, and it applies when that code has loaded. Like a lazily loaded stylesheet, it stays loaded after the user navigates away, so use CSS class names to scope its styles.
+
+.`src/main/frontend/views/calendar.tsx`
+[source,tsx]
+----
+import './calendar.css';
+
+export default function CalendarView() {
+  return <div className="calendar-view">...</div>;
+}
+----
+
+A stylesheet whose file name ends with `.module.css` is a CSS module, which scopes its class names to the files that import it. Vaadin gives each class a unique name, and the import returns an object that maps the class names in the file to the unique names:
+
+.`src/main/frontend/views/calendar.tsx`
+[source,tsx]
+----
+import styles from './calendar.module.css';
+
+export default function CalendarView() {
+  return <div className={styles.calendar}>...</div>;
+}
+----
+
+TypeScript reports an error for these imports unless it has type declarations for them. Add the declarations to the [filename]`types.d.ts` file in the project folder, after the ones that Vaadin generates there. Keep the declaration of `*.module.css` first:
+
+.`types.d.ts`
+[source,typescript]
+----
+declare module '*.module.css' {
+  const classes: Readonly<Record<string, string>>;
+  export default classes;
+}
+
+declare module '*.css' {}
+----
+
 == Spring Security
 
-If you are using <<{articles}/flow/security/enabling-security#, Spring Security>> in your Vaadin application, you need to ensure that your stylesheets are accessible to unauthenticated users. The default Vaadin Spring Security configuration only permits access to `src/main/resources/META-INF/resources/styles.css` as well as the Aura and Lumo theme stylesheets.
+If you are using <<{articles}/flow/security/spring#, Spring Security>> in your Vaadin application, you need to ensure that your stylesheets are accessible to unauthenticated users. The default Vaadin Spring Security configuration only permits access to `src/main/resources/META-INF/resources/styles.css` as well as the Aura and Lumo theme stylesheets.
 
 To allow access to more stylesheets, you can modify your Spring Security configuration like so:
 

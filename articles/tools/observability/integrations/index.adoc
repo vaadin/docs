@@ -75,6 +75,52 @@ While testing an integration, set it to `1.0` so every request produces a span.
 Lower it again for production.
 
 
+[[secure-actuator-endpoints]]
+== Secure the Actuator Endpoints
+
+Exposing an Actuator endpoint is necessary, but in an application that uses Spring Security it isn't sufficient.
+The Vaadin security configuration handles every request that no other filter chain claims, including the Actuator endpoints, and answers an unauthenticated one by redirecting it to the login view.
+A metrics scraper, a monitoring agent, or a script can't fill in a login form, so its requests never reach the endpoint.
+
+Give the Actuator endpoints a security filter chain of their own, with HTTP Basic authentication and no session, ordered ahead of the Vaadin one:
+
+.`ActuatorSecurityConfig.java`
+[source,java]
+----
+@Configuration
+class ActuatorSecurityConfig {
+
+    @Bean
+    @Order(1) // <1>
+    SecurityFilterChain actuatorSecurityFilterChain(HttpSecurity http)
+            throws Exception {
+        http.securityMatcher(EndpointRequest.toAnyEndpoint()) // <2>
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(EndpointRequest.to("health"))
+                        .permitAll() // <3>
+                        .anyRequest().hasRole("METRICS")) // <4>
+                .httpBasic(Customizer.withDefaults()) // <5>
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(
+                                SessionCreationPolicy.STATELESS)); // <6>
+        return http.build();
+    }
+}
+----
+<1> Spring Security uses the first filter chain that matches a request. Leave the Vaadin configuration without an `@Order`, so that this chain comes first.
+<2> Applies this chain to the Actuator endpoints only, including the `vaadin` insights endpoint. In Spring Boot 4, the [classname]`EndpointRequest` class is in the [packagename]`org.springframework.boot.security.autoconfigure.actuate.web.servlet` package.
+<3> Keeps the health endpoint open for load balancers and container probes. Remove this line if nothing needs to reach it anonymously.
+<4> Requires an authenticated user with the `METRICS` role. Create a dedicated account for the scraper or agent in your user store, rather than reusing a person's.
+<5> Answers an unauthenticated request with `401` and a `WWW-Authenticate` header, instead of a redirect to the login view.
+<6> Creates no HTTP session per request. Without this, every scrape or poll would leave a session behind on the server.
+
+Then give the client the account's credentials.
+For Prometheus, see <<prometheus#secure-the-endpoint,Secure the Endpoint>>.
+
+If the clients run inside a private network, you can also move the Actuator endpoints to a management port that users can't reach, and permit all requests there instead of authenticating them.
+See <<{articles}/building-apps/production/logs-and-metrics#expose-metrics,Collect Logs & Metrics>> for that setup.
+
+
 [[percentiles]]
 == Percentiles and Histogram Buckets
 
