@@ -16,6 +16,7 @@ export default function LoginView() {
     <LoginForm
       error={hasError}
       noForgotPassword
+      onErrorChanged={(event) => setHasError(event.detail.value)}
       onLogin={async ({ detail: { username, password } }) => {
         const { error } = await login(username, password);
         setHasError(error);
