@@ -409,6 +409,7 @@ How the parts work together:
 * Calcite returns dates as [classname]`java.sql.Date` and timestamps as [classname]`java.sql.Timestamp`. The provider converts them to [classname]`LocalDate` and [classname]`LocalDateTime`, which the grid renders with its date renderers.
 * Calcite's parse and validation errors name the problem in the SQL the LLM wrote, such as an unknown column. The provider relays them in a [classname]`ToolException`, so the LLM can correct its query. The [classname]`ToolException` of a table with too many rows reaches the LLM with its own message. Every other failure, including the unchecked exceptions Calcite throws while a query runs, becomes a [classname]`ToolException` with a generic message.
 * Calcite rejects a statement that ends with a semicolon, and LLMs often write one. The provider removes a trailing semicolon before it runs a query, so the LLM doesn't spend a turn on correcting it.
+* Calcite can't change data through these tables. A `DELETE` or `UPDATE` fails before anything runs, so the provider is read-only by construction. The advice on the Controllers page about keeping secrets out of the schema text and error messages still applies.
 
 
 [[paging]]
@@ -481,13 +482,11 @@ A provider created in the view belongs to one user: its connection, its cached r
 The provider needs no LLM to test. A unit test can call [methodname]`executeQuery()` with hand-written SQL against a fake client and check the rows. This catches mistakes in the schema text, the type mapping, and the quoting before a model is involved.
 
 
-=== What to Expect at Runtime
+=== Know the Limits
 
 Each query reads every table it uses in full, and Calcite filters, joins, sorts, and groups in memory. A sorted or paged grid query reads the whole table as well. The time and memory a query takes therefore grow with the size of the tables it reads, not with the size of its result. The row limit of [classname]`BackendTable` fails the queries on a table that has outgrown this approach. For large tables, <<#pass-conditions,pass conditions to the backend>>, <<#backend-adapters,run more of the query in the backend>>, or <<#database-copy,copy the data into a database>>.
 
 The chart calls [methodname]`executeQuery(String sql)` for each of its series queries and receives the full result. It does so when the LLM proposes the queries, and again every time the chart renders, including after a state restore. A series query that groups its rows returns a small result, and the table cache serves the repeated calls.
-
-Calcite can't change data through these tables. A `DELETE` or `UPDATE` fails before anything runs, so the provider is read-only by construction. The advice on the Controllers page about keeping secrets out of the schema text and error messages still applies.
 
 
 [[pass-conditions]]
