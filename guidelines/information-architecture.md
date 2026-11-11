@@ -50,7 +50,7 @@ Vaadin Framework reference documentation. Technical, code-centric, unopinionated
 
 ### articles/hilla
 
-Hilla framework documentation (discontinued). Relevant content should be migrated to articles/flow as features merge into Vaadin. Some pages take their content from an underscore-prefixed partial in `articles/hilla/_shared`, left over from the removed Hilla Lit pages. Each partial is included by one page only, so inline it into that page when you move the page.
+Hilla framework documentation (discontinued). Relevant content should be migrated to articles/flow as features merge into Vaadin.
 
 ### articles/components
 

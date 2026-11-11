@@ -59,8 +59,8 @@ attributes in `articles/_vaadin-version.adoc` (`{vaadin-version}`,
 ## Feature Flags
 
 Every feature flag that Flow and Flow Components declare is listed on
-`articles/flow/configuration/feature-flags.adoc`, under Experimental, Legacy or
-Hilla feature flags, with a one-line description. The Check Feature Flags
+`articles/flow/configuration/feature-flags.adoc`, under Experimental or Legacy
+feature flags, with a one-line description. The Check Feature Flags
 workflow fails when a flag is missing from the page or when the page lists a
 flag that no longer exists.
 
