@@ -1,173 +1,232 @@
 ---
-title: The Loading Indicator
-page-title: How to customize the loading indicator in Vaadin
-description: Using a loading indicator to notify the user of progress in loading the page.
-meta-description: Learn how to modify and enhance the Vaadin Loading Indicator for better user experience in your application.
+title: Loading and Connection Indicator
+page-title: Loading and connection indicator in Vaadin applications
+description: The indicator that shows slow requests and a lost connection to the server, and how to configure and style it.
+meta-description: Configure and style the Vaadin loading and connection indicator from Java or TypeScript - loading bar delays, connection status messages, and custom CSS.
 order: 50
 ---
 
 
-= The Loading Indicator
+= Loading and Connection Indicator
 
-To inform the user that loading is in progress and that the _UI_ is currently unresponsive, a _loading indicator_ is displayed. A longer loading time might be due bad network conditions, for example. The framework automatically displays a loading indicator after a configurable delay from the start of a server request, and hides it after the response processing has ended.
+Vaadin shows a loading bar at the top of the page when a request to the server takes a while. When the browser loses its connection to the server, Vaadin shows a status message. Both are parts of the `<vaadin-connection-indicator>` element, which Vaadin adds to the page. Flow and React views share the element: it shows the requests of Flow views, and the calls that React views make to browser-callable services.
 
-By default, the loading indicator is shown at the top of the viewport after a delay. You can turn the indicator off, change delays or customize the look of the indicator. The theming targets the `<div class="v-loading-indicator"></div>` element located inside the `<body>` element. You also need to toggle the default theming off.
+section_outline::[]
+
+
+[[loading-bar]]
+== Loading Bar
+
+The loading bar appears when a request takes longer than the first delay. It then goes through three stages, each with a CSS class name:
+
+[cols="1,1,3"]
+|===
+|Class Name |Default Delay |Default Appearance
+
+|`first`
+|450 ms
+|The bar appears.
+
+|`second`
+|1500 ms
+|The bar grows longer.
+
+|`third`
+|5000 ms
+|The bar gets thicker and starts to pulse.
+|===
+
+Each delay counts from the start of the request. The bar disappears when the request ends.
+
+In React views, a call with the `mute` request option doesn't show the loading bar. See <<{articles}/flow/react-views/browser-callable-services#request-options,Request Options>>.
+
+
+[[status-message]]
+== Connection Status Message
+
+When the browser loses its connection to the server, the indicator shows a status message at the top of the page:
+
+- While Vaadin tries to reconnect, it shows the reconnecting text.
+- When Vaadin gives up, or the browser goes offline, it shows the offline text.
+
+The message shows in full for two seconds by default, and then shrinks to a thin bar. The bar expands again when the user hovers over it. When the connection comes back, the indicator shows the online text for the same time.
+
+Flow views try to reconnect when a request fails. In React views, a failed call to a browser-callable service shows the offline text, and the next successful call ends it.
+
+
+[[java]]
+== Configuring from Java
+
+Flow views get their configuration from two objects of the [classname]`UI`:
+
+[methodname]`getLoadingIndicatorConfiguration()`::
+The delays of the loading bar, and whether the default styles apply.
+
+[methodname]`getReconnectDialogConfiguration()`::
+The reconnecting text, set with [methodname]`setDialogText()`, and the offline text, set with [methodname]`setDialogTextGaveUp()`. It also has the number of reconnect attempts and the interval between them.
+
+To configure every UI, use a UI init listener. Register it as described in <<service-init-listener#,Service Init Listener>>:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/flow/advanced/loadingindicator/IndicatorConfigurationListener.java[tags=snippet,indent=0]
+----
+
+The configuration reaches the browser when Vaadin creates the UI, which happens when the browser first shows a Flow view. It changes only the properties that it sets. Before that, and in applications with only React views, the configuration from TypeScript applies.
+
+
+[[typescript]]
+== Configuring from TypeScript
+
+Set the properties of `connectionIndicator` in the entry point of the frontend, [filename]`src/main/frontend/index.tsx`. Vaadin generates a default entry point, so first copy it there, as described in <<modifying-the-bootstrap-page#default-bootstrap-template-and-entry-point,Default Template and Entry Point>>.
+
+[source,tsx]
+.[filename]`src/main/frontend/index.tsx`
+----
+import { connectionIndicator } from 'Frontend/generated/jar-resources/ConnectionIndicator.js';
+
+connectionIndicator.firstDelay = 300; // Milliseconds
+connectionIndicator.onlineText = 'Online again';
+connectionIndicator.offlineText = 'Offline';
+
+// The rest of the generated file
+----
+
+The properties and their defaults are:
+
+[cols="2,2,3"]
+|===
+|Property |Default |Description
+
+|`firstDelay`
+|`450`
+|The delay in milliseconds before the loading bar appears with the `first` class name.
+
+|`secondDelay`
+|`1500`
+|The delay before the loading bar gets the `second` class name.
+
+|`thirdDelay`
+|`5000`
+|The delay before the loading bar gets the `third` class name.
+
+|`expandedDuration`
+|`2000`
+|How long, in milliseconds, a new status message shows in full.
+
+|`onlineText`
+|`Online`
+|The message when the connection comes back.
+
+|`reconnectingText`
+|`Connection lost, trying to reconnect...`
+|The message while Vaadin tries to reconnect.
+
+|`offlineText`
+|`Connection lost`
+|The message when Vaadin gives up reconnecting, or the browser is offline.
+
+|`applyDefaultTheme`
+|`true`
+|Whether the default styles apply. See <<styling>>.
+|===
+
+
+[[styling]]
+== Styling the Indicator
+
+The indicator has the following structure. The element has the `loading`, `reconnecting`, `offline` and `expanded` attributes while it's in these states. When no request is in progress, the loading bar has `display: none` set as an inline style.
 
 [source,html]
 ----
-<body>
-  <!-- application root level element omitted -->
-  <!-- "the framework removes "display: none" when indicator shown -->
-  <div class="v-loading-indicator first"
-       style="display: none;">
+<vaadin-connection-indicator offline expanded>
+  <div class="v-loading-indicator" style="display: none"></div>
+  <div class="v-status-message">
+    <span class="text">Connection lost</span>
   </div>
-</body>
+</vaadin-connection-indicator>
 ----
 
-The loading indicator can be configured from Java by accessing the configuration object from [classname]`UI`.
-
-[source,java]
-----
-public class AppShell implements AppShellConfigurator, VaadinServiceInitListener {
-
-    // other implementation omitted
-    @Override
-    public void serviceInit(ServiceInitEvent serviceInitEvent) {
-        serviceInitEvent.getSource().addUIInitListener(uiInitEvent -> {
-            LoadingIndicatorConfiguration conf = uiInitEvent.getUI().getLoadingIndicatorConfiguration();
-
-            // disable default theme -> loading indicator isn't shown
-            conf.setApplyDefaultTheme(false);
-        });
-    }
-}
-----
-
-The configuration object can be used to configure the delays after which the indicator changes "stages".
-The indicator is shown after a delay of 300 ms by default and given a class name of `first`.
-You can configure two additional delays.
-After the delays, the class names `second` and `third` are set, which can be used to change the style of the loading indicator after a certain time has passed.
-
-[source,java]
-----
-public class AppShell implements AppShellConfigurator, VaadinServiceInitListener {
-
-    @Override
-    public void serviceInit(ServiceInitEvent serviceInitEvent) {
-        serviceInitEvent.getSource().addUIInitListener(uiInitEvent -> {
-            LoadingIndicatorConfiguration conf = uiInitEvent.getUI().getLoadingIndicatorConfiguration();
-
-            // disable default theme -> loading indicator isn't shown
-            conf.setApplyDefaultTheme(false);
-
-            /*
-             * Delay for showing the indicator and setting the 'first' class name.
-             */
-            conf.setFirstDelay(300); // 300ms is the default
-
-            /* Delay for setting the 'second' class name */
-            conf.setSecondDelay(1500); // 1500ms is the default
-
-            /* Delay for setting the 'third' class name */
-            conf.setThirdDelay(5000); // 5000ms is the default
-        });
-    }
-}
-----
+To style the indicator yourself, turn off the default styles, either from Java with [methodname]`setApplyDefaultTheme(false)` or from TypeScript with `applyDefaultTheme = false`. The indicator is then invisible until your styles show it. Vaadin hides it with `opacity: 0` and `pointer-events: none` for the `.v-loading-indicator` and `.v-status-message` selectors, which come after your stylesheets. Set these properties with a more specific selector, such as `vaadin-connection-indicator .v-loading-indicator`.
 
 
-== Displaying a Modal Curtain
+[[modal-curtain]]
+=== Modal Curtain
 
-To show an alternative for the default loading indicator theme, this example demonstrates how to show a loading indicator that darkens the UI.
-The darkening is animated, so that the screen doesn't flicker.
-The darkening starts after the server-side round-trip exceeds 0.5 seconds (300 ms delay configured in Java + 200 ms animation delay).
-
-[NOTE]
-You should explicitly disable the default theme via Java, as shown in the previous chapter.
+The following styles show the loading bar as a curtain that darkens the whole page. The darkening fades in, starting 200 milliseconds after the loading bar appears, so that the page doesn't flicker on short requests:
 
 [source,css]
 ----
-.v-loading-indicator {
-  position: fixed; /* Occupy whole screen even if scrolled */
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  /* Eat mouse events when visible, doesn't prevent scrolling */
+vaadin-connection-indicator .v-loading-indicator {
+  position: fixed; /* Covers the whole page, even when scrolled */
+  inset: 0;
+  opacity: 1;
+  /* Blocks clicks while the curtain is visible, but not scrolling */
   pointer-events: auto;
-  /* Animated with delay to prevent flashing */
   animation: fadein 0.3s ease-out 0.2s normal 1 both;
   z-index: 2147483647;
 }
+
 @keyframes fadein {
   0% {
-    background: rgba(0,0,0,0);
+    background: rgba(0, 0, 0, 0);
   }
   100% {
-    background: rgba(0,0,0,.5); /* Darkens the UI */
+    background: rgba(0, 0, 0, 0.5); /* Darkens the page */
   }
 }
 ----
 
-The following image illustrates an application with the modal curtain visible during loading (top image) compared to the normal state (bottom image).
+The following image shows an application with the curtain during loading at the top, and in its normal state at the bottom:
 
 image:images/modal_curtain.png[modal curtain,700,700]
 
-== Displaying a Changing Loading Indicator
 
-Once the loading indicator is displayed, it gets the class name `first`. After
-the second and third configurable delays, it gets the class names `second` and the `third` respectively.
-You can use these class names in your styling to allow the appearance to reflect the length of time the user has been waiting.
+[[changing-indicator]]
+=== Changing Indicator
 
-The following style snippet demonstrates how to create an animation that changes
-color while the user is waiting.
-
-[NOTE]
-You should also disable the default theme explicitly via Java.
+The stage class names can change the look of the loading bar as the user waits. The following styles show a pulsing circle in the middle of the page, which changes color in each stage:
 
 [source,css]
 ----
-.v-loading-indicator {
+vaadin-connection-indicator .v-loading-indicator {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
+  opacity: 1;
   pointer-events: auto;
   z-index: 2147483647;
 }
-.v-loading-indicator:before {
+
+vaadin-connection-indicator .v-loading-indicator::before {
   width: 76px;
   height: 76px;
-
   position: absolute;
   top: 50%;
   left: 50%;
-
   margin: -38px 0 0 -38px;
-
   border-radius: 100%;
   animation: bouncedelay 1.2s infinite 0.4s ease-in-out both;
   content: "";
 }
 
-.v-loading-indicator.first:before {
+vaadin-connection-indicator .v-loading-indicator.first::before {
   background-color: skyblue;
 }
 
-.v-loading-indicator.second:before {
+vaadin-connection-indicator .v-loading-indicator.second::before {
   background-color: salmon;
 }
 
-.v-loading-indicator.third:before {
+vaadin-connection-indicator .v-loading-indicator.third::before {
   background-color: red;
 }
 
 @keyframes bouncedelay {
   0%, 80%, 100% {
     transform: scale(0);
-  } 40% {
-    transform: scale(1.0);
+  }
+  40% {
+    transform: scale(1);
   }
 }
 ----
