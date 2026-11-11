@@ -1,0 +1,103 @@
+---
+title: Stateless Authentication
+page-title: Stateless authentication with JWT in Vaadin applications
+description: Keeping the authentication of the user in a signed JSON Web Token in the browser, instead of in the HTTP session.
+meta-description: Reference for stateless authentication in Vaadin with Spring Security - the stateless configurer, JSON Web Token cookies, their lifetime, and the principal.
+order: 75
+---
+
+
+= Stateless Authentication
+
+By default, Spring Security keeps the authentication of the user in the HTTP session. With stateless authentication, the browser keeps it instead, in a signed JSON Web Token (JWT). The server doesn't need the session to know who the user is. A restart of the server therefore doesn't log the users out, and several servers recognize the same users without sharing their sessions.
+
+Only the authentication leaves the session. Vaadin still keeps the UI state of Flow views in the HTTP session, so an application with Flow views still depends on it.
+
+section_outline::[]
+
+
+[[dependencies]]
+== Dependencies
+
+Stateless authentication needs these dependencies. Spring Boot manages their versions:
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.security</groupId>
+    <artifactId>spring-security-oauth2-jose</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.security</groupId>
+    <artifactId>spring-security-oauth2-resource-server</artifactId>
+</dependency>
+----
+
+
+[[configuration]]
+== Configuration
+
+Apply [classname]`VaadinStatelessSecurityConfigurer` after [classname]`VaadinSecurityConfigurer`, and turn off the sessions of Spring Security:
+
+[source,java]
+----
+<source-info group="VaadinSecurityConfigurer"></source-info>
+include::{root}/src/main/java/com/vaadin/demo/fusion/security/stateless/SecurityConfigurer.java[tags="stateless-configure"]
+----
+<1> The secret key that signs and verifies the JWT, from the Base64-encoded property `my.app.auth.secret`.
+<2> The signature algorithm. The key must be long enough for the algorithm. The algorithm HS256 needs a key of at least 32 bytes.
+<3> The issuer of the JWT, a string or a URL that identifies the application.
+
+.Keep the Secret Key Secret
+[CAUTION]
+====
+Anyone who has the key can create a JWT that the application accepts. Give each application and each environment a key of its own, and don't commit it to the source repository. See <<{articles}/flow/security/protections/external-configuration#,Storing Sensitive Data>>.
+====
+
+[classname]`VaadinStatelessSecurityConfigurer` has these configuration methods:
+
+[methodname]`withSecretKey()`::
+Configures the secret key. It returns a configurer with the methods [methodname]`secretKey()`, which sets the key, [methodname]`algorithm()`, which sets the algorithm, and [methodname]`and()`, which returns to [classname]`VaadinStatelessSecurityConfigurer`. When the algorithm isn't set, it comes from the key. An overload of [methodname]`withSecretKey()` takes a [interfacename]`Customizer` of that configurer instead.
+
+[methodname]`issuer()`::
+Sets the issuer of the JWT.
+
+[methodname]`expiresIn()`::
+Sets the lifetime of the JWT in seconds. The default is 1800 seconds, which is 30 minutes.
+
+
+[[tokens]]
+== Tokens & Cookies
+
+After the login, the server sends the JWT in two cookies:
+
+`jwt.headerAndPayload`::
+The header and the payload of the JWT. The browser code can read this cookie.
+
+`jwt.signature`::
+The signature of the JWT, in an HTTP-only cookie that the browser code can't read.
+
+The server renews the JWT and the cookies in its responses, so they expire after the lifetime of the JWT has passed without requests. For example, this sets the lifetime to one hour:
+
+[source,java]
+----
+http.with(new VaadinStatelessSecurityConfigurer<>(), cfg -> cfg
+        .withSecretKey().secretKey(secretKey).and()
+        .issuer("com.example.application")
+        .expiresIn(3600));
+----
+
+The payload has the name of the user as its subject, the issuer, and the times when the JWT was issued and when it expires. Its `roles` claim lists the role authorities of the user, without the role prefix. When the server reads the JWT, it adds the prefix again. The other granted authorities of the user aren't in the JWT.
+
+The CSRF token is also in a cookie, `XSRF-TOKEN`, instead of the session.
+
+
+[[principal]]
+== The Principal
+
+With stateless authentication, the principal of the authentication is a [classname]`Jwt` instead of the object that the authentication provider created, such as a [interfacename]`UserDetails`. To get the full user information, load it with the name of the user:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/security/stateless/SecurityUtils.java[tags="user-details"]
+----
