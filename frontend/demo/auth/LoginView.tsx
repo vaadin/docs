@@ -1,33 +1,26 @@
-import React from 'react';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useState } from 'react';
 import type { ViewConfig } from '@vaadin/hilla-file-router/types.js';
-import { useSignal } from '@vaadin/hilla-react-signals';
-import { LoginOverlay } from '@vaadin/react-components/LoginOverlay.js';
+import { LoginForm } from '@vaadin/react-components/LoginForm.js';
 import { useAuth } from './auth';
 
 export const config: ViewConfig = {
+  skipLayouts: true,
   menu: { exclude: true },
 };
 
-// tag::snippet[]
 export default function LoginView() {
-  useSignals(); // hidden-source-line
   const { login } = useAuth();
-  const hasError = useSignal(false);
+  const [hasError, setHasError] = useState(false);
 
   return (
-    <LoginOverlay
-      opened
-      error={hasError.value}
+    <LoginForm
+      error={hasError}
       noForgotPassword
-      onErrorChanged={(event) => {
-        hasError.value = event.detail.value;
-      }}
+      onErrorChanged={(event) => setHasError(event.detail.value)}
       onLogin={async ({ detail: { username, password } }) => {
         const { error } = await login(username, password);
-        hasError.value = Boolean(error);
+        setHasError(error);
       }}
     />
   );
 }
-// end::snippet[]
