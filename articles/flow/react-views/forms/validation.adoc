@@ -1,0 +1,145 @@
+---
+title: Validation
+page-title: Validate forms in React views | Vaadin
+description: The Bean Validation constraints that forms check in the browser, validators of your own, and errors that a service reports.
+meta-description: Reference for Vaadin form validation in React views - Bean Validation constraints in the browser, required fields, error messages, custom validators, and server errors.
+order: 10
+---
+
+
+= Form Validation
+:toclevels: 2
+
+A form validates its value in the browser, so that the user sees errors right away. The service validates the value again on the server, when the form is submitted. The browser runs the Bean Validation constraints of the Java type, and validators that the view adds. The server runs only the Bean Validation constraints, and checks of its own.
+
+The browser validates a field when the user changes its value, and when the field loses focus. On submit, it validates the whole form.
+
+section_outline::[]
+
+
+[[constraints]]
+== Bean Validation Constraints
+
+The generator copies these Jakarta Bean Validation constraints from the Java type to the form model, so that the browser checks them, too:
+
+* `@AssertFalse`, `@AssertTrue`
+* `@DecimalMax`, `@DecimalMin`, `@Digits`, `@Max`, `@Min`
+* `@Negative`, `@NegativeOrZero`, `@Positive`, `@PositiveOrZero`
+* `@Email`, `@NotBlank`, `@NotEmpty`, `@Pattern`, `@Size`
+* `@Future`, `@Past`
+* `@NotNull`, `@Null`
+
+Only the server checks other constraints, such as `@PastOrPresent`, `@FutureOrPresent`, and constraints of your own. Their errors appear in the fields after a submit, as described in <<index#server-validation,Server-Side Validation>>.
+
+For example, the `Person` record on <<index#models,Forms>> has these constraints:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/forms/person/Person.java[tags=snippet,indent=0]
+----
+
+The [annotationname]`@Valid` annotations make the server validate the nested objects, too. The browser validates them in any case.
+
+
+[[required]]
+== Required Fields
+
+A field is required when its property has a [annotationname]`@NotNull`, [annotationname]`@NotEmpty`, or [annotationname]`@NotBlank` constraint, or a [annotationname]`@Size` constraint with a `min` greater than 0. The [methodname]`field()` function sets the `required` state of the component, which shows an indicator.
+
+When a field isn't required and its value is empty, the browser doesn't run its other validators. For example, an empty postal code passes a [annotationname]`@Pattern` constraint. A number field is an exception: an empty field for a non-nullable number fails with the message "must be a number".
+
+
+[[messages]]
+== Error Messages
+
+When a constraint has no `message` attribute in Java, the browser shows a message of its own in English, such as "must not be blank". After a submit, the field shows the message of the server, which comes from Bean Validation. When the constraint has a `message` attribute, both use it.
+
+The browser shows the message as it's written in Java. It doesn't replace placeholders such as `{min}`. To replace them, set the static `interpolateMessageCallback` property of [classname]`BinderRoot`, from `@vaadin/hilla-lit-form`. It gets the message and the validator, which has the attributes of the constraint as properties:
+
+[source,typescript]
+----
+import { BinderRoot } from '@vaadin/hilla-lit-form';
+
+BinderRoot.interpolateMessageCallback = (message, validator) =>
+  message.replace(/\{(\w+)\}/gu, (placeholder, name: string) =>
+    String((validator as unknown as Record<string, unknown>)[name] ?? placeholder),
+  );
+----
+
+
+[[validators]]
+== Validators in the View
+
+A view can add validators of its own, for checks that have no Bean Validation constraint. Only the browser runs these validators, so they don't protect the data. When the check matters, make the service check it, too.
+
+A validator is an object with a `message` and a [methodname]`validate()` function. The function gets the value, and returns whether it's valid. It can also return a promise. Add the validators once, in an effect without dependencies.
+
+The examples in this section use this record:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/forms/signup/SignUp.java[tags=snippet,indent=0]
+----
+
+
+[[field-validators]]
+=== Field Validators
+
+To validate a single field, get its part of the form with [methodname]`useFormPart()`, and call [methodname]`addValidator()`:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/fusion/forms/signup/sign-up-form.tsx[tags=field,indent=0]
+----
+
+The field shows the `message` of the validator when [methodname]`validate()` returns `false`.
+
+The validators of the Bean Validation constraints are also available as classes in `@vaadin/hilla-lit-form`, with the same names. For example, `username.addValidator(new Size({ max: 20, message: 'At most 20 characters' }))` adds a [annotationname]`@Size` check to a field in the browser.
+
+
+[[form-validators]]
+=== Form Validators
+
+A check that involves several fields belongs to the form. Call [methodname]`addValidator()` of the form, and return the fields to mark from [methodname]`validate()`:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/fusion/forms/signup/sign-up-form.tsx[tags=form,indent=0]
+----
+
+The [methodname]`validate()` function of a form validator gets the whole value of the form. It can return these values:
+
+`true` or an empty array::
+The value is valid.
+
+An object or an array of objects with a `property`, and an optional `message`::
+Each object marks the field of its `property` as invalid. The `property` is the model of the field, or its path, such as `'address.street'`. The `message` of the object replaces the message of the validator.
+
+`false`::
+The form is invalid, but no field shows the error. It's in the `errors` of the form.
+
+The browser runs the form validators together with the validators of the fields.
+
+
+[[implies-required]]
+=== Required Validators
+
+A validator with `impliesRequired: true` makes its field required, like a [annotationname]`@NotBlank` constraint. The browser then runs the validator also when the field is empty.
+
+
+[[server-errors]]
+== Errors from the Service
+
+A service can report validation errors of its own, for example for checks that need data from a database. Throw an [classname]`EndpointValidationException`, with a [classname]`ValidationErrorData` for each error. Its second argument is the path of the field that shows the error:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/forms/signup/SignUpService.java[tags=snippet,indent=0]
+----
+
+The form shows the error in the field, like the errors of the Bean Validation constraints:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/fusion/forms/signup/sign-up-form.tsx[tags=snippet,indent=0]
+----

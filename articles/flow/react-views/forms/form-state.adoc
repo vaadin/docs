@@ -1,0 +1,96 @@
+---
+title: Form State
+page-title: The state of forms and fields in React views | Vaadin
+description: The value, the dirty and invalid states, and the errors of a form and its fields, and how to change the value of a field from code.
+meta-description: Reference for the state of Vaadin forms in React views - value, default value, dirty, visited, invalid, errors, and submitting - and changing field values from code.
+order: 20
+---
+
+
+= Form State
+:toclevels: 2
+
+The result of [methodname]`useForm()` describes the state of the form. The result of [methodname]`useFormPart()` describes the state of a part of the form, such as a single field. The component re-renders when the state changes.
+
+section_outline::[]
+
+
+[[properties]]
+== State Properties
+
+The form and its parts have these properties:
+
+`value`::
+The current value.
+
+`defaultValue`::
+The value that was last read or submitted.
+
+`dirty`::
+`true` when the value differs from the default value. A form stays dirty when the user changes a field back to its original value, because the form then has a new value object. A single field with a string, number, or boolean value compares the values themselves.
+
+`visited`::
+`true` when the field has lost focus at least once. It's only set for fields, not for the form or for parts that contain several fields.
+
+`required`::
+`true` when the field is required, as described in <<validation#required,Required Fields>>.
+
+`invalid`::
+`true` when there are validation errors.
+
+`errors`::
+The validation errors of the form or the part, including the errors of the fields that it contains. Each error has a `property`, which identifies the field by its model or its path, and a `message`. When a component reports its own input as invalid, for example because a required field is empty, the errors also contain an error with an empty message.
+
+`ownErrors`::
+The validation errors that belong to the form or the part itself, and not to a field that it contains.
+
+The form also has a `submitting` property, which is `true` while the `onSubmit` callback runs. See <<index#submitting,Submitting>>.
+
+For example, the following button is enabled only when there is something to save, and the list shows all the errors of the form:
+
+[source,tsx]
+----
+const { model, field, dirty, submitting, errors } = useForm(PersonModel, {
+  onSubmit: async (person) => {
+    await PersonService.savePerson(person);
+  },
+});
+
+// ...
+
+<Button onClick={save} disabled={!dirty || submitting}>
+  Save
+</Button>
+<ul>
+  {errors
+    .filter((error) => error.message)
+    .map((error, index) => (
+      <li key={index}>{error.message}</li>
+    ))}
+</ul>
+----
+
+
+[[changing-values]]
+== Changing Values from Code
+
+To change the value of a field from code, call [methodname]`setValue()` of its part, or of the form with a new value for the whole form. Don't change the objects in `value` directly: the form doesn't notice such changes, so it neither re-renders nor validates.
+
+The following example has a combo box for a country and another for a city. When the country changes, the view loads the cities of the country, and selects the first city if the current one isn't among them:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/fusion/forms/formchange/CompanyOfficeView.tsx[tags=snippet,indent=0]
+----
+
+The form, the classes, and the service of the example are as follows:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/forms/formchange/CompanyOffice.java[]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/forms/formchange/OfficeService.java[]
+----

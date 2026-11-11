@@ -1,59 +1,71 @@
-import React, { useEffect } from 'react';
-import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { useForm } from '@vaadin/hilla-react-form';
-import { useSignal } from '@vaadin/hilla-react-signals';
-import { Button } from '@vaadin/react-components/Button.js';
-import { ComboBox } from '@vaadin/react-components/ComboBox.js';
+import { useEffect, useState } from 'react';
+import { ValidationError } from '@vaadin/hilla-lit-form';
+import { useForm, useFormPart } from '@vaadin/hilla-react-form';
+import { Button, ComboBox, VerticalLayout } from '@vaadin/react-components';
 import type City from 'Frontend/generated/com/vaadin/demo/fusion/forms/formchange/City';
 import CompanyOfficeModel from 'Frontend/generated/com/vaadin/demo/fusion/forms/formchange/CompanyOfficeModel';
 import type Country from 'Frontend/generated/com/vaadin/demo/fusion/forms/formchange/Country';
 import { OfficeService } from 'Frontend/generated/endpoints';
 
 export default function CompanyOfficeView() {
-  useSignals(); // hidden-source-line
   // tag::snippet[]
-  const form = useForm(CompanyOfficeModel, {
+  const { model, field, read, submit, value } = useForm(CompanyOfficeModel, {
     onSubmit: async (companyOffice) => {
       await OfficeService.saveCompanyOffice(companyOffice);
     },
   });
-  const countries = useSignal<Country[]>([]);
-  const cities = useSignal<City[]>([]);
+  const city = useFormPart(model.city);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
+  const countryName = value.country.name;
 
   useEffect(() => {
-    OfficeService.loadCompanyOffice().then(form.read);
-    OfficeService.loadCountries().then((loaded) => {
-      countries.value = loaded;
-    });
+    OfficeService.loadCompanyOffice().then(read);
+    OfficeService.loadCountries().then(setCountries);
   }, []);
 
   useEffect(() => {
-    if (form.value.country?.name) {
-      OfficeService.loadCities(form.value.country.name).then((loaded) => {
-        cities.value = loaded;
-        form.value.city = loaded[0];
-      });
+    if (!countryName) {
+      return;
     }
-  }, [form.value.country]);
+    OfficeService.loadCities(countryName).then((loaded) => {
+      setCities(loaded);
+      if (!loaded.some((c) => c.name === city.value?.name)) {
+        city.setValue(loaded[0]);
+      }
+    });
+  }, [countryName]);
+  // end::snippet[]
 
+  async function save() {
+    try {
+      await submit();
+    } catch (error) {
+      if (!(error instanceof ValidationError)) {
+        throw error;
+      }
+    }
+  }
+
+  // tag::snippet[]
   return (
-    <section>
+    <VerticalLayout theme="padding">
       <ComboBox
-        {...form.field(form.model.country)}
-        label={'Country'}
-        items={countries.value}
-        itemLabelPath={'name'}
-        itemValuePath={'name'}
+        label="Country"
+        items={countries}
+        itemLabelPath="name"
+        itemValuePath="name"
+        {...field(model.country)}
       />
       <ComboBox
-        {...form.field(form.model.city)}
-        label={'City'}
-        items={cities.value}
-        itemLabelPath={'name'}
-        itemValuePath={'name'}
+        label="City"
+        items={cities}
+        itemLabelPath="name"
+        itemValuePath="name"
+        {...field(model.city)}
       />
-      <Button onClick={form.submit}>Save</Button>
-    </section>
+      <Button onClick={save}>Save</Button>
+    </VerticalLayout>
   );
   // end::snippet[]
 }
