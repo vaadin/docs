@@ -1,0 +1,157 @@
+---
+title: Shared Signals in React Views
+page-title: Full-stack signals for React views in Vaadin applications
+description: How React views use the shared signals that browser-callable services return.
+meta-description: Reference for Vaadin full-stack signals - shared signals that browser-callable services return to React views, their client API, and their access control.
+section-nav: badge-preview
+order: 45
+---
+
+
+= Shared Signals in React Views
+:toclevels: 2
+
+:preview-feature: Full-stack signals
+:feature-flag: com.vaadin.experimental.fullstackSignals
+:ticket-url: https://github.com/vaadin/hilla/issues/new/choose
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+A browser-callable service can return a <<shared-signals#,shared signal>> to React views. The view gets a full-stack signal: a signal in the browser that holds the value of the shared signal. A change that one browser makes goes through the server to every browser that uses the signal.
+
+section_outline::[]
+
+
+[[services]]
+== Returning Signals from Services
+
+A method of a browser-callable service can return a shared signal of the following types. The generated TypeScript function returns the matching signal from `@vaadin/hilla-react-signals`.
+
+[cols="1,1,2"]
+|===
+|Java Type |TypeScript Type |Value
+
+|[classname]`SharedValueSignal<T>`
+|`ValueSignal<T>`
+|A value of the type `T`
+
+|[classname]`SharedNumberSignal`
+|`NumberSignal`
+|A number
+
+|[classname]`SharedListSignal<T>`
+|`ListSignal<T>`
+|An array with a `ValueSignal<T>` for each item
+|===
+
+The other shared signal types, such as [classname]`SharedMapSignal` and [classname]`SharedNodeSignal`, aren't supported.
+
+The method runs each time a browser connects to the signal. Keep the signal in a field and return the same instance on every call. A method that creates a new signal on each call gives each browser a signal of its own, and nothing is shared.
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/signals/MeetingService.java[tags=snippet,indent=0]
+----
+
+The value of a shared signal is stored as JSON. Use a type that converts to JSON, preferably an immutable one, such as a record. See <<shared-signals#,Shared Signals>>. Vaadin generates a TypeScript type for the value type, like for the other types that a service uses.
+
+The parameters of the method become parameters of the generated function. The browser sends the arguments when it connects to the signal. Return the same instance for the same arguments, so that the browsers that pass them share the signal. In the example above, all the browsers that pass `YES` get the same signal.
+
+
+[[views]]
+== Using Signals in Views
+
+The generated function returns the signal right away, not a `Promise`. Each call creates a separate signal with a connection of its own. Call the function once, for example at the top level of the module:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/fusion/signals/meeting-view.tsx[tags=signals,indent=0]
+----
+
+The generated function of a value signal takes an optional options object. Its `defaultValue` is the value of the signal until the first value arrives from the server. Without it, the value is the default of the type, such as an empty string for a `String`. A `NumberSignal` starts at `0`, and a `ListSignal` starts with an empty array.
+
+Read the value with the `value` property. A component that reads it renders again when the value changes, because Vaadin compiles React views with the signals transform of `@preact/signals-react`.
+
+The signal connects to the server when a component or an effect first reads its value, and gets the current value then. It disconnects when nothing reads it anymore. The values come through the push connection that <<{articles}/flow/react-views/browser-callable-services/reactive-services#,reactive services>> also use. When the connection to the server comes back after a break, the signal connects again.
+
+
+[[value-signals]]
+== Value Signals
+
+A `ValueSignal` has the following members:
+
+`value`::
+The current value. Assigning a value changes the signal, like [methodname]`set()`.
+
+[methodname]`set(value)`::
+Changes the value. The browser shows the new value right away. The server replaces its value with it, whatever the other browsers changed in the meantime: the last change wins.
+
+`error`::
+A signal that holds an error when the server fails to apply a change, for example because the access annotations of the service method deny it. Otherwise, it's `undefined`.
+
+The following text field shows the topic of the example service, and changes it when the user edits the field:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/fusion/signals/meeting-view.tsx[tags=value,indent=0]
+----
+
+The methods that change a signal return an operation. Its `result` property is a `Promise` that resolves when the browser gets the server's confirmation of the change. When the change fails, the promise doesn't settle, and `error` holds the error.
+
+Changing a value based on its current value, such as a counter, can lose the changes that other browsers make at the same time. Use the [methodname]`incrementBy()` method of a number signal for counters.
+
+
+[[number-signals]]
+== Number Signals
+
+A `NumberSignal` is a `ValueSignal` for a number. It adds the following methods:
+
+[methodname]`incrementBy(delta)`::
+Adds the given amount to the value on the server. A negative amount subtracts. The server adds each amount to its current value, so the increments from all browsers count. The browser shows the new value when the server confirms it.
+
+[methodname]`valueAsInt()`::
+Returns the value without its fractional part.
+
+The following buttons count the votes of the example service:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/fusion/signals/meeting-view.tsx[tags=number,indent=0]
+----
+
+
+[[list-signals]]
+== List Signals
+
+The `value` of a `ListSignal` is an array with a `ValueSignal` for each item. Assigning `value` throws an error. Change the list with the following methods:
+
+[methodname]`insertFirst(value)`::
+Inserts an item at the beginning of the list.
+
+[methodname]`insertLast(value)`::
+Inserts an item at the end of the list.
+
+[methodname]`remove(item)`::
+Removes the item with the given signal from the list.
+
+The list changes in the browser when the server confirms the change.
+
+To change an item, change its own signal, for example by assigning its `value`. Each item signal has an `id` that stays the same while the item is in the list, which suits the `key` of a React element. The following view shows the agenda of the example service. It lets the user mark items done, remove them, and add new ones:
+
+[source,tsx]
+----
+include::{root}/frontend/demo/fusion/signals/meeting-view.tsx[tags=list,indent=0]
+----
+
+
+[[server-changes]]
+== Changes on the Server
+
+Code on the server can read and change the shared signal like any other shared signal. The browsers that are connected to the signal don't get the changes that server-side code makes. A browser gets them when it connects to the signal again.
+
+
+[[access-control]]
+== Access Control
+
+The access annotations of the service method apply when a browser connects to the signal, and to each change that the browser sends. See <<{articles}/flow/security/react-views/service-access-control#,Service Access Control>>.
+
+When access is denied on connecting, the browser gets no value, and the signal keeps its default value. When access to a change is denied, the server doesn't apply it, and the `error` property of the signal holds the error.

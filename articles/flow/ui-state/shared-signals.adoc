@@ -529,4 +529,28 @@ SharedValueSignal<String> readOnlyName = name.asReadonly();
 // readOnlyName.set("new") would throw an exception
 ----
 
+
+[[validators]]
+== Validating Changes
+
+The [methodname]`withValidator()` method returns a new instance of the signal that checks each change made through it with a [classname]`CommandValidator`. The new instance shares the value of the original. The original instance still accepts all changes.
+
+The validator gets each change as a [classname]`SignalCommand`, such as [classname]`SignalCommand.IncrementCommand`, and returns `true` to accept it. When it returns `false`, the method that made the change throws an [classname]`UnsupportedOperationException`, and the value stays the same:
+
+[source,java]
+----
+SharedNumberSignal votes = new SharedNumberSignal();
+SharedNumberSignal singleVotes = votes.withValidator(command ->
+        command instanceof SignalCommand.IncrementCommand increment
+                && Math.abs(increment.delta()) == 1);
+
+singleVotes.incrementBy(1); // Accepted
+singleVotes.incrementBy(5); // Throws UnsupportedOperationException
+votes.incrementBy(5); // Accepted, because the original has no validator
+----
+
+The validator applies also to changes made through the child signals of the instance, such as the entries of a list signal. In a transaction, the validator checks each change, and a rejected change fails the whole transaction. Commands that only check a condition, such as the one that [methodname]`verifyValue()` submits, are always accepted.
+
+Calling [methodname]`withValidator()` on an instance that already has a validator returns an instance that needs both validators to accept a change. The [methodname]`and()` method of [classname]`CommandValidator` combines two validators in the same way. The [methodname]`asReadonly()` method uses the validator [classname]`CommandValidator.REJECT_ALL`, which rejects all changes.
+
 [discussion-id]`4ED29fCD-42B1-4A1D-8B9E-BE87F8862ED1`
