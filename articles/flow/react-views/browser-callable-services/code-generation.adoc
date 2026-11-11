@@ -1,0 +1,136 @@
+---
+title: Code Generation
+page-title: TypeScript code generation for browser-callable services | Vaadin
+description: When Vaadin generates the TypeScript code of browser-callable services, which files it writes, and how it finds the services.
+meta-description: Reference for Vaadin TypeScript code generation - when it runs, the generated files, finding browser-callable services in a build, and Java parameter names.
+order: 50
+---
+
+
+= Code Generation
+:toclevels: 2
+
+Vaadin generates the TypeScript code that React views use to call browser-callable services. The generator reads the compiled Java classes, not their source code, so a class must be compiled before Vaadin generates code for it.
+
+section_outline::[]
+
+
+[[when]]
+== When the Code Is Generated
+
+Vaadin generates the code at these times:
+
+In development mode::
+When the application starts, and when a hotswap tool, such as HotswapAgent or JRebel, reloads a service, or a class that a service uses.
+
+In a production build::
+In the `build-frontend` goal of `vaadin-maven-plugin`, and in the `vaadinBuildFrontend` task of the Vaadin Gradle plugin.
+
+On request::
+In the `generate` goal of `vaadin-maven-plugin`, which needs the compiled classes, so run it as `mvn compile vaadin:generate`. In the `hillaGenerate` task of the Vaadin Gradle plugin, which compiles the classes itself. The Gradle plugin has the task only in projects that apply the Spring Boot Gradle plugin.
+
+In development mode and in a production build, Vaadin generates the code only when the project uses React views, for example views in [filename]`src/main/frontend/views`. The `generate` goal and the `hillaGenerate` task don't check for React views.
+
+In development mode, Vaadin generates the code for the services of the running application. In a build, it finds them as described in <<#discovery,Finding the Services>>.
+
+
+[[generated-files]]
+== Generated Files
+
+Vaadin writes the code in the [filename]`src/main/frontend/generated` directory. The `Frontend/generated/` prefix of the imports refers to it. The directory contains these files:
+
+[filename]`{service}.ts`::
+A module for each service, with a function for each method. See <<index#generated-modules,Generated Modules>>.
+
+[filename]`endpoints.ts`::
+A module that exports all the service modules.
+
+[filename]`connect-client.default.ts`::
+The client that the service modules use, unless the project has a client of its own. See <<client#,TypeScript Client>>.
+
+[filename]`{package}/{type}.ts`::
+A TypeScript type for each Java type that the services use, in directories named after the Java package. A nested class has a directory named after the enclosing class, such as [filename]`Sort/Direction.ts`. See <<type-conversion#,Type Conversion>>.
+
+[filename]`{package}/{type}Model.ts`::
+A model of each type, for binding forms to it. See <<{articles}/hilla/guides/forms/binder#,Binding Data to Forms>>.
+
+[filename]`{package}/{type}Union.ts`::
+A union of the subtypes of a polymorphic type. See <<type-conversion#polymorphic-types,Polymorphic Types>>.
+
+The directory also contains files that Vaadin generates for other purposes, such as the routes of the file router. Don't edit the generated files, because Vaadin overwrites them. When Vaadin no longer generates a file that it generated before, for example because a service was removed, it deletes the file.
+
+
+[[discovery]]
+== Finding the Services
+
+A browser-callable service must be a Spring bean, because the server calls the bean. In development mode, Vaadin generates the code for the beans annotated with [annotationname]`@BrowserCallable` or [annotationname]`@Endpoint`. Vaadin finds the services in another module of the project, or in a dependency such as <<{articles}/tools/sso#,SSO Kit>>, in the same way, if Spring creates them. When Spring doesn't find such a service, make sure that component scanning covers its package, or declare it as a bean in a configuration class.
+
+In a production build, Vaadin looks for the annotated classes on the class path of the project. When that search fails, Vaadin runs the Spring Ahead-of-Time (AOT) processing of the Spring Boot application class instead. It then takes the services from the beans that the processing finds. The `generate` goal of Maven always uses the AOT processing.
+
+
+[[endpoint-discovery]]
+[role="since:com.vaadin:vaadin@V25.2"]
+=== Explicit Discovery
+
+The AOT processing needs the Spring Boot application class on the class path of the module. To generate the code in a module that doesn't have one, such as a library of services, or to use another application class, configure the discovery explicitly. Vaadin then only uses the AOT processing. The configuration applies to builds, not to development mode.
+
+With Maven, set the parameters of `vaadin-maven-plugin`. They apply to the `build-frontend` and `generate` goals:
+
+`mainClass`::
+The fully qualified name of the Spring Boot application class. Without this parameter, Vaadin uses the `mainClass` parameter of `spring-boot-maven-plugin`, if it's set.
+
+`sourceClasses`::
+The fully qualified names of the Spring configuration classes that declare the browser-callable beans. Vaadin uses them when there is no Spring Boot application class.
+
+For example, to list the configuration classes of a library of services:
+
+[source,xml]
+----
+<plugin>
+    <groupId>com.vaadin</groupId>
+    <artifactId>vaadin-maven-plugin</artifactId>
+    <version>${vaadin.version}</version>
+    <configuration>
+        <sourceClasses>
+            <sourceClass>com.example.services.ServicesConfiguration</sourceClass>
+            <sourceClass>com.example.services.ReportsConfiguration</sourceClass>
+        </sourceClasses>
+    </configuration>
+</plugin>
+----
+
+With Gradle, set these project properties, for example in [filename]`gradle.properties`. They apply to the `vaadinBuildFrontend` and `hillaGenerate` tasks:
+
+`com.vaadin.hilla.mainClass`::
+The fully qualified name of the Spring Boot application class. Without this property, Vaadin uses the `mainClass` property, if it's set.
+
+`com.vaadin.hilla.sourceClasses`::
+A comma-separated list of the fully qualified names of the Spring configuration classes that declare the browser-callable beans.
+
+For example:
+
+[source,properties]
+----
+com.vaadin.hilla.mainClass=com.example.application.Application
+----
+
+You can also pass the properties on the command line, such as `./gradlew -Pcom.vaadin.hilla.mainClass=com.example.application.Application hillaGenerate`.
+
+
+[[java-compiler-options]]
+== Parameter Names
+
+The generated functions take their parameter names from the compiled classes. The Java compiler keeps the names of method parameters in the classes only with the `-parameters` option. The parent POM of Spring Boot, `spring-boot-starter-parent`, and the Spring Boot Gradle plugin turn the option on.
+
+Without the option, the parameters of the generated functions are called `arg0`, `arg1`, and so on. In a Maven project that doesn't use the Spring Boot parent POM, turn the option on in `maven-compiler-plugin`:
+
+[source,xml]
+----
+<plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <parameters>true</parameters>
+    </configuration>
+</plugin>
+----
