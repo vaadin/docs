@@ -184,6 +184,40 @@ UI.getCurrentOrThrow().getPage().addJavaScript(
 ----
 
 
+=== Dynamic Imports
+
+Use [methodname]`addDynamicImport(JsFunction)` to load JavaScript whose `Promise` must resolve before anything else changes on the page -- a web component module that's kept out of the main bundle and loaded only when it's first needed, for example. No later change in the same round trip is applied until the `Promise` resolves.
+
+Declare the import as a method of a [annotationname]`@JsDefinition` interface and obtain it through [classname]`JsSnippets`, so that loading it compiles nothing in the browser, and the call keeps working under a content security policy that doesn't allow `unsafe-eval` (see <<{articles}/flow/security/protections/content-security-policy#,Content Security Policy>>):
+
+[source,java]
+----
+@JsDefinition
+public interface ReportEditorJs extends Serializable {
+    @JsExpression("return import('Frontend/report-editor/report-editor.js');")
+    JsFunction loadEditor();
+}
+----
+
+[source,java]
+----
+private static final ReportEditorJs EDITOR_JS = JsSnippets.of(ReportEditorJs.class);
+
+private void openAdvancedEditing() {
+    UI.getCurrentOrThrow().getPage()
+            .addDynamicImport(EDITOR_JS.loadEditor());
+    // The module is defined by the time it's attached
+    layout.add(new ReportEditor());
+}
+----
+
+The path given to `import()` must be a literal string for the bundler to split it into a file of its own, and the imported component must not also carry [annotationname]`@JsModule` for the same file, or the module ends up in the main bundle instead.
+
+A function added again with the same captured values loads only once. The function can't capture an element or a component, attached or not: dependencies are loaded before the changes of the same round trip are applied, and a detached element can't be referenced; adding such a function throws [classname]`IllegalArgumentException`.
+
+The [methodname]`addDynamicImport(String)` overload loads the same kind of `Promise`-returning JavaScript from an expression given as a string, but the browser compiles that expression, so it needs a content security policy that allows `unsafe-eval`.
+
+
 === Dependency Loading Order
 
 Imported dependency files of the same type load in the order they are defined in the class. For example, CSS files load in the `@CssImport` annotation definition order, while JavaScript files in the `@JsModule` and `@JavaScript` annotation definition order.
