@@ -15,15 +15,5 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http)
             throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable).build();
-
-        // @formatter:off hidden-source-line
-        /* Disable on docs app, but leave in place to be used as snippet // hidden-source-line
-        // tag::download[]
-        // Restrict access to FileDownloadEndpoint to authenticated users
-        http.authorizeHttpRequests(authorize -> authorize
-                .requestMatchers("/download/**").authenticated());
-        // end::download[]
-        */ // hidden-source-line
-        // @formatter:on hidden-source-line
     }
 }

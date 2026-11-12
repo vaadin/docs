@@ -2,9 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
-import { Item } from '@vaadin/react-components/Item.js';
-import { ListBox } from '@vaadin/react-components/ListBox.js';
-import { Select } from '@vaadin/react-components/Select.js';
+import { Select, SelectItem, SelectListBox } from '@vaadin/react-components';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
@@ -23,10 +21,14 @@ function Example() {
   return (
     // tag::snippet[]
     <Select label="Assignee">
-      <ListBox>
+      <SelectListBox>
         {people.value.map((person) => (
           // Use the label attribute to display full name of the person as selected value label
-          <Item value={String(person.id)} key={person.id} label={formatPersonFullName(person)}>
+          <SelectItem
+            value={String(person.id)}
+            key={person.id}
+            label={formatPersonFullName(person)}
+          >
             <div className="person-item">
               <img
                 src={person.pictureUrl}
@@ -36,9 +38,9 @@ function Example() {
               <span>{formatPersonFullName(person)}</span>
               <span>{person.profession}</span>
             </div>
-          </Item>
+          </SelectItem>
         ))}
-      </ListBox>
+      </SelectListBox>
     </Select>
     // end::snippet[]
   );

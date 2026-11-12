@@ -26,6 +26,15 @@ Button fullscreenButton = new Button("Fullscreen");
 Fullscreen.onClick(fullscreenButton).enter();
 ----
 
+[IMPORTANT]
+====
+[methodname]`onClick(...)` _arms_ the request; it does not register a click listener you fill in later. The request must run inside the browser's gesture window, so it has to be armed up front -- calling [methodname]`enter()` from an [methodname]`addClickListener` callback runs one round-trip too late and the browser rejects it.
+
+Forgetting [methodname]`enter()` altogether -- a binding created with no action -- fails loudly instead: the framework throws an [classname]`IllegalStateException` when the view renders, naming the unarmed binding.
+
+[methodname]`exit()` is different: it needs no gesture and so _is_ called from a normal handler. See <<{articles}/flow/browser-apis/clipboard-api#how-the-binding-works,How the Click Binding Works>> in the Clipboard article for the full explanation of this arm-don't-handle model.
+====
+
 To fullscreen a single component instead of the whole page, pass it to [methodname]`enter(Component)`:
 
 [source,java]
@@ -49,6 +58,26 @@ Button closeButton = new Button("Close", e -> Fullscreen.exit());
 ----
 
 The call is a no-op when the page isn't currently fullscreen. The user can also press kbd:[Esc] -- the browser handles that itself, and the state signal updates accordingly.
+
+
+== Toggling Fullscreen
+
+"Click to enter, click to exit" is a natural request, but a single button can't both _arm_ an enter request for the gesture window and decide at click time to exit instead -- the two needs pull in opposite directions. The canonical pattern keeps them separate: always arm [methodname]`enter()`, let the user leave with kbd:[Esc] or a control wired to [methodname]`Fullscreen.exit()`, and drive the visible affordance from [methodname]`stateSignal()` so the right control shows in each state:
+
+[source,java]
+----
+Button enter = new Button("Fullscreen");
+Fullscreen.onClick(enter).enter(videoPanel);
+
+Button exit = new Button("Exit fullscreen", e -> Fullscreen.exit());
+
+Signal<Boolean> isFullscreen = Fullscreen.stateSignal()
+        .map(state -> state == FullscreenState.FULLSCREEN);
+enter.bindVisible(isFullscreen.map(on -> !on));
+exit.bindVisible(isFullscreen);
+----
+
+Because [methodname]`exit()` needs no gesture, the exit control is an ordinary click handler -- only the enter side has to be armed. Pressing kbd:[Esc] reaches the same state through [methodname]`stateSignal()`, so the buttons stay in sync however the user leaves fullscreen.
 
 
 == Observing Fullscreen State

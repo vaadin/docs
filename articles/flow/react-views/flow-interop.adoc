@@ -1,0 +1,179 @@
+---
+title: Flow Interoperability
+page-title: Use Flow views and components with React views | Vaadin
+description: Flow views in the React menu, page titles, Flow layouts around React views, and Flow components inside React views.
+meta-description: Combine React views with Flow in a Vaadin application - Flow views in the React menu, page titles, Flow layouts around React views, and Flow components.
+order: 20
+---
+
+
+= Flow Interoperability
+:toclevels: 2
+
+React views and Flow views share the client-side router. The router shows a React view when one matches the path, and otherwise passes the path to the server, which shows the Flow view with that route. A link or a call to `useNavigate()` reaches a Flow view the same way as a React view, and a Flow view reaches a React view with an [classname]`Anchor` or [methodname]`UI.navigate()`. See <<{articles}/building-apps/react/navigate#navigating-to-and-from-flow-views,Navigating to and from Flow Views>>.
+
+This page describes the other ways in which React views and Flow work together.
+
+
+[[menu]]
+== Flow Views in the Menu
+
+The <<routing#menu,`createMenuItems()`>> function also returns the Flow views annotated with [annotationname]`@Menu`:
+
+[source,java]
+----
+@Route("orders")
+@Menu(title = "Orders", order = 2, icon = "vaadin:cart")
+public class OrdersView extends VerticalLayout {
+}
+----
+
+The [annotationname]`@Menu` annotation has the same `title`, `order`, and `icon` options as the `menu` option of a React view, so the items of both kinds of views sort together. Without a `title`, the item uses the page title of the view, or the simple name of its class when it has no page title.
+
+The server sends a Flow view to the browser only when:
+
+- the user is allowed to open it, according to <<{articles}/flow/security/access-control/navigation-access-control#,Navigation Access Control>>,
+- its route has no required parameters, and
+- the [classname]`MenuAccessControl` settings allow sending Flow views.
+
+The [methodname]`setPopulateClientSideMenu()` method of [classname]`MenuAccessControl` takes one of these values:
+
+`AUTOMATIC`::
+Sends the Flow views when there's a main layout for the React views: a [filename]`@layout.tsx` file directly in [filename]`src/main/frontend/views`. This is the default.
+
+`ALWAYS`::
+Always sends the Flow views.
+
+`NEVER`::
+Never sends Flow views, so the browser gets no information about them.
+
+To change the setting, declare a [classname]`MenuAccessControl` bean. In an application with Spring Security, use [classname]`SpringMenuAccessControl`, which is the default implementation there. Without Spring Security, use [classname]`DefaultMenuAccessControl`.
+
+[source,java]
+----
+@Bean
+public MenuAccessControl menuAccessControl() {
+    var menuAccessControl = new SpringMenuAccessControl();
+    menuAccessControl.setPopulateClientSideMenu(
+            MenuAccessControl.PopulateClientMenu.NEVER);
+    return menuAccessControl;
+}
+----
+
+For building a menu in a Flow layout from the same views, see <<{articles}/flow/routing/menu-configuration#,Menu Configuration>>.
+
+
+[[page-titles]]
+== Page Titles
+
+A Flow view sets the page title with the [annotationname]`@PageTitle` annotation or the [interfacename]`HasDynamicTitle` interface, as described in <<{articles}/flow/routing/page-titles#,Updating the Page Title during Navigation>>. When the browser has a signal in `window.Vaadin.documentTitleSignal`, the server also sets the title as the value of that signal.
+
+A React layout can create the signal and show its value, so that the header shows the title of both kinds of views. The layout sets the value itself for React views, because `useViewConfig()` returns `undefined` while the router shows a Flow view:
+
+[source,tsx]
+.[filename]`views/@layout.tsx`
+----
+import { useViewConfig } from '@vaadin/hilla-file-router/runtime.js';
+import { effect, signal } from '@vaadin/hilla-react-signals';
+import { useEffect } from 'react';
+import { Outlet } from 'react-router';
+
+const documentTitleSignal = signal('');
+(window as any).Vaadin.documentTitleSignal = documentTitleSignal;
+effect(() => {
+  document.title = documentTitleSignal.value;
+});
+
+export default function MainLayout() {
+  const title = useViewConfig()?.title;
+
+  useEffect(() => {
+    if (title) {
+      documentTitleSignal.value = title;
+    }
+  }, [title]);
+
+  return (
+    <>
+      <header>{documentTitleSignal.value}</header>
+      <Outlet />
+    </>
+  );
+}
+----
+
+
+[[layouts]]
+== Flow Layouts Around React Views
+
+A Flow layout annotated with [annotationname]`@Layout` also wraps the React views whose route it covers. For example, a layout annotated with `@Layout("/admin")` wraps the React views in [filename]`views/admin`. For how to write such a layout, and how to make it accessible when the application uses access control, see <<{articles}/flow/routing/layout#,Router Layouts & Nested Router Targets>>.
+
+The router applies the Flow layout through the component given to `withFallback()` or `withLayout()` in the <<routing#routes-file,route configuration file>>. The generated file passes the `Flow` component to `withFallback()`, so it does this by default.
+
+To show a React view without the Flow layout, set its `flowLayout` option to `false`:
+
+[source,tsx]
+----
+export const config: ViewConfig = {
+  flowLayout: false,
+};
+----
+
+A view with the `skipLayouts` option is also shown without the Flow layout.
+
+Wrap a group of views in one kind of layout: either a Flow layout or a React [filename]`@layout.tsx`. A React [filename]`@layout.tsx` directly in [filename]`src/main/frontend/views` wraps the Flow views as well as the React views.
+
+
+[[flow-components]]
+== Flow Components in React Views
+
+A React view can show a Flow component when the component is exported as a web component. Create a [classname]`WebComponentExporter` for it, with the tag name of the web component and the properties that the browser can set:
+
+[source,java]
+----
+public class GreetingExporter extends WebComponentExporter<Greeting> {
+
+    public GreetingExporter() {
+        super("greeting-component");
+        addProperty("name", "World").onChange(Greeting::setName);
+    }
+
+    @Override
+    protected void configureInstance(WebComponent<Greeting> webComponent,
+            Greeting component) {
+    }
+}
+----
+
+The exporter needs a public constructor without parameters. In this example, [classname]`Greeting` is a Flow component with a [methodname]`setName()` method. For more about exporters, see <<{articles}/flow/integrations/embedding/exporter#,Creating an Embedded Vaadin Application>>.
+
+In the React view, create the element with the `reactElement()` function from [filename]`Frontend/generated/flow/Flow`. It loads the script of the web component and returns a React element with the given tag name:
+
+[source,tsx]
+----
+import { reactElement } from 'Frontend/generated/flow/Flow';
+
+function Greeting({ name }: { name: string }) {
+  return reactElement('greeting-component', { name });
+}
+
+export default function WelcomeView() {
+  return <Greeting name="Alice" />;
+}
+----
+
+The function takes these arguments:
+
+`tag`::
+The tag name given to the exporter.
+
+`props`::
+Optional. An object with string values, which become the attributes of the element.
+
+`onload`::
+Optional. A function that's called when the script of the web component has loaded. Use it, for example, to remove a placeholder.
+
+`onerror`::
+Optional. A function that's called with the error when the script fails to load. Without it, the error is logged to the browser console.
+
+Call `reactElement()` while a component renders, as in the example above. It uses a React hook to load the script, so it doesn't work in an event handler or outside a component.

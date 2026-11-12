@@ -157,7 +157,7 @@ export default function ProductByCategoriesView() {
     } else {
       ProductService.productsInCategory(categoryName).then((data) => products.value = data);
     }
-  }, []);
+  }, [categoryName]); // <2>
 
   return (
     <ul>{products.value.map((product) => (
@@ -167,40 +167,37 @@ export default function ProductByCategoriesView() {
 }
 ----
 <1> When the parameter is absent, fetch all products; otherwise fetch products in the given category.
+<2> Fetches the products again whenever the parameter changes -- for example, when the user navigates from one category to another without leaving the view.
 
 === Wildcard Parameters
 
-A wildcard parameter matches any number of unmatched URL segments and is typically used as a fallback for unknown routes -- for example, a custom 404 page. Name the file `{...wildcard}.tsx`:
+pass:[<!-- vale Vaadin.Ellipses = NO -->]
+
+A wildcard parameter matches the rest of the path, however many segments it has. It suits a view that shows content by its path, such as a document browser. Name the file `{\...name}.tsx`:
+
+pass:[<!-- vale Vaadin.Ellipses = YES -->]
 
 [source]
 ----
 views/
-├── @index.tsx
-├── about.tsx
-├── contact-us.tsx
-└── {...wildcard}.tsx <1>
+└── docs
+    └── {...path}.tsx <1>
 ----
-<1> Matches any route not handled by another view.
+<1> Matches `/docs/intro`, `/docs/guides/setup`, and any other path under `/docs` that no other view matches.
 
 [source,tsx]
-.views/{...wildcard}.tsx
+.views/docs/{\...path}.tsx
 ----
-import { NavLink, useParams } from "react-router";
+import { useParams } from 'react-router';
 
-export default function WildcardView() {
-  const wildcard = useParams()['*']; // <1>
-  return (
-    <>
-      <h3>Page Not Found!</h3>
-      <div>
-        The '<b>/{wildcard}</b>' route does not exist.
-        Go back to the <NavLink to="/">home page</NavLink>.
-      </div>
-    </>
-  );
+export default function DocumentView() {
+  const path = useParams()['*']; // <1>
+  return <h1>Document: {path}</h1>;
 }
 ----
-<1> The wildcard value is read from the `*` key. It can contain multiple segments.
+<1> The `*` key holds the wildcard value, which can contain several segments, such as `guides/setup`.
+
+A wildcard view also catches the routes of the Flow views under its directory, and the router shows the wildcard view instead of those Flow views. For this reason, don't use a wildcard view directly under `views` as a "page not found" view. To customize that page, replace the not-found view of Flow, as described in <<{articles}/flow/routing/exceptions#custom-exception-handlers,Custom Exception Handlers>>.
 
 
 == Query Parameters

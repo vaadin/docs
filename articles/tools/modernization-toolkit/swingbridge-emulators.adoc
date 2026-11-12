@@ -20,9 +20,9 @@ SB-Emulators differs from <<swing-bridge#, SwingBridge Streamer>>. SwingBridge S
 
 == How It Works
 
-- `vaadinx.awt.*` mirrors `java.awt.*` for the `Component`/`Container` hierarchy; `vaadinx.swing.*` mirrors `javax.swing.*` for the `JComponent` subclasses (`JFrame`, `JButton`, `JLabel`, `JTextField`, and so on).
+- `vaadinx.awt.*` mirrors `java.awt.*` for the [classname]`Component`/[classname]`Container` hierarchy; `vaadinx.swing.*` mirrors `javax.swing.*` for the [classname]`JComponent` subclasses ([classname]`JFrame`, [classname]`JButton`, [classname]`JLabel`, [classname]`JTextField`, and so on).
 - Every emulated component is backed by a real Vaadin component — its _peer_ — and forwards behavior to it. You write Swing-shaped code; the browser renders Vaadin.
-- Data types that aren't components (`Color`, `Font`, `Dimension`, `ActionEvent`, `ActionListener`, table and list models) are reused straight from the JDK, so their imports don't change.
+- Data types that aren't components ([classname]`Color`, [classname]`Font`, [classname]`Dimension`, [classname]`ActionEvent`, [interfacename]`ActionListener`, table and list models) are reused straight from the JDK, so their imports don't change.
 - A method with no Vaadin counterpart logs a warning and returns a sensible default rather than crashing the app. Genuine programming errors — a bad index, orphan-component state — still throw the same exception Swing would, so real bugs aren't hidden.
 
 This is an import-swap, not a binary drop-in: you need source access for the Swing code you depend on, because compiled Swing JARs must be recompiled against the emulation.
@@ -91,9 +91,9 @@ public final class EmployeePreviewPanel extends JPanel {
 ----
 |===
 
-That sameness is the point: for most of a codebase, migrating is find-and-replace on imports. A small set of files need genuine hand-edits — splitting `main()`, marking the main window, handling exit paths, and making state that was global on the desktop per-user on the server — but those are the exception. Most apps land 80% or more of the migration mechanically.
+That sameness is the point: for most of a codebase, migrating is find-and-replace on imports. A small set of files need genuine hand-edits — splitting [methodname]`main()`, marking the main window, handling exit paths, and making state that was global on the desktop per-user on the server — but those are the exception. Most apps land 80% or more of the migration mechanically.
 
-Blocking dialogs are a notable case that works unchanged. In Swing, `JOptionPane.showConfirmDialog(...)` and `dialog.setVisible(true)` block until the user responds, and Swing code reads straight down the page relying on that. A web request/response cycle can't normally block waiting for fresh user input, which is why most web toolkits force a rewrite into callbacks. SB-Emulators keeps the blocking code intact: the call blocks, the dialog renders in the browser, and it returns the user's choice exactly as under Swing.
+Blocking dialogs are a notable case that works unchanged. In Swing, [methodname]`JOptionPane.showConfirmDialog()` and a modal dialog's [methodname]`setVisible()` block until the user responds, and Swing code reads straight down the page relying on that. A web request/response cycle can't normally block waiting for fresh user input, which is why most web toolkits force a rewrite into callbacks. SB-Emulators keeps the blocking code intact: the call blocks, the dialog renders in the browser, and it returns the user's choice exactly as under Swing.
 
 
 == The Migration Arc
@@ -123,16 +123,16 @@ The trade-off is honest: this path reaches _running_ cheaply and preserves behav
 
 Some Swing capabilities are permanently out of scope:
 
-- *`JApplet`* — browsers dropped applet support years ago, and the class was removed from the JDK in Java 26.
+- *[classname]`JApplet`* — browsers dropped applet support years ago, and the class was removed from the JDK in Java 26.
 - *Look-and-Feel dispatch* — styling is handled in a later Vaadin and CSS pass, outside SB-Emulators.
-- *User-authored painting of components via `Graphics`* — `paintComponent`, custom-painted components, and component printing such as `JTable.print()`; there is no `Graphics2D` surface to override. Hand-written `Printable` implementations are the exception: an optional module prints them into a PDF the user downloads.
+- *User-authored painting of components via [classname]`Graphics`* — [methodname]`paintComponent()`, custom-painted components, and component printing such as [methodname]`JTable.print()`; there is no [classname]`Graphics2D` surface to override. Hand-written [interfacename]`Printable` implementations are the exception: an optional module prints them into a PDF the user downloads.
 
 
 == Requirements
 
 - *JDK 24 or later at runtime.* The virtual-thread machinery that makes blocking dialogs work deadlocks on JDK 21. Your migrated app's bytecode may still target Java 21 — only the JVM it _runs_ on must be 24 or later.
 - *`--add-opens java.base/java.lang=ALL-UNNAMED`* on that JVM, both for tests and in production.
-- A *Vaadin 25* host application with server push (`@Push`) enabled. The runtime relies on push to render modal dialogs.
+- A *Vaadin host application* with server push ([annotationname]`@Push`) enabled. The runtime relies on push to render modal dialogs.
 - *HTTP requests served by platform threads*, not virtual threads. This is the default in Vaadin Boot, and in Spring Boot as long as `spring.threads.virtual.enabled` stays off.
 - *The SB-Emulators servlet*, or on Spring Boot, the `swingbridge-emulators-spring` dependency, which registers it for you.
 

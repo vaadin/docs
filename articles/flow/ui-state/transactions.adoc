@@ -9,7 +9,7 @@ order: 60
 
 = Transactions
 
-Transactions allow grouping multiple signal operations into a single atomic unit. All operations in a transaction either succeed or fail together, ensuring data consistency.
+Transactions allow grouping multiple signal operations into a single atomic unit. All operations in a transaction either succeed or fail together, ensuring data consistency. A transaction covers a single shared signal and its child signals, as described in <<#transaction-scope,Transaction Scope>>.
 
 
 == Basic Transactions
@@ -18,15 +18,43 @@ Use [methodname]`Signal.runInTransaction()` to execute multiple signal operation
 
 [source,java]
 ----
+SharedMapSignal<String> person = new SharedMapSignal<>(String.class);
+
 Signal.runInTransaction(() -> {
     // All operations here will be committed atomically
-    firstNameSignal.set("John");
-    lastNameSignal.set("Doe");
-    ageSignal.set(30);
+    person.put("firstName", "John");
+    person.put("lastName", "Doe");
+    person.put("email", "john.doe@example.com");
 });
 ----
 
 If any operation fails, none of the changes are applied. Observers see either the complete update or nothing at all - never a partial update.
+
+
+[#transaction-scope]
+== Transaction Scope
+
+A transaction can read and update one shared signal and its child signals: the entries of a [classname]`SharedListSignal` or [classname]`SharedMapSignal`, or the children of a [classname]`SharedNodeSignal`. Each shared signal created with a public constructor is an independent signal tree. It's committed independently, and in a cluster it may be owned by a different node than another shared signal. Reading or updating a second independent shared signal in the same transaction throws an [classname]`IllegalStateException`:
+
+[source,java]
+----
+SharedValueSignal<String> firstName = new SharedValueSignal<>("");
+SharedValueSignal<String> lastName = new SharedValueSignal<>("");
+
+// Throws: firstName and lastName are independent shared signals
+Signal.runInTransaction(() -> {
+    firstName.set("John");
+    lastName.set("Doe");
+});
+----
+
+Values that must change together need to live in a single shared signal. Use one of these:
+
+* entries of one [classname]`SharedMapSignal` or [classname]`SharedListSignal`, when the values have the same type, as in the examples on this page;
+* a [classname]`SharedValueSignal` holding a record, updated as a whole with [methodname]`update()`, when the values always change together;
+* a [classname]`SharedNodeSignal` root with a child for each part, when the values have different shapes. See <<shared-signals#sharednodesignal,SharedNodeSignal>>.
+
+Reading a computed signal counts as reading the signals it depends on, so those also need to be within the shared signal that the transaction covers. Local signals, such as [classname]`ValueSignal` and [classname]`ListSignal`, can't be read or updated inside [methodname]`runInTransaction()`. See <<local-signals#,Local Signals>>.
 
 
 == Transaction Benefits
@@ -49,13 +77,18 @@ The `verifyValue()` method verifies that a signal has a specific expected value:
 
 [source,java]
 ----
+SharedMapSignal<String> order = new SharedMapSignal<>(String.class);
+order.put("status", "pending");
+
 Signal.runInTransaction(() -> {
+    SharedValueSignal<String> status = order.get().get("status");
+
     // Transaction fails if current status is not "pending"
-    statusSignal.verifyValue("pending");
+    status.verifyValue("pending");
 
     // Only executed if verification passes
-    statusSignal.set("processing");
-    processedBySignal.set(currentUser);
+    status.set("processing");
+    order.put("processedBy", currentUser);
 });
 ----
 
@@ -95,6 +128,7 @@ Signal.runInTransaction(() -> {
 ----
 
 
+[#operation-results]
 == Operation Results
 
 Signal operations return result objects that provide information about the operation and allow chaining.
@@ -102,7 +136,7 @@ Signal operations return result objects that provide information about the opera
 
 === SignalOperation
 
-The base interface for all signal operations. Operations return a [classname]`CompletableFuture` that resolves when the operation completes:
+The base class for all signal operations. Operations return a [classname]`CompletableFuture` that resolves when the operation completes:
 
 [source,java]
 ----
@@ -167,14 +201,14 @@ When running transactions, [methodname]`Signal.runInTransaction()` returns a [cl
 [source,java]
 ----
 TransactionOperation<Void> txOp = Signal.runInTransaction(() -> {
-    firstNameSignal.set("John");
-    lastNameSignal.set("Doe");
+    person.put("firstName", "John");
+    person.put("lastName", "Doe");
 });
 
 // Check transaction status via the inherited result()
 CompletableFuture<SignalOperation.ResultOrError<Void>> result = txOp.result();
 
-if (result.isDone()) {
+if (result.isDone() && result.join().successful()) {
     System.out.println("Transaction committed successfully");
 }
 ----
@@ -195,46 +229,51 @@ String returnValue = txOp.returnValue(); // "Order confirmed"
 
 == Bypassing Transactions
 
-Effect and computed signal callbacks run inside a read-only transaction to prevent accidental changes. If you need to modify a signal from within an effect (and you're certain there's no risk of infinite loops), use [methodname]`runWithoutTransaction()`:
+Use [methodname]`Signal.runWithoutTransaction()` to run code outside the current transaction. Changes made inside it are applied immediately and aren't part of the transaction, so they're kept even if the transaction fails:
 
 [source,java]
 ----
-Signal.effect(component, () -> {
-    String value = sourceSignal.get();
+Signal.runInTransaction(() -> {
+    SharedValueSignal<String> status = order.get().get("status");
+    status.verifyValue("pending");
+    status.set("confirmed");
 
-    // WARNING: This might lead to infinite loops.
-    // Do this only if absolutely necessary.
+    // Applied immediately, even if the verification above fails.
+    // auditLog is a separate SharedListSignal<String>, which is allowed
+    // because it's not part of the transaction.
     Signal.runWithoutTransaction(() -> {
-        derivedSignal.set(transformValue(value));
+        auditLog.insertLast("Confirmation attempted by " + currentUser);
     });
 });
 ----
 
 [WARNING]
-Using `runWithoutTransaction()` bypasses safety checks. Only use it when you're certain the update won't cause an infinite loop.
+Changes made with `runWithoutTransaction()` don't get the atomicity and isolation guarantees of the surrounding transaction. Use it only for updates that must be applied regardless of whether the transaction succeeds.
 
 
 == Best Practices
 
 
-=== Use Transactions for Related Updates
+=== Keep Related Values in One Shared Signal
 
-When multiple signals should be updated together, use a transaction:
+Values that should be updated together belong in the same shared signal, so they can be updated in one transaction. See <<#transaction-scope,Transaction Scope>>.
 
 [source,java]
 ----
-// Good: Related updates in a transaction
+// Good: Related values in one shared signal, updated in a transaction
 Signal.runInTransaction(() -> {
-    orderStatusSignal.set("shipped");
-    shippedAtSignal.set(Instant.now());
-    trackingNumberSignal.set(tracking);
+    order.put("status", "shipped");
+    order.put("shippedAt", Instant.now().toString());
+    order.put("trackingNumber", tracking);
 });
 
-// Avoid: Separate updates that might leave inconsistent state
-orderStatusSignal.set("shipped");
-shippedAtSignal.set(Instant.now()); // What if this fails?
-trackingNumberSignal.set(tracking);
+// Avoid: Separate updates that others can observe one at a time
+order.put("status", "shipped");
+order.put("shippedAt", Instant.now().toString());
+order.put("trackingNumber", tracking);
 ----
+
+Each separate update is committed on its own, so other users can see the order as shipped before it has a tracking number.
 
 
 === Use Verification for Conditional Updates
@@ -243,13 +282,17 @@ When updates depend on current state, use verification:
 
 [source,java]
 ----
+// Assumes order already has "status" and "assignee" entries
 Signal.runInTransaction(() -> {
-    // Ensure we're updating the expected state
-    statusSignal.verifyValue("pending");
-    quantitySignal.verifyValue(expectedQuantity);
+    SharedValueSignal<String> status = order.get().get("status");
+    SharedValueSignal<String> assignee = order.get().get("assignee");
 
-    statusSignal.set("confirmed");
-    quantitySignal.set(newQuantity);
+    // Ensure we're updating the expected state
+    status.verifyValue("pending");
+    assignee.verifyValue(expectedAssignee);
+
+    status.set("confirmed");
+    order.put("confirmedBy", currentUser);
 });
 ----
 
@@ -270,24 +313,27 @@ Signal.runInTransaction(() -> {
 ----
 
 
-=== Keep Transactions Small
+=== Keep Transactions Focused
 
-Transactions hold resources while executing. Keep them focused on the minimal set of related operations:
+Include only the operations that must succeed or fail together. If any operation in a transaction fails, all of them are rejected, so an unrelated update in the same transaction is lost along with the rest:
 
 [source,java]
 ----
-// Good: Small, focused transaction
+// Good: Only the updates that belong together
 Signal.runInTransaction(() -> {
-    userSignal.set(updatedUser);
-    lastModifiedSignal.set(Instant.now());
+    SharedValueSignal<String> status = order.get().get("status");
+    status.verifyValue("pending");
+    status.set("confirmed");
+    order.put("confirmedAt", Instant.now().toString());
 });
 
-// Avoid: Large transactions with unrelated operations
+// Avoid: An unrelated update that is lost if the verification fails
 Signal.runInTransaction(() -> {
-    userSignal.set(updatedUser);
-    lastModifiedSignal.set(Instant.now());
-    // Don't include unrelated updates
-    analyticsCounterSignal.incrementBy(1);
-    logSignal.set(logMessage);
+    SharedValueSignal<String> status = order.get().get("status");
+    status.verifyValue("pending");
+    status.set("confirmed");
+    order.put("confirmedAt", Instant.now().toString());
+    // Doesn't depend on the status, so don't make it conditional
+    order.put("lastViewedBy", currentUser);
 });
 ----

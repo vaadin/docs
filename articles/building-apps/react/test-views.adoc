@@ -1,0 +1,208 @@
+---
+title: Test React Views
+page-title: How to test React views in a Vaadin application with Vitest
+description: Test React views in a browser with Vitest and React Testing Library, without a running server.
+meta-description: Test Vaadin React views with Vitest browser mode and React Testing Library - set up Vitest, render views, simulate users, and mock browser-callable services.
+order: 70
+---
+
+
+= Test React Views
+:toclevels: 2
+
+React views run in the browser, so you test them with JavaScript tools. This guide uses https://vitest.dev/guide/browser/[Vitest in browser mode], which runs the tests in a real browser, and https://testing-library.com/docs/react-testing-library/intro/[React Testing Library], which renders a view and works with it like a user. The tests replace the browser-callable services with mocks, so they don't need a running server.
+
+Test the services themselves with Java tests, as described in <<../testing#,Testing>>. To test the whole application in a browser, see <<{articles}/flow/testing/end-to-end#,End-to-End Testing>>.
+
+
+== Setting Up Vitest
+
+Install Vitest, its Playwright provider, and React Testing Library, and then the Chromium browser that the tests run in:
+
+[source,bash]
+----
+npm install --save-dev vitest @vitest/browser-playwright @testing-library/react @testing-library/dom @testing-library/user-event
+----
+
+[source,bash]
+----
+npx playwright install chromium
+----
+
+Create a [filename]`vitest.config.ts` file in the project folder:
+
+[source,typescript]
+.[filename]`vitest.config.ts`
+----
+import { fileURLToPath } from 'node:url';
+import babel from '@rolldown/plugin-babel';
+import react from '@vitejs/plugin-react';
+import { playwright } from '@vitest/browser-playwright';
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  plugins: [
+    react(),
+    babel({ // <1>
+      include: '**/*.tsx',
+      plugins: [['module:@preact/signals-react-transform', { mode: 'all' }]],
+    }),
+  ],
+  optimizeDeps: {
+    include: ['@preact/signals-react/runtime'], // <2>
+  },
+  resolve: {
+    alias: {
+      Frontend: fileURLToPath(new URL('./src/main/frontend', import.meta.url)), // <3>
+    },
+  },
+  test: {
+    include: ['src/test/frontend/**/*.test.tsx'],
+    globals: true, // <4>
+    browser: {
+      enabled: true,
+      provider: playwright(),
+      headless: true,
+      instances: [{ browser: 'chromium' }],
+    },
+  },
+});
+----
+<1> The signals transform makes a component render again when a signal that it reads changes, like in the application. Vaadin already adds these packages to [filename]`package.json`.
+<2> The transform adds an import that Vite doesn't find in advance. Without this line, a run without a Vite cache, such as on a CI server, fails.
+<3> Resolves the `Frontend/` imports of the views.
+<4> Lets React Testing Library clean up the page after each test.
+
+Add a script that runs the tests to [filename]`package.json`:
+
+[source,json]
+.[filename]`package.json`
+----
+"scripts": {
+  "test": "vitest"
+}
+----
+
+For type checking in your editor, add a [filename]`tsconfig.json` file to the folder of the tests. The [filename]`tsconfig.json` in the project folder covers only [filename]`src/main/frontend`, and Vaadin may replace it, so don't change it for the tests:
+
+[source,json]
+.[filename]`src/test/frontend/tsconfig.json`
+----
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "types": ["@vitest/browser-playwright"]
+  },
+  "include": ["**/*", "../../../types.d.ts"]
+}
+----
+
+When a test fails, Vitest saves a screenshot in the [filename]`.vitest` folder. Add the folder to [filename]`.gitignore`.
+
+
+== Generating the Service Clients
+
+The views import the TypeScript clients that Vaadin generates for the browser-callable services, so the tests need them too, even when they mock the services. Vaadin generates the clients when the application starts in development mode. Without starting it, for example on a CI server, generate them with Maven before running the tests:
+
+[source,bash]
+----
+mvn compile vaadin:generate
+----
+
+
+== Writing a Test
+
+The examples in this guide test the following view, which adds todos through a service:
+
+[source,tsx]
+.[filename]`src/main/frontend/views/todo.tsx`
+----
+include::{root}/frontend/demo/fusion/testing/todo-view.tsx[tags=snippet,indent=0]
+----
+
+[source,java]
+.[filename]`TodoService.java`
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/testing/TodoService.java[tags=snippet,indent=0]
+----
+
+Put the tests in [filename]`src/test/frontend`, not in the [filename]`views` folder, because the router treats every file there as a view. The following test renders the view and checks its heading:
+
+[source,tsx]
+.[filename]`src/test/frontend/views/todo.test.tsx`
+----
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import TodoView from 'Frontend/views/todo';
+
+describe('TodoView', () => {
+  it('shows the heading', () => {
+    render(<TodoView />);
+    expect(screen.getByText('Todos')).toBeInTheDocument();
+  });
+});
+----
+
+Run the tests:
+
+[source,bash]
+----
+npm test
+----
+
+In a terminal, Vitest keeps running and runs the tests again when a file changes. To run them once, for example on a CI server, use `npx vitest run`.
+
+
+== Mocking Services
+
+A view that calls a service in a test would send the call to the test server, which doesn't know the service. Replace the generated clients with mocks by calling `vi.mock()` at the top level of the test file:
+
+[source,tsx]
+----
+import { TodoService } from 'Frontend/generated/endpoints';
+import { beforeEach, vi } from 'vitest';
+
+vi.mock('Frontend/generated/endpoints', () => ({
+  TodoService: { addTodo: vi.fn() },
+}));
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+----
+
+The mock replaces the module for every test in the file, and for the views that the tests render. It contains only the services and methods that you list. The `beforeEach()` hook clears the recorded calls before each test.
+
+You can't replace a single method with `vi.spyOn(TodoService, 'addTodo')`, because the generated clients are ES modules, which can't be changed.
+
+
+== Testing User Interaction
+
+The `userEvent` object of React Testing Library types and clicks like a user. The following tests add a todo, and check that the view shows it and sends it to the service:
+
+[source,tsx]
+----
+import userEvent from '@testing-library/user-event';
+
+it('adds a todo', async () => {
+  const user = userEvent.setup();
+  render(<TodoView />);
+
+  await user.type(await screen.findByLabelText('New todo'), 'Buy milk');
+  await user.click(screen.getByRole('button', { name: 'Add' }));
+
+  expect(await screen.findByText('Buy milk')).toBeInTheDocument();
+});
+
+it('saves the todo through the service', async () => {
+  const user = userEvent.setup();
+  render(<TodoView />);
+
+  await user.type(await screen.findByLabelText('New todo'), 'Buy milk');
+  await user.click(screen.getByRole('button', { name: 'Add' }));
+
+  expect(TodoService.addTodo).toHaveBeenCalledWith('Buy milk');
+});
+----
+
+Vaadin components set up their labels after the first render, so find a field by its label with `findByLabelText()`, which waits for it, rather than with `getByLabelText()`. For the other queries and actions, see the https://testing-library.com/docs/react-testing-library/intro/[React Testing Library documentation].

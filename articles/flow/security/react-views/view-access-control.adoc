@@ -1,0 +1,112 @@
+---
+title: View Access Control
+page-title: Access control for React views in Vaadin applications
+description: How Vaadin checks the access options of React views in the browser, in the menu, and on page loads.
+meta-description: Reference for access control of Vaadin React views - the access options of views, the checks in the router, in the menu, and on page loads, and role names.
+order: 30
+---
+
+
+= View Access Control
+:toclevels: 2
+
+The `loginRequired` and `rolesAllowed` options of a view control who can open it. They are part of the view configuration, described in <<{articles}/flow/react-views/routing#view-configuration,View Configuration>>. A view without them is open to everyone. A view with `rolesAllowed` needs a logged-in user, even without `loginRequired`.
+
+Vaadin checks these options in three places:
+
+- In the browser, when the router opens a view.
+- On the server, when it sends the menu items.
+- In Spring Security, when the browser loads a page.
+
+None of these checks protects data. Protect the services that the views call, as described in <<service-access-control#,Service Access Control>>.
+
+section_outline::[]
+
+
+[[browser]]
+== In the Browser
+
+The [methodname]`protect()` method of [classname]`RouterConfigurationBuilder` makes the router check the options. The [filename]`routes.tsx` file that Vaadin generates calls it. See <<{articles}/flow/react-views/routing#routes-file,The Route Configuration File>>.
+
+When the router opens a view or a layout that has one of the options, it checks them with the <<authentication#use-auth,`hasAccess()`>> function of the authentication context. When the check fails, the router goes to the path that [methodname]`protect()` got, or to `/login` without an argument. This happens also to a logged-in user who doesn't have the role. While the user information is loading, the router renders an empty element instead of the view.
+
+The options of a layout apply to all the views inside it.
+
+The check needs the `AuthProvider` of the authentication context. See <<authentication#configure-auth,Authentication Context>>.
+
+
+[[menu]]
+== In the Menu
+
+When the browser loads a page, the server sends the list of views that the menu can show. It leaves out the views that the user can't open, and the views inside a layout that the user can't open. It checks the roles with the [methodname]`isUserInRole()` method of the HTTP request. With Spring Security, this method adds the role prefix to a role name without it. See <<{articles}/flow/react-views/routing#menu,Creating Menu Items>>.
+
+
+[[page-loads]]
+== Page Loads
+
+When the browser loads the page of a view that has `loginRequired: true`, Spring Security checks the request:
+
+- When nobody is logged in, the browser goes to the login view. After the login, it comes back to the view.
+- When the view also has `rolesAllowed`, the user needs a granted authority with the same name as one of the roles. Otherwise, the server responds with `403 Forbidden`.
+
+The page of a view without `loginRequired: true` loads for everyone. This includes a view that has only `rolesAllowed`, and a view inside a layout that requires login. The check in the browser then decides whether the view opens.
+
+
+[[role-names]]
+== Role Names
+
+The three checks compare the names in `rolesAllowed` with different things:
+
+[cols="1,2"]
+|===
+|Check |Compares `rolesAllowed` with
+
+|In the browser
+|The roles that the `getRoles` function of the authentication context returns, as they are
+
+|In the menu
+|The granted authorities, after adding the role prefix `ROLE_` to the names that don't have it
+
+|On page loads
+|The granted authorities, as they are
+|===
+
+For example, `rolesAllowed: ['ADMIN']` matches the granted authority `ROLE_ADMIN` in the menu, but not on a page load. To get the same result from all three checks, write the names of the granted authorities in `rolesAllowed`, such as `ROLE_ADMIN`. Then return the granted authorities as they are from `getRoles`, as the example in <<authentication#user-information,User Information>> does.
+
+
+[[has-access]]
+== Checking Access in a View
+
+The [methodname]`hasAccess()` function of the authentication context makes the same check as the router. It takes an object with `loginRequired` and `rolesAllowed` properties, and returns `true` when the current user meets them:
+
+[source,tsx]
+----
+const { hasAccess } = useAuth();
+const canDelete = hasAccess({ rolesAllowed: ['ROLE_ADMIN'] });
+----
+
+Without either property, it returns `true`. An explicit `loginRequired: false` turns the check off, even together with `rolesAllowed`. The router treats the options of a view the same way.
+
+
+[[route-objects]]
+== Route Objects
+
+For routes that you define as React Router route objects, the [methodname]`protectRoutes()` function of `@vaadin/hilla-react-auth` makes the same check. It takes the routes, and reads the `loginRequired` and `rolesAllowed` options from the `handle` of each route:
+
+[source,tsx]
+----
+import { protectRoutes } from '@vaadin/hilla-react-auth';
+
+export const routes = protectRoutes([
+  { path: '/admin', element: <AdminView />, handle: { rolesAllowed: ['ROLE_ADMIN'] } },
+  { path: '/login', element: <LoginView /> },
+], '/login');
+----
+
+The second argument is the path to go to when the check fails, and defaults to `/login`.
+
+
+[[flow-views]]
+== Flow and React Views Together
+
+Flow views are protected by their access annotations, as described in <<{articles}/flow/security/access-control/annotations#,Annotation-Based Access Control>>. When the login view is a React view, navigation access control sends the users who aren't logged in to it, also from Flow views. The menu items that <<{articles}/flow/react-views/routing#menu,`createMenuItems()`>> returns include the Flow views that have the [annotationname]`@Menu` annotation and that the user can open. See <<{articles}/flow/react-views/flow-interop#menu,Flow Views in the Menu>>.

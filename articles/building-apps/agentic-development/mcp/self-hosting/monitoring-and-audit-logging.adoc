@@ -1,0 +1,128 @@
+---
+title: Monitoring and Audit Logging
+page-title: Monitor and Audit a Self-Hosted Vaadin MCP Server
+description: What to monitor, what to alert on, and how to record every tool call.
+meta-description: Monitor a self-hosted Vaadin MCP server through its health endpoint, alert before the license expires, and record one JSON line per tool call.
+order: 40
+---
+
+
+= Monitoring and Audit Logging
+
+Two separate jobs: watching that the server is healthy, and keeping a record of what was asked of it.
+
+
+== Monitoring
+
+Point your monitoring at `/health` -- at the root, not under `/actuator`. It needs no authentication:
+
+[source,bash]
+----
+curl -s http://localhost:8080/health
+----
+
+=== Liveness and Readiness Probes
+
+Probe the endpoint and let the HTTP status code decide. The server answers *200* when it's serving, and *503* when its documentation failed to load -- which is the one fault a restart might clear:
+
+[source,yaml]
+----
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 10
+----
+
+Kubernetes makes that request from outside the container, which matters here: the image has no shell and no HTTP client, so an `exec` probe or a Docker `healthcheck:` command cannot work. See <<deployment-examples#health-checks,Health Checks>>.
+
+*A license problem never changes the status code.* An expiring or expired key leaves `/health` at 200 until the server stops serving altogether, so a probe won't warn you. That's what the next section is for.
+
+=== What to Alert On
+
+Alerting needs the response body, not the status code. The response reports two components: `versionSnapshot`, with the documentation versions the image was built from, and `license`, which is the one to watch -- an unrenewed key eventually stops the server, and nothing above tells you that's coming:
+
+[source,bash]
+----
+curl -s http://localhost:8080/health | jq '.components.license.details.license.status'
+----
+
+[cols="1,3"]
+|===
+|Value |What It Means
+
+|`valid`
+|Normal. No action needed.
+
+|`expiring_soon`
+|The key expires within 30 days. Request a renewal now.
+
+|`in_grace`
+|The key has expired. The server keeps working for 30 days from the expiry date, then stops.
+|===
+
+The server re-checks its license every hour, so this field stays current without a restart. See <<licensing#renewal,Renewing the Key>> for the other places the same warning appears.
+
+=== Log Filtering
+
+Every log line includes `[vaadin-mcp]` between the level and the logger name, so you can filter this server's output out of a shared log stream:
+
+----
+[2026-09-17T09:14:22.031+00:00] [INFO ] [vaadin-mcp] c.v.m.s.SearchService - ...
+----
+
+
+[[audit-logging]]
+== Audit Logging
+
+Set `VAADIN_AUDIT_LOG_PATH` to a file path, and the server appends one JSON line per tool call:
+
+----
+VAADIN_AUDIT_LOG_PATH=/var/log/vaadin-mcp/audit.jsonl
+----
+
+Each line contains these fields:
+
+[cols="1,3"]
+|===
+|Field |Contents
+
+|`ts`
+|When the call happened.
+
+|`tool`
+|Which tool was called.
+
+|`args`
+|The arguments it was called with -- for a search, the developer's query text.
+
+|`durationMs`
+|How long the call took.
+
+|`status`
+|Whether it succeeded.
+
+|`licenseKid`
+|Which license key the server was running under.
+|===
+
+Requests are recorded, never responses: the log says what was asked, not what came back.
+
+To set this up:
+
+. Mount a volume for the directory, so records survive a redeploy.
+. Make that directory writable by user ID 65532, the account the container runs as. A Docker named volume and a Kubernetes persistent volume are both owned by `root` when created, so this needs setting explicitly -- <<deployment-examples#file-ownership,File Ownership Comes First>> covers both.
+. Point `logrotate`, `journald`, or your own log shipper at the file. The server only appends -- it never rotates or deletes anything, so retention is up to you.
+
+Check the startup log to confirm it took effect. The server names the file it opened, or says that the variable is unset.
+
+*If the server can't open the path you set, it won't start.* Check the mount and its permissions before deploying with audit logging enabled.
+
+.Audit Records Contain Developers' Queries
+[NOTE]
+====
+The `args` field holds what was searched for, which makes this log a record of what individual people were working on. Whether you may keep that, and for how long, depends on where your developers are based and is yours to decide.
+
+The server writes only to the file you name. It sends these records nowhere, and deleting them is up to your log tooling.
+====

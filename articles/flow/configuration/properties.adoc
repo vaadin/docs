@@ -95,7 +95,7 @@ When a system property and a servlet parameter have the same name, the system pr
 [[properties]]
 == List of Properties
 
-The following list contains the properties that are defined in the [classname]`com.vaadin.server.DeploymentConfiguration`, [classname]`com.vaadin.flow.server.Constants` and [classname]`com.vaadin.flow.server.InitParameters` classes. They're listed in alphabetical order. If you use Spring Boot, you should add the `vaadin.` prefix to them (e.g., change `brotli` to `vaadin.brotli`).
+The following list contains the properties that are defined in the [classname]`com.vaadin.flow.function.DeploymentConfiguration`, [classname]`com.vaadin.flow.server.Constants` and [classname]`com.vaadin.flow.server.InitParameters` classes. They're listed in alphabetical order. If you use Spring Boot, you should add the `vaadin.` prefix to them (e.g., change `brotli` to `vaadin.brotli`).
 
 Each property defines a "mode", which is either **Development**, **Production**, **Runtime**, **Build**, or **Bundle**.
 Development and production parameters are used in execution of the application in these modes.
@@ -137,6 +137,11 @@ Closes the Vaadin session if no UI is active. A UI is considered active if it's 
 Default: `false` +
 Mode: Runtime
 
+`**csp**`::
+[since:com.vaadin:vaadin@V25.4]#Runs the application under a strict, nonce-based Content Security Policy.# The value `off` behaves as if no strict policy is in use. With `warn`, every call that wouldn't work under a strict policy, such as [methodname]`executeJs()`, is logged as a warning. With `strict`, Vaadin sends a nonce-based `Content-Security-Policy` header in production mode, and calls that need `eval` throw an exception. The `strict` mode isn't usable for applications yet, because Vaadin itself still makes such calls, for example for the event data of click listeners. Use `warn` to find the calls in your application. Values are case-insensitive. See <<{articles}/flow/security/protections/content-security-policy#,Content Security Policy>>. +
+Default: `off` +
+Mode: Runtime
+
 `**devmode.componentTracker.enabled**`::
 Enable component tracking in development mode. +
 Default: `true` +
@@ -148,7 +153,7 @@ Default: `true` +
 Mode: Development
 
 `**devmode.frontendExtraFileExtensions**`::
-Define additional frontend file extensions to copy from jar files to the application `frontend/generated/jar-resources`. Default extension copied are `.js`, `.js.map`, `.ts`, `.ts.map`, `.tsx`, `.tsx.map`, `.css`, and `.css.map`. +
+Defines additional frontend file extensions, such as `.scss`, whose files are taken into account in the frontend bundle. Vaadin computes hashes of these files to detect whether the bundle must be rebuilt. The extensions included by default are `.js`, `.js.map`, `.ts`, `.ts.map`, `.tsx`, `.tsx.map`, `.css`, and `.css.map`. +
 Default: `""` +
 Mode: Development
 
@@ -163,9 +168,9 @@ Default: `true` +
 Mode: Development
 
 `**devmode.optimizeBundle**`::
-Optimizes frontend resource bundles. All frontend resources in the classpath are included by default in the generated bundle in development mode. When set to `true`, the frontend build creates an optimized bundle by including only frontend resources that are used from the application entry points. It uses bytecode scanning, which increases application start-up time. Set to `false` to skip the optimization in production mode. +
-Default: `false` +
-Mode: Build
+Optimizes the frontend resource bundle in development mode. By default, all frontend resources in the classpath are included in the development bundle. When set to `true`, only frontend resources that are used from the application entry points are included. It uses bytecode scanning, which increases application start-up time. For production builds, configure the `optimizeBundle` plugin property, or set this property as a system property when running the build. +
+Default: `false` for development mode; `true` for production builds +
+Mode: Development, Build
 
 `**devmode.output.pattern.timeout**`::
 Defines the time to wait for the frontend build tool to output either the success or error string for completion. +
@@ -207,18 +212,13 @@ Enables the client-side bootstrap page to include the initial JSON data fragment
 Default: `false` +
 Mode: Runtime
 
-`**enableErrorHandlerRedirect**`::
-If `{@code true}`, navigation error views implementing [interfacename]`HasErrorParameter` can be rendered for exceptions during RPC request handling. +
-Default: `false` +
-Mode: Runtime
-
 `**frameOptions**`::
 [since:com.vaadin:vaadin@V25.2]#The value of the `X-Frame-Options` HTTP response header# sent with the application page. The header lets the browser protect the application against clickjacking. Common values are `SAMEORIGIN` and `DENY`. Set the parameter to an empty value to disable sending the header, for example for applications that are meant to be embedded in a frame. The header is only set if the response doesn't already contain an `X-Frame-Options` header set by other means, such as Spring Security or a servlet filter. +
 Default: `SAMEORIGIN` +
 Mode: Runtime
 
 `**frontend.hotdeploy**`::
-Enables development using the frontend development server instead of an application bundle. This applies only to development mode. Hilla always forces frontend `hotdeploy` to true. This is a runtime property read by the application. For Gradle projects, the Gradle plugin requires separate configuration via the `frontendHotdeploy` option in the `vaadin {}` block (see <<{articles}/flow/configuration/gradle#build-file.vaadin-options,Vaadin Plugin Configuration>>). +
+Enables development using the frontend development server instead of an application bundle. This applies only to development mode. In a project that uses React views, it defaults to `true`. This is a runtime property read by the application. For Gradle projects, the Gradle plugin requires separate configuration via the `frontendHotdeploy` option in the `vaadin {}` block (see <<{articles}/flow/configuration/gradle#build-file.vaadin-options,Vaadin Plugin Configuration>>). +
 Default: `false` +
 Mode: Development
 
@@ -237,11 +237,6 @@ Sets the fully-qualified name for the internationalization provider class. To tr
 Default: `null` +
 Mode: Runtime
 
-`**launch-browser-delay**`::
-Defines how long to wait before opening a new browser tab for the staring application. The time is counted always from the latest application start that would try to open a tab. +
-Default: 30 min +
-Mode: Development
-
 `**maxMessageSuspendTimeout**`::
 Sets the maximum time in `milliseconds` that the client waits for predecessors of an out-of-sequence message, before considering them missing and requesting a full state resynchronization from the server. For example, when a server sends adjacent `XmlHttpRequest` responses and pushes messages over a low-bandwidth connection, the client may receive the messages out of sequence. Increase this value if your application experiences excessive resynchronization requests. However, be aware that it degrades the UX with flickering and loss of client-side-only states, such as scroll position. +
 Default: 5000 ms (i.e., 5 seconds) +
@@ -258,7 +253,7 @@ Default: +
 Mode: Runtime
 
 `**node.download.root**`::
-Base URL to download Node.js during build. +
+Base URL to download Node.js during build. For the default Node.js version, the downloaded archive is checked against checksums shipped with Vaadin, so the download root can only serve the official, unmodified archive. To install a custom Node.js build instead, use <<development-mode/node-js.adoc#node-folder, `node.folder`>>. +
 Default: `https://nodejs.org/dist/` +
 Mode: Build
 
@@ -273,7 +268,7 @@ Default: `null` +
 Mode: Build
 
 `**npm.excludeWebComponents**`::
-Excludes all Vaadin professional and core components from [filename]`package.json`. Lumo theme is not excluded. Excluded packages aren't installed by npm, which makes development bundles smaller. This property alone doesn't remove any Maven and Gradle dependencies. Supported also as a Vaadin Plugin property, `npmExcludeWebComponents`. See <<development-mode/index.adoc#exclude-vaadin-components, Optimize Bundle>> for more information. +
+Excludes all Vaadin free and commercial components from [filename]`package.json`. Lumo theme is not excluded. Excluded packages aren't installed by npm, which makes development bundles smaller. This property alone doesn't remove any Maven and Gradle dependencies. Supported also as a Vaadin Plugin property, `npmExcludeWebComponents`. See <<development-mode/index.adoc#exclude-vaadin-components, Optimize Bundle>> for more information. +
 Default: `false` +
 Mode: Build
 
@@ -283,8 +278,8 @@ Default: +
 Mode: Build
 
 `**npm.minimumFrontendPackageAgeDays**`::
-[since:com.vaadin:vaadin@V25.2]#Defines the minimum age, in days, that a frontend (npm) package version must have before npm, pnpm, or bun is allowed to install it.# Package versions published more recently than the configured number of days aren't installed. This protects against supply-chain attacks where a compromised package version is briefly available on the registry. By default, only package versions published more than one day ago are installed, which is a change in behavior for projects that depend on freshly released packages. Set to `0` to disable the check. Requires pnpm 10.16.0 or later, or bun 1.3.0 or later, when those package managers are used. +
-Default: `1` +
+[since:com.vaadin:vaadin@V25.2]#Defines the minimum age, in days, that a frontend (npm) package version must have before npm, pnpm, or bun is allowed to install it.# Package versions published more recently than the configured number of days aren't installed. This protects against supply-chain attacks where a compromised package version is briefly available on the registry. A value set here overrides the minimum release age the package manager is configured with; where nothing is set here, that configuration applies, and package versions have to be at least one day old where it's unset as well. Set to `0` to add no restriction of Vaadin's own. Requires pnpm 10.16.0 or later, or bun 1.3.0 or later, when those package managers are used. +
+Default: +
 Mode: Build
 
 `**npm.postinstallPackages**`::
@@ -333,7 +328,7 @@ Default: `""` +
 Mode: Runtime
 
 `**react.enable**`::
-Whether to use React Router, add React core dependencies, React integration helpers and Vaadin's provided React components (i.e., `@vaadin/react-components`). Fallbacks to `vaadin-router`, excludes all React dependencies and adds `Lit` dependencies, if set to `false`. Vaadin plugin configuration for the `reactEnable` property needs to be set to match the configuration property value. See <<../../upgrading#hilla-react-dependencies, Hilla & React Dependencies>> for more information. +
+Whether to use React Router, add React core dependencies, React integration helpers and Vaadin's provided React components (i.e., `@vaadin/react-components`). [deprecated:com.vaadin:vaadin@V25.0]#Setting this to `false`# falls back to the deprecated Vaadin Router, excludes all React dependencies and adds Lit dependencies; that option is removed in Vaadin 26. Vaadin plugin configuration for the `reactEnable` property needs to be set to match the configuration property value. See <<{articles}/upgrading#vaadin-router-removal, Vaadin Router Deprecation>> for more information. +
 Default: `true` +
 Mode: Runtime
 
@@ -343,7 +338,7 @@ Default: `true` for development mode; `false` for production mode +
 Mode: Runtime
 
 `**require.home.node**`::
-Skip global Node.js lookup and use only Vaadin-managed installations in `~/.vaadin/`. When set to `true`, the global `PATH` is not checked and Node.js is resolved from version-specific directories under `~/.vaadin/` (e.g., `~/.vaadin/node-v24.14.0/`). If a suitable version isn't found, it's downloaded and installed automatically. +
+Skip global Node.js lookup and use only Vaadin-managed installations in `~/.vaadin/`. When set to `true`, the global `PATH` is not checked and Node.js is resolved from version-specific directories under `~/.vaadin/` (e.g., `~/.vaadin/node-v<version>/`). If a suitable version isn't found, it's downloaded and installed automatically. +
 Default: `false` +
 Mode: Build
 
@@ -355,6 +350,11 @@ Mode: Runtime
 `**syncIdCheck**`::
 Enables synchronized ID checking. The synchronized ID is used to handle situations in which the client sends a message to a connector that has been removed from the server. It's set to `true`, by default. You should only disable it if your application doesn't need to stay synchronized, and suffers from a bad network connection. +
 Default: `true` +
+Mode: Runtime
+
+`**themedHtml**`::
+Makes the Aura and Lumo themes style plain HTML tables across the whole application, however they were created -- a component, a template, or raw HTML. Other native HTML elements aren't styled by the themes yet, but future releases can extend this setting to them. Enabling it adds the `vaadin-themed-html` class to the page's `<body>`. Regardless of this setting, an individual table or a subtree can opt in on its own with the same class name, and a table under a themed ancestor can opt back out with the `vaadin-unthemed-html` class name. Both class names are available as `Constants.THEMED_HTML_CLASS_NAME` and `Constants.UNTHEMED_HTML_CLASS_NAME`. +
+Default: `false` +
 Mode: Runtime
 
 `**webComponentDisconnect**`::
@@ -399,7 +399,7 @@ Mode: Build
 
 `**frontendIgnoreVersionChecks**`::
 Makes Flow skip node and npm/pnpm/bun version checks during bundle build and development server startup. Note that disabling frontend tools version checking can cause failing builds and other issues that are difficult to debug. +
-Default: +
+Default: `false` +
 Mode: Development, Bundle
 
 `**javaSourceFolder**`::
@@ -409,7 +409,7 @@ Mode: Development
 
 `**javaResourceFolder**`::
 Resources source folder used for component scanning during development mode. +
-Default: `${project.basedir}/src/main/java` +
+Default: `${project.basedir}/src/main/resources` +
 Mode: Development
 
 `**npmFolder**`::
@@ -432,7 +432,7 @@ Directory to place resources that are not served from the application. +
 Default: `${project.build.outputDirectory}/META-INF/VAADIN/` +
 Mode: Build
 
-`**webpackOutputDirectory**`::
+`**frontendOutputDirectory**`::
 Directory to generate served resources as [filename]`index.js` and other generated files. +
 Default: `${project.build.outputDirectory}/META-INF/VAADIN/webapp/` +
 Mode: Build

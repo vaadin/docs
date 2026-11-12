@@ -1,24 +1,21 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { EmailField, FormItem, FormLayout, SplitLayout, TextField } from '@vaadin/react-components';
+import {
+  Checkbox,
+  EmailField,
+  FormLayout,
+  PasswordField,
+  SplitLayout,
+} from '@vaadin/react-components';
 
 function Example() {
   function renderFormLayout() {
     // tag::snippet[]
     return (
       <FormLayout style={{ width: '100%' }} autoResponsive labelsAside>
-        <FormItem>
-          <label slot="label">First name</label>
-          <TextField />
-        </FormItem>
-        <FormItem>
-          <label slot="label">Last name</label>
-          <TextField />
-        </FormItem>
-        <FormItem>
-          <label slot="label">Email address</label>
-          <EmailField />
-        </FormItem>
+        <EmailField label="Email" />
+        <PasswordField label="Password" />
+        <Checkbox label="Subscribe" />
       </FormLayout>
     );
     // end::snippet[]

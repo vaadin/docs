@@ -46,7 +46,6 @@ function resolveVersions() {
     if (!match) {
       throw new Error(`Could not resolve version for ${repo.artifact} from Maven dependency tree`);
     }
-    // eslint-disable-next-line @typescript-eslint/prefer-destructuring
     versions[repo.name] = match[1];
     console.log(`  ${repo.artifact} -> ${match[1]}`);
   }
@@ -98,8 +97,8 @@ function findProviderClasses(repoPath) {
   const spiFiles = gitFindFiles(repoPath, SPI_SERVICE);
   const classes = [];
   for (const spiFile of spiFiles) {
-    // Skip test resources
-    if (spiFile.includes('src/test/')) continue;
+    // Skip test resources (src/test/) and test modules (e.g. flow-tests/)
+    if (/(^|\/)[\w-]*tests?\//.test(spiFile)) continue;
     const content = gitShow(repoPath, spiFile);
     if (!content) continue;
     for (const line of content.split('\n')) {
@@ -135,7 +134,6 @@ function extractFeatureIds(source) {
   const constRegex = /static\s+final\s+String\s+(\w+)\s*=\s*"([^"]+)"/g;
   let m;
   while ((m = constRegex.exec(cleaned)) !== null) {
-    // eslint-disable-next-line @typescript-eslint/prefer-destructuring
     constantsMap[m[1]] = m[2];
   }
 

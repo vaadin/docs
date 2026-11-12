@@ -60,7 +60,7 @@ public class GridTooltipGenerator extends Div {
         boolean isAvailable = "Available".equals(status);
         Badge badge = new Badge();
         badge.setIcon(isAvailable ? VaadinIcon.CHECK.create()
-                : VaadinIcon.CLOSE_SMALL.create());
+                : VaadinIcon.CLOSE.create());
         badge.addThemeVariants(BadgeVariant.ICON_ONLY,
                 isAvailable ? BadgeVariant.SUCCESS : BadgeVariant.ERROR);
         return badge;

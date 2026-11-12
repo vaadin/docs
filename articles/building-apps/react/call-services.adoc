@@ -1,6 +1,7 @@
 ---
 title: Call Java Services
 page-title: How to call Java services from a React view in Vaadin
+description: Make a Java service browser-callable and call it from a React view through a generated TypeScript client.
 meta-description: Make a Java service browser-callable and call it from a React view in Vaadin in a type-safe way, with automatically generated TypeScript clients.
 order: 30
 ---
@@ -9,7 +10,7 @@ order: 30
 = Call Java Services from React Views
 :toclevels: 2
 
-A React view runs in the browser, so it gets its data from the server by calling Java services. Vaadin lets you do this in a type-safe way -- without writing a REST controller -- by making a service _browser-callable_ and generating a TypeScript client for it. This guide covers the basics; for the full details, see the <<{articles}/hilla/guides/endpoints#,Endpoints reference guide>>.
+A React view runs in the browser, so it gets its data from the server by calling Java services. Vaadin lets you do this in a type-safe way -- without writing a REST controller -- by making a service _browser-callable_ and generating a TypeScript client for it. This guide covers the basics; for the full details, see the <<{articles}/flow/react-views/browser-callable-services#,Browser-Callable Services reference>>. Browser-callable services need the Hilla Spring Boot starter in the project, as described in <<index#enabling,Enabling React Views in a Project>>.
 
 
 == Making a Service Browser-Callable
@@ -27,6 +28,8 @@ public class CounterService {
 }
 ----
 <1> Browser-callable services are inaccessible by default. You must add a security annotation to grant access. See <<security#,Secure React Views>>.
+
+Every public method of the service is callable from the browser. Make methods that the browser shouldn't call private, or move them to another service.
 
 The TypeScript client is regenerated automatically when the application starts in development mode, when a service is hot-swapped, and during a production build. The generator reads compiled Java byte code, so the classes must be compiled first.
 
@@ -58,7 +61,7 @@ export default function CounterView() {
 
 == Passing Objects
 
-Services can receive and return objects, not only primitives. Vaadin generates a TypeScript interface for each Java type used. You can use classes or records:
+Services can receive and return objects, not only primitives. Vaadin generates a TypeScript interface for each Java type used, which makes these types part of the API that your views depend on. <<../business-logic/add-service#input-output,Input & Output>> compares using entities and DTOs for this. You can use classes or records:
 
 .Prefer Records
 [TIP]
@@ -82,7 +85,7 @@ interface City {
 export default City;
 ----
 
-Vaadin uses Jackson for serialization, so Jackson annotations can customize the generated types. See the <<{articles}/hilla/reference/type-conversion#,Type Conversion reference guide>> for details.
+Vaadin uses Jackson for serialization, so Jackson annotations can customize the generated types. See the <<{articles}/flow/react-views/browser-callable-services/type-conversion#,Type Conversion reference guide>> for details.
 
 
 == Nullability
@@ -109,12 +112,12 @@ public @NonNull List<@NonNull City> findCities(@NonNull Query query) {
 
 .Change the Default
 [TIP]
-If most types in your project should be non-nullable, apply Spring's [annotationname]`@NonNullApi` at the package level in `package-info.java`. For more control over nullability, see the <<{articles}/hilla/reference/type-nullability#,Type Nullability reference guide>>.
+If most types in your project should be non-nullable, apply JSpecify's [annotationname]`@NullMarked` at the package level in `package-info.java`. For more control over nullability, see the <<{articles}/flow/react-views/browser-callable-services/type-nullability#,Type Nullability reference guide>>.
 
 
 == Pushing Updates with Reactive Services
 
-The service methods shown so far return a single value in response to a call. A service can instead push a *stream* of values to the browser over time by returning a https://projectreactor.io/[Reactor] `Flux`. This is useful for live data, such as a clock, a progress indicator, or notifications. A browser-callable service can only return a `Flux` -- convert a `Mono` to one with `asFlux()`.
+The service methods shown so far return a single value in response to a call. A service can instead push a *stream* of values to the browser over time by returning a https://projectreactor.io/[Reactor] `Flux`. This is useful for live data, such as a clock, a progress indicator, or notifications. A browser-callable service can only return a `Flux` -- convert a `Mono` to one with `flux()`.
 
 The following service emits the current date and time every second:
 
@@ -135,7 +138,7 @@ public class TimeService {
 <2> Drop values that can't be sent to the client in time.
 <3> Output the current date and time as a string.
 
-For how to produce reactive streams on the server, including from background jobs, see <</building-apps/business-logic/background-jobs/interaction/reactive#,Producing Reactive Streams>>.
+For how to produce reactive streams on the server, including from background jobs, see <<{articles}/building-apps/business-logic/background-jobs/interaction/reactive#,Producing Reactive Streams>>.
 
 === Subscribing from a View
 

@@ -1,0 +1,133 @@
+---
+title: Prometheus
+page-title: How to export Observability Kit metrics to Prometheus | Vaadin
+description: Learn how to export Observability Kit metrics to Prometheus from a Vaadin application.
+meta-description: Configure a Vaadin application to expose Observability Kit metrics to Prometheus through Spring Boot Actuator and Micrometer.
+order: 10
+page-links:
+  - https://prometheus.io[Website]
+---
+
+
+= Prometheus Integration
+
+https://prometheus.io[Prometheus] is a pull-based metrics system: it scrapes a metrics endpoint that your application exposes.
+Micrometer has a native Prometheus registry, so exposing the kit's metrics is a matter of adding the registry and an Actuator endpoint.
+
+Prometheus handles metrics only.
+To collect traces as well, pair it with a tracing backend -- see <<jaeger-prometheus#,Jaeger & Prometheus>> for a local setup, or <<grafana#,Grafana>> for metrics, traces, and logs in one tool.
+
+
+== Expose the Metrics Endpoint
+
+Add Spring Boot Actuator and the Prometheus registry:
+
+.`pom.xml`
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.micrometer</groupId>
+    <artifactId>micrometer-registry-prometheus</artifactId>
+</dependency>
+----
+
+Then expose the Prometheus endpoint:
+
+.`application.properties`
+[source,properties]
+----
+management.endpoints.web.exposure.include=prometheus
+spring.application.name=vaadin
+----
+
+The metrics are now served at `GET /actuator/prometheus`.
+Setting `spring.application.name` tags every meter with a consistent service name.
+
+Start your application, exercise a few views, then open `http://localhost:8080/actuator/prometheus` and confirm the Vaadin meters appear -- for example `vaadin_sessions_active` or `vaadin_request_duration_seconds_count`.
+
+
+== Scrape the Endpoint
+
+Configure Prometheus to scrape the Actuator endpoint.
+The scrape path is `/actuator/prometheus`, not the Prometheus default of `/metrics`:
+
+.`prometheus.yml`
+[source,yaml]
+----
+global:
+  scrape_interval: 15s # Default is every 1 minute.
+
+scrape_configs:
+  - job_name: 'vaadin'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['localhost:8080']
+----
+
+If your application uses Spring Security, the scrape also needs credentials -- see <<#secure-the-endpoint,Secure the Endpoint>>.
+
+https://prometheus.io/download/[Download Prometheus, role="button secondary water"]
+
+Extract the archive, then start Prometheus with the configuration file:
+
+[source,terminal]
+----
+./prometheus --config.file=/PATH/TO/prometheus.yml
+----
+
+Remember to substitute the correct path to the [filename]`prometheus.yml` file.
+
+
+[[secure-the-endpoint]]
+== Secure the Endpoint
+
+In an application that uses Spring Security, the Vaadin security configuration also handles `/actuator/prometheus`, and redirects an unauthenticated request to the login view.
+You can see this with `curl`:
+
+[source,terminal]
+----
+curl -i http://localhost:8080/actuator/prometheus
+----
+
+A `302` response with a `Location` header pointing at the login view means the scrape never reaches the endpoint.
+Prometheus follows the redirect, receives the login page instead of metrics, and fails to parse it.
+No Vaadin series appear, and the only trace of the problem is the scrape error on the [guilabel]*Targets* page of Prometheus.
+
+First, give the Actuator endpoints a security filter chain of their own with HTTP Basic authentication, as shown in <<index#secure-actuator-endpoints,Secure the Actuator Endpoints>>.
+Check the chain with `curl -u USER:PASSWORD http://localhost:8080/actuator/prometheus`, which should now return the metrics, while the same request without `-u` returns `401`.
+
+Then add the credentials of the scraper account to the scrape job:
+
+.`prometheus.yml`
+[source,yaml]
+----
+scrape_configs:
+  - job_name: 'vaadin'
+    metrics_path: '/actuator/prometheus'
+    basic_auth:
+      username: 'prometheus'
+      password_file: '/PATH/TO/password.txt'
+    static_configs:
+      - targets: ['localhost:8080']
+----
+
+The password file holds the account's password and nothing else.
+Restart Prometheus, or reload its configuration, and check that the target shows as `UP` on the [guilabel]*Targets* page.
+
+
+== Viewing Metrics
+
+The default address for the Prometheus user interface is `http://localhost:9090`.
+Enter a metric name into the search field and click [guibutton]*Execute*.
+
+If you don't know the metric name, click the globe icon next to [guibutton]*Execute* to open the metrics explorer, which lists the available metrics alphabetically.
+
+To view a result as a graph, click the [guilabel]*Graph* tab.
+
+Prometheus renders Micrometer's dotted meter names in its own convention.
+For example, the `vaadin.request.duration` timer appears as `vaadin_request_duration_seconds` with `_count`, `_sum`, and `_max` suffixes -- plus a parallel `vaadin_request_duration_active_seconds` long-task family when tracing is on, and `_bucket` series once you opt into <<index#percentiles,histogram buckets>>.
+See the <<../reference#,Reference>> page for the full list of meters.

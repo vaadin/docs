@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const DSP_VERSION = '3.0.0-alpha.13';
+const DSP_VERSION = '3.0.0-alpha.15';
 
 const projectRootPath = path.resolve(__dirname, '..');
 const dspConfig = JSON.parse(
@@ -45,7 +45,7 @@ async function checkPreConditions() {
 
     // Verify Maven is installed
     await new Promise((resolve, reject) => {
-      const ps = spawn('mvn', ['--version'], {
+      const ps = spawn('mvn --version', {
         stdio: 'ignore',
         shell: true,
       });
@@ -83,7 +83,9 @@ const nodeModulesPath = path.resolve(projectRootPath, 'node_modules');
 const firstLaunch = !fs.existsSync(nodeModulesPath);
 const firstLaunchMessage = firstLaunch ? ' (first launch may take a while)' : '';
 
-// License check helper command
+// License check helper command. Only the build runs it: Design System
+// Publisher is no longer a product, so dev-mode starts skip the extra Maven
+// run to keep startup fast for people working on the documentation.
 const hasLicenseChecker = (() => {
   const pomFilePath = path.resolve(projectRootPath, 'pom.xml');
   const pomFile = fs.readFileSync(pomFilePath, 'utf8');
@@ -161,7 +163,6 @@ const SCRIPTS = {
   develop: {
     name: `dsp@${DSP_VERSION}:start`,
     commands: [
-      LICENSE_CHECK,
       // Starts docs-app and docs server (concurrently)
       {
         shell: [
@@ -189,7 +190,7 @@ const SCRIPTS = {
         ],
         ignoredLogSignals: ['New version of Astro available', 'Observability agent is not running'],
       },
-    ].filter((p) => !!p),
+    ],
   },
   build: {
     name: `dsp@${DSP_VERSION}:build`,
@@ -369,12 +370,14 @@ function finish() {
  */
 async function execute(shellCommand, phases, ignoredLogSignals = []) {
   return new Promise((resolve) => {
-    const parts = Array.isArray(shellCommand) ? shellCommand : shellCommand.split(' ');
-    const ps = spawn(parts[0], [...parts.slice(1)], { shell: true });
+    // Pass the whole command line as one string: with `shell: true`, Node
+    // would only concatenate separate args anyway, and warns about it (DEP0190).
+    const command = Array.isArray(shellCommand) ? shellCommand.join(' ') : shellCommand;
+    const ps = spawn(command, { shell: true });
 
     ps.on('close', (code) => {
       if (code !== 0) {
-        console.error(`${shellCommand} failed with code ${code}`);
+        console.error(`${command} failed with code ${code}`);
         process.exit(code);
       }
 
@@ -394,9 +397,11 @@ async function execute(shellCommand, phases, ignoredLogSignals = []) {
 
       if (phase && !phase.done) {
         // A phase was found and it wasn't marked as done yet
+        phase.done = true;
 
-        if (phase.lastPhase) {
-          // This is the last phase of the script
+        // The ready signals may arrive out of order (e.g. concurrently started
+        // processes), so only finish once every phase of the last command is done
+        if (phases[phases.length - 1].lastPhase && phases.every((p) => p.done)) {
           finish();
         } else {
           // Update the progress
@@ -404,16 +409,14 @@ async function execute(shellCommand, phases, ignoredLogSignals = []) {
           // Make sure progress doesn't exceed total weight
           progressState.progress = Math.min(progressState.progress, totalWeight);
 
-          const nextPhase = phases[phases.indexOf(phase) + 1];
+          const nextPhase = phases.find((p) => !p.done);
           if (nextPhase) {
-            // If the next phase exists, render its text
+            // If there's a phase still waiting, render its text
             progressState.phase = nextPhase.text;
           }
 
           logProgress(progressState);
         }
-
-        phase.done = true;
       }
     });
 

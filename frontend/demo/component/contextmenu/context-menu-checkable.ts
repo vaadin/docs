@@ -2,7 +2,7 @@ import 'Frontend/demo/init'; // hidden-source-line
 import '@vaadin/context-menu';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import type { ContextMenuItem, ContextMenuItemSelectedEvent } from '@vaadin/context-menu';
+import type { ContextMenuItemData, ContextMenuItemSelectedEvent } from '@vaadin/context-menu';
 import { applyTheme } from 'Frontend/demo/theme';
 
 @customElement('context-menu-checkable')
@@ -15,7 +15,7 @@ export class Example extends LitElement {
 
   // tag::snippet[]
   @state()
-  private items: ContextMenuItem[] = [
+  private items: ContextMenuItemData[] = [
     { text: 'Abigail Lewis', checked: true },
     { text: 'Allison Torres' },
     { text: 'Anna Myers' },

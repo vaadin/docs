@@ -83,6 +83,9 @@ Builds the frontend bundle for production. Supports all `prepare-frontend` optio
 `clean-frontend`::
 Cleans the generated frontend files. Supports the same configuration options as `prepare-frontend`. Alias: `dance`.
 
+`generate`::
+Generates the TypeScript code of browser-callable services for React views. Compile the classes first, for example with `mvn compile vaadin:generate`. See <<{articles}/flow/react-views/browser-callable-services/code-generation#,Code Generation>>.
+
 `download-license`::
 Downloads a license key for commercial Vaadin products. Can be executed without a Maven project. See <<licenses#,Licenses>> for more information.
 
@@ -122,7 +125,7 @@ Java source folders for scanning. Defaults to `"${project.basedir}/src/main/java
 Java resource folder. Defaults to `"${project.basedir}/src/main/resources"`.
 
 `nodeDownloadRoot`::
-URL to use for downloading Node.js. In environments behind a firewall, the Node.js download can be provided from an intranet mirror. Defaults to `null`, which downloads Node.js from `https://nodejs.org/dist/`. Settable as the `-Dvaadin.node.download.root` system property.
+URL to use for downloading Node.js. In environments behind a firewall, the Node.js download can be provided from an intranet mirror. For the default Node.js version, Flow checks the downloaded archive against checksums it ships, so the mirror has to serve the official, unmodified archive; use `nodeFolder` instead to install a custom build. Defaults to `null`, which downloads Node.js from `https://nodejs.org/dist/`. Settable as the `-Dvaadin.node.download.root` system property.
 
 `nodeFolder`::
 The folder containing the Node.js executable to use. When specified, Node.js is exclusively used from this folder. If the binary isn't found there, the build fails with no fallback. Defaults to `null`. Settable as the `-Dvaadin.node.folder` system property.
@@ -131,7 +134,7 @@ The folder containing the Node.js executable to use. When specified, Node.js is 
 The Node.js version to be used when Node.js is installed automatically. Should be in the format `"v24.14.0"`. Defaults to `FrontendTools.DEFAULT_NODE_VERSION`. Settable as the `-Dvaadin.node.version` system property.
 
 `npmExcludeWebComponents`::
-Excludes all Vaadin professional and core components from the `package.json`. Lumo theme is not excluded. Excluded packages aren't installed by npm, which makes development bundles smaller. This property alone doesn't remove any Maven dependencies. See <<development-mode/index.adoc#exclude-vaadin-components, Optimize Bundle>> for more information. Defaults to `false`. Settable as the `-Dvaadin.npm.excludeWebComponents` system property.
+Excludes all Vaadin free and commercial components from the `package.json`. Lumo theme is not excluded. Excluded packages aren't installed by npm, which makes development bundles smaller. This property alone doesn't remove any Maven dependencies. See <<development-mode/index.adoc#exclude-vaadin-components, Optimize Bundle>> for more information. Defaults to `false`. Settable as the `-Dvaadin.npm.excludeWebComponents` system property.
 
 `npmFolder`::
 The folder where the [filename]`package.json` file is located. Defaults to `${project.basedir}`.
@@ -155,19 +158,16 @@ Additional npm packages to run post-install scripts for. Post-install is run aut
 The npm packages to exclude from running post-install scripts. Used to skip built-in entries (for example, `esbuild`) when their post-install step is known to fail or isn't needed. Defaults to an empty list. Settable as the `-Dvaadin.npm.excludePostinstallPackages` system property, using a comma-separated list.
 
 `frontendHotdeploy`::
-Whether the frontend development server is used in development mode. When disabled, a development bundle is used instead. Defaults to `null`, in which case the development server is used only when Hilla views are present. Settable as the `-Dvaadin.frontend.hotdeploy` system property.
+Whether the frontend development server is used in development mode. When disabled, a development bundle is used instead. Defaults to `null`, in which case the development server is used only when React views are present. Settable as the `-Dvaadin.frontend.hotdeploy` system property.
 
 `applicationIdentifier`::
 Identifier for the application. If not specified, defaults to a hash derived from `groupId:artifactId`. Settable as the `-Dvaadin.applicationIdentifier` system property.
-
-`productionMode`::
-Define whether the application is running in production mode. Defaults to `false`. For production, the frontend is bundled and optimized, as described in <<../production#,Deploying to Production>>.
 
 `projectBasedir`::
 The folder where the [filename]`package.json` file is located. Defaults to `${project.basedir}`.
 
 `reactEnable`::
-Whether to use React Router, add React core dependencies, React integration helpers and Vaadin's provided React components (i.e., `@vaadin/react-components`). Fallbacks to `vaadin-router`, excludes all React dependencies and adds `Lit` dependencies, if set to `false` -- default is `true`. Configuration property `vaadin.react.enable` needs to be set to match this value. See <<../../upgrading#hilla-react-dependencies, Hilla & React Dependencies>> for more information. Settable as the `-Dvaadin.react.enable` system property.
+Whether to use React Router, add React core dependencies, React integration helpers and Vaadin's provided React components (i.e., `@vaadin/react-components`). Defaults to `true`. [deprecated:com.vaadin:vaadin@V25.0]#Setting this to `false`# falls back to the deprecated Vaadin Router, excludes all React dependencies and adds Lit dependencies; that option is removed in Vaadin 26. Configuration property `vaadin.react.enable` needs to be set to match this value. See <<{articles}/upgrading#vaadin-router-removal, Vaadin Router Deprecation>> for more information. Settable as the `-Dvaadin.react.enable` system property.
 
 `requireHomeNodeExec`::
 Whether to skip the global Node.js lookup and use only Vaadin-managed installations in `~/.vaadin/`. If set to `true`, the global `PATH` is not checked and Node.js is resolved from version-specific directories under `~/.vaadin/`. If a suitable version isn't found, it's downloaded and installed automatically. Defaults to `false`. Settable as the `-Dvaadin.require.home.node` system property.
@@ -263,6 +263,6 @@ Defines whether `npm ci` is run instead of `npm i` in production frontend builds
 Forces Vaadin to create a new production bundle even if a pre-compiled one can be used. Usually needed to create an optimized production bundle and to load components sources to the browser on demand, i.e. once one opens a route where these components are used. Defaults to `false`. Settable as the `-Dvaadin.force.production.build` system property.
 
 `minimumFrontendPackageAgeDays`::
-Minimum age, in days, that a frontend (npm) package version must have before npm, pnpm, or bun is allowed to install it. This mitigates supply-chain attacks where a compromised version is briefly available on the registry. Defaults to `1`; set it to `0` to disable. Requires pnpm `>= 10.16.0` or bun `>= 1.3.0` when those tools are used. Settable as the `-Dvaadin.npm.minimumFrontendPackageAgeDays` system property.
+Minimum age, in days, that a frontend (npm) package version must have before npm, pnpm, or bun is allowed to install it. This mitigates supply-chain attacks where a compromised version is briefly available on the registry. Unset by default: a value set here overrides the minimum release age the package manager is configured with, and where neither is set, package versions have to be at least one day old. Set it to `0` to add no restriction of Vaadin's own. Requires pnpm `>= 10.16.0` or bun `>= 1.3.0` when those tools are used. Settable as the `-Dvaadin.npm.minimumFrontendPackageAgeDays` system property.
 
 [discussion-id]`CD6D2FC7-ED44-442C-B32F-FABA5AF7294F`

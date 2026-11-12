@@ -1,0 +1,74 @@
+---
+title: Air-Gapped Operation
+page-title: Run the Vaadin MCP Server in an Air-Gapped Network
+description: How to get the image into a disconnected network, and what the server sends.
+meta-description: Copy the Vaadin MCP server image into an air-gapped network with standard Docker commands, and see exactly what outbound traffic the server does and does not make.
+order: 30
+---
+
+
+= Air-Gapped Operation
+
+The server answers every question from data inside its own image, so it needs no route to the internet. Your developers' tools still connect to it, so it does need an inbound route -- what it never needs is a way out. This page covers getting the image into a disconnected network, and what to tell your security team about what the running container sends.
+
+
+== Moving the Image In
+
+Use the standard Docker export and import commands. No special tooling is needed.
+
+On a machine that can reach Docker Hub, save the image to a file:
+
+[source,bash]
+----
+docker pull vaadin/mcp-server:1.0.0-20260916-114956-2b7c708
+docker save vaadin/mcp-server:1.0.0-20260916-114956-2b7c708 | gzip > vaadin-mcp-server.tar.gz
+----
+
+Transfer that file by whatever route your network allows, then load it on the inside:
+
+[source,bash]
+----
+gunzip -c vaadin-mcp-server.tar.gz | docker load
+----
+
+Use a permanent tag rather than `:latest`, so you can still tell afterward which build you imported. To update the documentation later, repeat these steps with a newer image.
+
+
+== What the Server Sends
+
+Use this section when your security team asks what the server does on the network.
+
+*While serving requests, the server makes no outbound network connections.* The documentation, the search indexes, and the model it uses to match your questions are all inside the image, and every answer comes from the container's own filesystem. The license check reads a local key file and contacts no license server.
+
+Two things are switched off rather than missing, which is worth stating precisely:
+
+* *Usage reporting.* This is the only code in the image that can make an outbound connection. It sends nothing unless you set `AMPLITUDE_API_KEY`. You can also request an image built without this code at all -- see <<configuration#custom-image,Requesting a Custom Image>>.
+* *Audit logging.* This writes to a file on your own disk. The server never transmits those records.
+
+Vaadin verifies this before publishing each image. The image is started in a sealed network namespace with no network route, and every one of its tools is called from inside that namespace. The test fails if anything in the server even tries to resolve a hostname. It also includes one outbound request that is expected to fail, which confirms the test environment really is isolated.
+
+
+[[analytics]]
+== Analytics
+
+One environment variable controls usage reporting: `AMPLITUDE_API_KEY`. Leave it unset -- the default -- and the server reports nothing. A self-hosted deployment needs no configuration for this.
+
+To confirm, check the startup log. It prints one of these lines:
+
+[cols="2,3"]
+|===
+|Log line |Meaning
+
+|`Analytics enabled` with a reporting URL
+|A key is set and the server is reporting usage.
+
+|Analytics is compiled in but the key is unset
+|The default. The server reports nothing.
+
+|Neither line
+|The image was built without the reporting code.
+|===
+
+The published image contains the reporting code but doesn't use it. If your security review needs that code absent rather than switched off, request an image built without it.
+
+The hosted server at `mcp.vaadin.com` does report usage -- see <<{articles}/building-apps/agentic-development/mcp/#hosted-server,What the Hosted Server Runs>>.

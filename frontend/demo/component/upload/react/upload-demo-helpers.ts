@@ -495,7 +495,7 @@ export class MockHttpServer {
     };
 
     window.OriginalHttpRequest = window.XMLHttpRequest;
-    window.XMLHttpRequest = Request as any; /* eslint-disable-line */
+    window.XMLHttpRequest = Request as any;
   }
 
   stop() {

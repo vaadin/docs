@@ -33,17 +33,46 @@ Vaadin uses the `npm` https://docs.npmjs.com/cli/v8/configuring-npm/package-json
 
 This default changes the behavior of installing frontend dependencies: if your project depends on a package version that was published less than a day ago, the installation fails or resolves to an older version until the package version is old enough.
 
-The minimum age is configured with the `npm.minimumFrontendPackageAgeDays` property. For example, to require package versions to be at least three days old, set the following system property:
+The minimum age is configured with the `npm.minimumFrontendPackageAgeDays` property, which takes precedence over the minimum release age setting of the package manager itself -- see <<minimum-age-precedence,Where the Minimum Age Comes From>>. For example, to require package versions to be at least three days old, set the following system property:
 
 [source,terminal]
 ----
 -Dvaadin.npm.minimumFrontendPackageAgeDays=3
 ----
 
-To disable the check and install packages regardless of their publication date, set the value to `0`.
+To let Vaadin add no restriction of its own, set the value to `0`. A minimum release age configured for the package manager itself then decides whether recently published versions are installed.
 
 [NOTE]
 When pnpm or bun is used as the package manager, this feature requires pnpm 10.16.0 or later, or bun 1.3.0 or later.
+
+
+[#minimum-age-precedence]
+[role="since:com.vaadin:vaadin@V25.3"]
+=== Where the Minimum Age Comes From
+
+npm, pnpm, and bun each have a minimum release age setting of their own, which a project may already configure in an [filename]`.npmrc` or a [filename]`pnpm-workspace.yaml`. Vaadin decides which value applies in this order:
+
+. A value set through `npm.minimumFrontendPackageAgeDays` is used as it stands. Vaadin passes it to the package manager on the command line, which takes precedence over every configuration file the package manager reads. A value of `0` adds no restriction of Vaadin's own, and a minimum release age the package manager is configured with then applies instead.
+. Where nothing is set through Vaadin, the configuration of the package manager decides. Vaadin asks npm or pnpm what it resolves for its `min-release-age` or `minimumReleaseAge` setting and, where a value is configured, passes no argument at all. The build logs which value it kept, and the parameter to set to override it.
+. Where neither is configured, package versions have to be at least one day old.
+
+Vaadin can't ask bun what it resolves, because bun has no command for printing its configuration. A `minimumReleaseAge` in a [filename]`bunfig.toml` is therefore not detected, and the one-day default is passed on the command line instead. Set `npm.minimumFrontendPackageAgeDays` to `0` to let the bun configuration decide.
+
+
+[role="since:com.vaadin:vaadin@V25.3"]
+=== Vaadin Packages Are Exempt
+
+The `@vaadin` packages Vaadin publishes itself are excluded from the minimum age, so that a new Vaadin version can be used the day it's released. Excluding them doesn't weaken the protection: the build always installs the exact `@vaadin` versions that come with the platform, never a version range, so a newly published version of one of them is never picked up on its own.
+
+Only the `@vaadin` packages themselves are excluded. Their own transitive dependencies still have to be old enough.
+
+Excluding packages is done through the package manager, which needs to be recent enough to support it:
+
+- *npm* 11.17.0 or later, which Node.js 26.4.0 and later ship with. The Node.js version Vaadin installs for itself is newer than that, so only a globally installed Node.js may need an upgrade.
+- *pnpm* 10.17.0 or later. Version 10.16.0 supports the minimum age itself, but silently ignores the exclusion.
+- *bun* can't exclude packages on the command line. List the `@vaadin` packages the project depends on -- spelled out one by one -- in the `minimumReleaseAgeExcludes` setting of a [filename]`bunfig.toml` to get the same result.
+
+When the package manager can't exclude them, the build logs a warning and an installation may fail during the first day after a Vaadin release. Nothing is excluded, and nothing is warned about, when no minimum age applies in the first place.
 
 
 == Switch Among npm, pnpm & bun

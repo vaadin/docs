@@ -2,10 +2,7 @@ import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-lin
 import React, { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
-import { Item } from '@vaadin/react-components/Item.js';
-import { ListBox } from '@vaadin/react-components/ListBox.js';
-import { Select } from '@vaadin/react-components/Select.js';
-import { Avatar } from '@vaadin/react-components/Avatar.js';
+import { Avatar, Select, SelectItem, SelectListBox } from '@vaadin/react-components';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
 
@@ -22,9 +19,9 @@ function Example() {
   return (
     // tag::snippet[]
     <Select label="Choose doctor" style={{ width: '15em' }}>
-      <ListBox>
+      <SelectListBox>
         {people.value.map((person) => (
-          <Item value={String(person.id)} key={person.id}>
+          <SelectItem value={String(person.id)} key={person.id}>
             <div className="person-item">
               <Avatar img={person.pictureUrl} name={`${person.firstName} ${person.lastName}`} />
               <span>
@@ -32,9 +29,9 @@ function Example() {
               </span>
               <span>{person.profession}</span>
             </div>
-          </Item>
+          </SelectItem>
         ))}
-      </ListBox>
+      </SelectListBox>
     </Select>
     // end::snippet[]
   );

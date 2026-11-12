@@ -35,7 +35,7 @@ export class Example extends LitElement {
     let text = '';
 
     const { column, item } = context;
-    if (column && item) {
+    if (column?.path && item) {
       switch (column.path) {
         case 'birthday':
           text = `Age: ${differenceInYears(Date.now(), parseISO(item.birthday))}`;
@@ -70,7 +70,7 @@ export class Example extends LitElement {
   }
 
   private statusRenderer: GridColumnBodyLitRenderer<Person> = ({ status }) => {
-    const icon = status === 'Available' ? 'check' : 'close-small';
+    const icon = status === 'Available' ? 'check' : 'close';
     const theme = status === 'Available' ? 'success' : 'error';
 
     return html`

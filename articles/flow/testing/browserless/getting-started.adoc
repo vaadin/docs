@@ -1,24 +1,37 @@
 ---
 title: Getting Started
-page-title: How to get started with Vaadin browserless testing
-description: Tutorial to create and run a browserless test.
-meta-description: A beginner-friendly guide on how to set up and run a browserless test in Vaadin.
-order: 10
+page-title: Getting Started with Browserless Testing | Vaadin
+description: Maven dependencies and a minimal test class for browserless tests in plain Java, Spring Boot, Quarkus, and Java EE/CDI projects.
+meta-description: Add the Vaadin browserless test dependencies for plain Java, Spring Boot, Quarkus, or Java EE/CDI, and start from a minimal test class skeleton.
+order: 5
 ---
 
+include::{articles}/_vaadin-version.adoc[]
 
 = Getting Started with Browserless Testing
 
-To start creating browserless tests in an existing Spring Boot project, add the `browserless-test-spring` dependency with a `test` scope. Spring Boot's test starter must also be present -- it's typically already on the classpath in Spring Boot projects.
+This page lists the test dependencies for each supported application framework, and a minimal test class that the snippets on the following pages build on.
 
-.Non-Spring Projects
-[TIP]
-This guide assumes a Spring Boot project. If you aren't using Spring, see <<non-spring#, Non-Spring Projects>> for a simpler setup.
 
-Assuming you've imported the Vaadin Bill-of-Materials (BOM) and have a Maven project, add the following:
+== Dependencies
 
+With the Vaadin Bill-of-Materials (BOM) imported in a Maven project, add the dependencies for your framework with a `test` scope.
+The BOM defines the versions of the Vaadin artifacts.
+
+[.example]
+--
 [source,xml]
 ----
+<source-info group="Plain Java"></source-info>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-junit6</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+[source,xml]
+----
+<source-info group="Spring Boot"></source-info>
 <dependency>
     <groupId>com.vaadin</groupId>
     <artifactId>browserless-test-spring</artifactId>
@@ -29,227 +42,168 @@ Assuming you've imported the Vaadin Bill-of-Materials (BOM) and have a Maven pro
     <artifactId>spring-boot-starter-test</artifactId>
     <scope>test</scope>
 </dependency>
+
+<!-- Optional: Spring Security test annotations, such as @WithMockUser -->
+<dependency>
+    <groupId>org.springframework.security</groupId>
+    <artifactId>spring-security-test</artifactId>
+    <scope>test</scope>
+</dependency>
 ----
+[source,xml]
+----
+<source-info group="Quarkus"></source-info>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-junit6</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-quarkus</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-junit</artifactId>
+    <scope>test</scope>
+</dependency>
+
+<!-- Optional: Quarkus Security test annotation @TestSecurity -->
+<dependency>
+    <groupId>io.quarkus</groupId>
+    <artifactId>quarkus-test-security</artifactId>
+    <scope>test</scope>
+</dependency>
+----
+[source,xml,subs="+attributes"]
+----
+<source-info group="Java EE/CDI"></source-info>
+<dependency>
+    <groupId>com.vaadin</groupId>
+    <artifactId>browserless-test-junit6</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.jboss.weld</groupId>
+    <artifactId>weld-junit5</artifactId>
+    <version>{weld-junit-version}</version>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.junit.jupiter</groupId>
+    <artifactId>junit-jupiter</artifactId>
+    <scope>test</scope>
+</dependency>
+
+<!-- In <dependencyManagement>, unless your parent POM already manages JUnit -->
+<dependency>
+    <groupId>org.junit</groupId>
+    <artifactId>junit-bom</artifactId>
+    <version>{junit-version}</version>
+    <type>pom</type>
+    <scope>import</scope>
+</dependency>
+----
+--
+
+A Java EE/CDI project also needs <<{articles}/flow/integrations/cdi#add-dependencies,Vaadin CDI>> and the provided Jakarta EE APIs, which the application already has.
+
+The optional security dependencies provide the test annotations that set the user of the <<spring-security#,Spring>> and <<quarkus#security-integration,Quarkus>> base classes.
+A secured application context needs only the application's own Spring Security or Quarkus Security.
 
 
-== First Browserless Test
+== Minimal Test Class
 
-In Spring Boot projects, views typically use dependency injection for services and other components. To handle this correctly, browserless testing provides a specialized base class: [classname]`SpringBrowserlessTest`. Annotate your test class with [annotationname]`@SpringBootTest` so that the full application context is available.
+A test class extends the base class of its framework.
+Before each test method, the Plain Java, Spring Boot, and Quarkus base classes create the Vaadin environment with one user and one window, and open the root view; after the test method, they clean the environment up.
+The test calls the testing methods, such as [methodname]`navigate()`, on itself.
 
-Given a simple view like this:
-
-.`HelloWorldView.java`
+[.example]
+--
 [source,java]
 ----
-@Route("")
-public class HelloWorldView extends HorizontalLayout {
+<source-info group="Plain Java"></source-info>
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.BrowserlessTest;
 
-    TextField name;
-    Button sayHello;
-
-    public HelloWorldView() {
-        name = new TextField("Your name");
-        sayHello = new Button("Say hello");
-        sayHello.addClickListener(e -> {
-            Notification.show("Hello " + name.getValue());
-        });
-        add(name, sayHello);
-    }
-}
-----
-
-A browserless test for it looks like this:
-
-.`HelloWorldViewTest.java`
-[source,java]
-----
-@SpringBootTest
-class HelloWorldViewTest extends SpringBrowserlessTest {
+class MyViewTest extends BrowserlessTest {
 
     @Test
-    public void setText_clickButton_notificationIsShown() {
-        final HelloWorldView helloView = navigate(HelloWorldView.class);
-
-        test(helloView.name).setValue("Test");
-        test(helloView.sayHello).click();
-
-        Notification notification = find(Notification.class).single();
-        Assertions.assertEquals("Hello Test", test(notification).getText());
+    void myTest() {
+        MyView view = navigate(MyView.class);
+        // Find components and simulate user actions
     }
-
 }
 ----
-
-The following sections break down what this test does.
-
-
-=== Navigating to a View
-
-The [methodname]`navigate()` method opens a view, just as a user would navigate to it in the browser. It returns the view instance so you can interact with it directly.
-
 [source,java]
 ----
-final HelloWorldView helloView = navigate(HelloWorldView.class);
+<source-info group="Spring Boot"></source-info>
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import com.vaadin.browserless.SpringBrowserlessTest;
+
+@SpringBootTest
+class MyViewTest extends SpringBrowserlessTest {
+
+    @Test
+    void myTest() {
+        MyView view = navigate(MyView.class);
+        // Find components and simulate user actions
+    }
+}
 ----
-
-
-=== Using the Java API Directly
-
-Since you're running on the server side, you have direct access to the Java component API. In the example above, the [classname]`TextField` and [classname]`Button` fields are package-protected. This means the test class can access them directly, as long as it's in the same Java package -- for example, if the view is in `src/main/java/com/example/app/`, put the test in `src/test/java/com/example/app/`.
-
 [source,java]
 ----
-// Read a component's value directly
-String currentValue = helloView.name.getValue();
+<source-info group="Quarkus"></source-info>
+import org.junit.jupiter.api.Test;
+import com.vaadin.browserless.quarkus.QuarkusBrowserlessTest;
+import io.quarkus.test.junit.QuarkusTest;
 
-// Check component state
-boolean isEnabled = helloView.sayHello.isEnabled();
-boolean isVisible = helloView.name.isVisible();
+@QuarkusTest
+class MyViewTest extends QuarkusBrowserlessTest {
+
+    @Test
+    void myTest() {
+        MyView view = navigate(MyView.class);
+        // Find components and simulate user actions
+    }
+}
 ----
-
-
-=== Simulating User Actions with Testers
-
-To simulate how a user interacts with a component, wrap it with [methodname]`test()`. This returns a component-specific tester that provides methods like [methodname]`setValue()`, [methodname]`click()`, and [methodname]`getText()`. Unlike calling the Java API directly, tester methods also verify that the component is in a usable state -- visible, enabled, and attached to the UI.
-
 [source,java]
 ----
-// Simulate typing into a text field
-test(helloView.name).setValue("Test");
+<source-info group="Java EE/CDI"></source-info>
+import org.junit.jupiter.api.Test;
 
-// Simulate clicking a button
-test(helloView.sayHello).click();
+class MyViewTest extends AbstractCdiViewTest {
 
-// Read the text a user would see
-String text = test(notification).getText();
+    @Test
+    void myTest() {
+        MyView view = navigate(MyView.class);
+        // Find components and simulate user actions
+    }
+}
 ----
+--
 
-Each Vaadin component has a tester tailored to its behavior. For example, a [classname]`CheckboxTester` uses [methodname]`click()` to toggle checked state, a [classname]`ComboBoxTester` has [methodname]`selectItem()`, and a [classname]`GridTester` has [methodname]`getRow()`. See <<component-testers#, Component Testers>> for a full overview and how to build testers for your own components.
+These base classes scan the whole classpath for routes, unless the test class has a <<test-environment#route-scanning,`@ViewPackages`>> annotation.
 
-
-=== Finding Components
-
-Not every component is stored in a view field. For example, the [classname]`Notification` in the test above is created inside a click listener and isn't referenced anywhere in the view. Use the [methodname]`find()` query method to find components in the UI by their type:
-
-[source,java]
-----
-// Find the single Notification currently open
-Notification notification = find(Notification.class).single();
-----
-
-The query API supports filtering by properties, predicates, and scoping to specific parts of the component tree. See <<component-query#, Querying Components>> for details.
+A Java EE/CDI test extends [classname]`AbstractCdiViewTest`, an application-owned subclass of [classname]`BrowserlessTest` that starts the Vaadin environment with Weld and [classname]`CdiVaadinServlet`, and registers the routes that the tests use instead of scanning for them.
+See <<cdi#test-base-class,CDI Test Integration>> for that class.
 
 
-[#test-ids]
-== Test IDs
+=== Locators
 
-Use [methodname]`Component.setTestId()` to assign a stable identifier to a component for use in tests. This sets the `data-testid` HTML attribute on the component's element, which can be used by testing frameworks like Playwright to locate elements reliably:
-
-[source,java]
-----
-Button submitButton = new Button("Submit");
-submitButton.setTestId("submit-button");
-
-// Later, retrieve the test ID
-String testId = submitButton.getTestId(); // "submit-button"
-----
-
-Test IDs are preferable to CSS class names or text content for locating elements in tests because they are stable, decoupled from styling, and unaffected by translations or UI changes.
-
-In a Playwright test, you can locate the element using the `data-testid` attribute:
-
-[source,java]
-----
-page.locator("[data-testid='submit-button']").click();
-----
-
-Browserless tests can use the same identifier: the [since:com.vaadin:vaadin@V25.2]#`testId()` terminal operator and the `withTestId()` filter# look up components by their test ID:
-
-[source,java]
-----
-Button submit = find(Button.class).testId("submit-button");
-----
-
-See <<component-query#test-ids, Querying Components>> for details.
+The optional [interfacename]`Locators` interface provides additional convenience methods: typed <<locators#,locator>> entry points, such as [methodname]`findButton()` and [methodname]`findTextField()`.
+To use them in a test that extends a base class, implement the interface in the test class, as described in <<locators#opting-in,Opting in for `BrowserlessTest`>>.
 
 
-== Running Tests
+== Using the Snippets on the Following Pages
 
-Testing with [classname]`SpringBrowserlessTest` doesn't require any particular setup beyond the dependencies above. Run the test directly from your IDE or use Maven, for example by typing `mvn test` in the terminal.
+Most snippets on the following pages call the testing methods on `window`, a window of an <<multi-user#,application context>>.
+In a test that extends a base class, call the same methods on the test class itself: `window.navigate()` becomes `navigate()`, and `window.findButton()` becomes `findButton()` when the test class implements [interfacename]`Locators`.
 
-
-== Navigating to Views
-
-On test initialization, the loaded view is the root view.
-
-To navigate to another registered view, use the [methodname]`navigate()` methods provided by the base class:
-
-- For a normal view with only a path defined
-+
-[methodname]`navigate(MyView.class)`
-+
-[methodname]`navigate("myView", MyView.class)`
-- For a view with [interfacename]`HasUrlParameter`
-+
-[methodname]`navigate(MyParam.class, "parameter")`
-+
-[methodname]`navigate("myParam/parameter", MyParam.class)`
-- For a view with URL template `@Route("template/:param")`
-+
-[methodname]`navigate(Template.class, Collections.singletonMap("param", PARAMETER))`
-+
-[methodname]`navigate("template/myParam", Template.class)`
-
-All navigation methods return the instantiated view, so that its fields can be used directly for testing.
-
-[NOTE]
-Navigation by location string takes in the view class, so that the initialized view can be automatically validated to be the expected one.
-
-You can also retrieve the current view at any time with [methodname]`getCurrentView()`:
-
-[source,java]
-----
-HasElement view = getCurrentView();
-----
+Snippets that create users and windows from `app` need an application context, which a test sets up when it needs several users or windows, or more control over the Vaadin environment; see <<multi-user#setting-up-an-application-context,Setting Up an Application Context>>.
 
 
-== Simulating Keyboard Shortcuts
-
-Use [methodname]`fireShortcut()` to simulate keyboard shortcuts registered with Vaadin's shortcut API:
-
-[source,java]
-----
-// Simulate pressing Enter
-fireShortcut(Key.ENTER);
-
-// Simulate Ctrl+S
-fireShortcut(Key.KEY_S, KeyModifier.CONTROL);
-----
-
-
-[#signals]
-== Testing Signal-Based UIs
-
-Views built on <<{articles}/flow/ui-state#, signals>> are testable without extra setup: [classname]`BrowserlessTest` registers a test [classname]`SignalEnvironment`, so signal effects run deterministically on the test thread instead of on a background thread pool. Signal changes made directly by a simulated user action are reflected in the UI immediately, so the testers and queries see the updated state right away. For a deeper look see <<testing-signals#, Testing Signals>>.
-
-When a signal is changed from a background thread -- for example, by a service callback or another part of the application -- call [methodname]`runPendingSignalsTasks()` to process the pending signal effects before asserting:
-
-[source,java]
-----
-// Application code updates a signal from a background thread
-test(view.start).click();
-
-// Process the pending signal effects, then assert
-runPendingSignalsTasks();
-Assertions.assertEquals("Completed", test(view.status).getText());
-----
-
-The same method is available on the JUnit extension as [methodname]`ext.runPendingSignalsTasks()` (see <<extensions#, JUnit 6 Extensions>>) and on each window in multi-user tests (see <<multi-user#signals, Signals in Multi-User Tests>>).
-
-
-.Multiple Users or Windows?
-[TIP]
-This setup drives a single user with a single window. For tests that need several concurrent users or multiple windows of the same user, see <<multi-user#, Multi-User and Multi-Window Testing>>.
-
-
-[discussion-id]`7F423DA0-1C41-44BA-B832-55C269FA9311`
+[discussion-id]`4D59DA39-8F41-49F4-B25D-09074A06FA3A`
