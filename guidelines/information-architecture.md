@@ -44,13 +44,9 @@ Also contains deep dive articles that explore concepts, reasoning behind practic
 
 ### articles/flow
 
-Vaadin Framework reference documentation. Technical, code-centric, unopinionated API documentation describing features and usage. Forms the foundation for Building Apps articles.
+The Reference Guide: reference documentation of the Vaadin framework, for both Flow views and React views. Technical, code-centric, unopinionated API documentation describing features and usage. Forms the foundation for Building Apps articles.
 
 **Note:** Legacy content exists here from when this contained all framework docs. Old tutorials and how-to content should be migrated to Building Apps.
-
-### articles/hilla
-
-Hilla framework documentation (discontinued). Relevant content should be migrated to articles/flow as features merge into Vaadin.
 
 ### articles/components
 
@@ -85,6 +81,5 @@ or on a page of its own (for example a component's `recipes.adoc`).
 
 ## Moving Content Between Sections
 
-Migrating legacy how-to content from `articles/flow` to Building Apps, or Hilla
-content to `articles/flow`, moves pages. Every moved page needs a redirect from
-its old URL — see [Versions & Lifecycle](versions-and-lifecycle.md#moving-or-removing-pages).
+Migrating legacy how-to content from `articles/flow` to Building Apps moves
+pages. Every moved page needs a redirect from its old URL — see [Versions & Lifecycle](versions-and-lifecycle.md#moving-or-removing-pages).
