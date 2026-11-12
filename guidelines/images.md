@@ -2,10 +2,13 @@
 
 How to add diagrams and other images to a page so that they look like the rest
 of the documentation. The palette and the drawing rules below are taken from the
-diagrams in `articles/building-apps` — `architecture/images/request-flow.svg`
-and `views/images/mvp.svg` are the reference examples. Older diagrams elsewhere (Montserrat text, the cyan and red of an
-earlier Vaadin brand, Mermaid defaults) do not follow these rules; do not copy
-their style.
+newest diagrams in `articles/building-apps`. Only
+`architecture/images/request-flow.svg` and `views/images/mvp.svg` are reference
+examples. Other diagrams do not follow these rules, including several in
+`articles/building-apps` (such as `layers.svg` and the API and SPI diagrams)
+that use an earlier blue and green. Older diagrams elsewhere use Montserrat
+text, the cyan and red of an earlier Vaadin brand, or Mermaid defaults. Do not
+copy the colors or style of any of these.
 
 The accessibility rules in the
 [Documentation Style Guide](../articles/contributing/docs/styleguide.adoc)
