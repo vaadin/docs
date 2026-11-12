@@ -44,13 +44,9 @@ Also contains deep dive articles that explore concepts, reasoning behind practic
 
 ### articles/flow
 
-Vaadin Framework reference documentation. Technical, code-centric, unopinionated API documentation describing features and usage. Forms the foundation for Building Apps articles.
+The Reference Guide: reference documentation of the Vaadin framework, for both Flow views and React views. Technical, code-centric, unopinionated API documentation describing features and usage. Forms the foundation for Building Apps articles.
 
 **Note:** Legacy content exists here from when this contained all framework docs. Old tutorials and how-to content should be migrated to Building Apps.
-
-### articles/hilla
-
-Hilla framework documentation (discontinued). Relevant content should be migrated to articles/flow as features merge into Vaadin. The rules for the deprecated `articles/hilla/lit` sub-tree are in [Versions & Lifecycle](versions-and-lifecycle.md#hilla-with-lit).
 
 ### articles/components
 
@@ -76,15 +72,84 @@ of explaining it a second time. Two explanations of the same thing drift apart,
 and the reader cannot tell which one is current.
 
 A how-to guide links to the reference page for the details of an API instead of
-copying them, and a reference page links to the guide that shows the API in
-use.
+copying them.
 
 Put a topic on the page a reader would look for it on. A change that only fits
 awkwardly under an existing heading is a sign that it belongs on another page,
 or on a page of its own (for example a component's `recipes.adoc`).
 
+Link to the section that holds the answer, with its anchor. A link to a page
+that only links on again, or to a long page without an anchor, leaves the
+reader to search for it.
+
+## The Reference Stands on Its Own
+
+The guides build on the reference, not the other way around. A reference page
+covers its whole topic. When it lacks a detail, add the detail to the
+reference. When another reference page already covers it, link to that section.
+
+Links from the reference into Building Apps belong on the overview page of a
+section, its `index.adoc`, and nowhere else. There, a sentence points to the
+guides for the area, for example "For task-oriented guides, see Building Apps >
+Security". No other reference page links into Building Apps: not for more
+details, not for a worked example, and not for a concept. A link on a single
+page is where a guide starts to replace the reference. Once the link exists,
+"see the guide" is the cheapest way to fill a gap in the page.
+
+A component's `index.adoc` is the component page, not the overview of a
+section, so it follows the rule for the other pages.
+
+The rule is easy to check: a link to `building-apps/` on a reference page other
+than the `index.adoc` of a section is a finding.
+
+## Structuring a Section
+
+### Overview Pages
+
+The `index.adoc` of a section gives a short introduction to the area — what it
+covers and what Vaadin provides for it — and lists the topics of the section.
+Long setup instructions do not belong there. Move them to a page of their own
+in the section, such as `setup.adoc`, and list that page with the other topics.
+A topic that is already covered elsewhere becomes an entry in the list, not a
+section of the overview page. In the reference, the overview page is also the
+one place that points to the Building Apps guides for the area.
+
+Some features are configured differently for different kinds of applications,
+such as Spring applications and plain servlet applications. Give each kind its
+own section, and put its configuration there rather than on a page shared by
+both. Write each of these sections for its own readers. A section on plain
+servlet applications does not mention Spring or point Spring users to another
+page: they look in the Spring section to begin with.
+
+### Getting-Started and Setup Pages
+
+A getting-started or setup page shows the common path: the standard entry
+points and the defaults that most applications use. A browserless test on such
+a page extends the `BrowserlessTest` base class, for example, rather than
+creating its own application and UI contexts.
+
+Leave optional APIs, such as the `Locators` interface, and advanced variants,
+such as a custom application context, to sections of their own. The setup page
+can link to them at the end. It does not send the reader to an advanced page
+for a basic utility that every reader of the setup needs. Document that utility
+on the setup page.
+
 ## Moving Content Between Sections
 
-Migrating legacy how-to content from `articles/flow` to Building Apps, or Hilla
-content to `articles/flow`, moves pages. Every moved page needs a redirect from
-its old URL — see [Versions & Lifecycle](versions-and-lifecycle.md#moving-or-removing-pages).
+Migrating legacy how-to content from `articles/flow` to Building Apps moves
+pages. Every moved page needs a redirect from its old URL — see [Versions & Lifecycle](versions-and-lifecycle.md#moving-or-removing-pages).
+
+Moving, splitting or renaming a section can break the cross references to it,
+and no pull request check reports a cross reference whose anchor no longer
+exists. A heading without an explicit `[[id]]` gets its anchor from its text,
+and renaming the heading changes the anchor. After such a change, search
+`articles/` for the old anchor and the old heading text, and update every cross
+reference that pointed at them:
+
+- the path, when the section moved to another page
+- the anchor after `#`, when the heading changed
+- the label, which often repeats the old heading
+
+Check that the target section still covers what the link promises. A link
+whose label names something the section no longer explains is as broken as one
+whose anchor no longer exists.

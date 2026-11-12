@@ -1,0 +1,79 @@
+---
+title: Reactive Services
+page-title: Stream values to React views with reactive services | Vaadin
+description: Service methods that return a stream of values, and the subscriptions that React views get for them.
+meta-description: Reference for Vaadin reactive services - service methods that return a Reactor Flux, EndpointSubscription, and the Subscription API of React views.
+order: 10
+---
+
+
+= Reactive Services
+:toclevels: 2
+
+A method of a browser-callable service can return a stream of values instead of a single value. The view then gets each value when the server emits it, until the stream ends or the view cancels its subscription.
+
+For how to use reactive services in a view, see <<{articles}/building-apps/react/call-services#pushing-updates-with-reactive-services,Pushing Updates with Reactive Services>>. For producing the streams, for example from background jobs, see <<{articles}/building-apps/business-logic/background-jobs/interaction/reactive#,Producing Reactive Streams>>.
+
+
+== Server Side
+
+A reactive method returns a https://projectreactor.io/[Reactor] `Flux`, or an [classname]`EndpointSubscription` that wraps one. Other reactive types aren't supported. Convert a `Mono` to a `Flux` with its [methodname]`flux()` method.
+
+The access annotations and the <<index#validation,parameter validation>> apply when the browser subscribes. When access is denied, the subscription ends with an error. When the arguments fail validation, the server logs the exception, but the subscription gets neither values nor an error.
+
+[classname]`EndpointSubscription` adds a callback that runs when the browser cancels the subscription, or when the browser loses its connection to the server. The callback doesn't run when the `Flux` completes or fails. Create the subscription with [methodname]`EndpointSubscription.of()`:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/reactive/ReactiveService.java[tags=snippet,indent=0]
+----
+
+
+== Browser Side
+
+The generated function of a reactive method returns a `Subscription` right away, instead of a `Promise`. It has no <<index#request-options,request options>>. The values come through a push connection, which all the subscriptions of the page share.
+
+The methods of a `Subscription` register callbacks and return the subscription, so that the calls can be chained:
+
+[methodname]`onNext(callback)`::
+Called with each value.
+
+[methodname]`onError(callback)`::
+Called with a message when the stream fails. No values follow. When the `Flux` fails, the message is `Exception in Flux`, and the server logs the exception.
+
+[methodname]`onComplete(callback)`::
+Called when the stream ends. No values follow.
+
+[methodname]`cancel()`::
+Ends the subscription. No values follow. Cancel subscriptions to streams that don't end on their own, for example when the component that shows the values is removed.
+
+[methodname]`onConnectionStateChange(callback)`::
+Called with an event when the state of the subscription changes. Its `detail.state` is `connecting`, `connected`, or `closed`.
+
+[methodname]`onSubscriptionLost(callback)`::
+Called when the connection to the server is restored, but the subscription is no longer valid. The callback returns what to do: `ActionOnLostSubscription.RESUBSCRIBE` subscribes to the method again, and `ActionOnLostSubscription.REMOVE` forgets the subscription. Without a callback, or when it returns nothing, the client forgets the subscription.
+
+[methodname]`context(host)`::
+Cancels the subscription when the given Lit element is removed from the page. React views cancel the subscription in the cleanup function of an effect instead.
+
+The following view shows the values of the clock service above, and cancels the subscription when the view is removed:
+
+[source,tsx]
+----
+import { ActionOnLostSubscription } from '@vaadin/hilla-frontend';
+import { useEffect, useState } from 'react';
+import { ReactiveService } from 'Frontend/generated/endpoints';
+
+export default function ClockView() {
+  const [time, setTime] = useState('');
+
+  useEffect(() => {
+    const subscription = ReactiveService.getClockCancellable()
+      .onNext(setTime)
+      .onSubscriptionLost(() => ActionOnLostSubscription.RESUBSCRIBE);
+    return () => subscription.cancel();
+  }, []);
+
+  return <p>Server time: {time}</p>;
+}
+----

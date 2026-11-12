@@ -1,0 +1,109 @@
+---
+title: Form API
+page-title: Hooks and types of form binding in React views | Vaadin
+description: The hooks that bind forms in React views, their results, and the types for validation.
+meta-description: API reference for Vaadin form binding in React views - useForm, useFormPart, useFormArrayPart, the field function, validators, errors, and form models.
+order: 50
+---
+
+
+= Form API
+:toclevels: 2
+
+The hooks of form binding are in the `@vaadin/hilla-react-form` package. The validation types are in `@vaadin/hilla-lit-form`, and the model helpers in `@vaadin/hilla-models`.
+
+section_outline::[]
+
+
+[[use-form]]
+== useForm
+
+`useForm(model, config?)` creates a form for the given model, and returns its state and functions. The optional configuration object has these properties:
+
+`onSubmit(value)`::
+An asynchronous function that [methodname]`submit()` calls with the value of the form. See <<index#submitting,Submitting>>.
+
+`onChange(oldValue)`::
+A function that the form calls when it updates its value, with the value before the update.
+
+The result has the state properties described in <<form-state#properties,Form State>>, and these functions:
+
+`field(model)`::
+Returns the properties that bind a component to the field of the given model. Spread them on the component. See <<field-components#,Field Components>>.
+
+`read(value)`::
+Sets the value and the default value of the form, and clears the validation errors. With `null` or `undefined`, it clears the form.
+
+`reset()`::
+Sets the value back to the default value.
+
+`clear()`::
+Sets the value and the default value to the default values of the model.
+
+`submit()`::
+Validates the form, and calls `onSubmit`. Returns a promise that resolves with the result of `onSubmit`, or rejects with a [classname]`ValidationError`.
+
+`setValue(value)`::
+Sets the value of the form.
+
+`setDefaultValue(value)`::
+Sets the default value of the form, which affects the `dirty` state and [methodname]`reset()`.
+
+`validate()`::
+Validates the form, and returns a promise of its errors.
+
+`addValidator(validator)`::
+Adds a validator to the form. See <<validation#form-validators,Form Validators>>.
+
+`setValidators(validators)`::
+Replaces the validators of the form.
+
+`setVisited(visited)`::
+Sets the `visited` state.
+
+`update()`::
+Re-renders the component.
+
+
+[[use-form-part]]
+== useFormPart
+
+`useFormPart(model)` returns the state and functions of a part of a form, such as a field or a nested object. The model must belong to a form that a [methodname]`useForm()` call in the same or a parent component created.
+
+The result has the state properties described in <<form-state#properties,Form State>>, except `submitting`, and the `field()`, `setValue()`, `validate()`, `addValidator()`, `setValidators()`, and `setVisited()` functions of [methodname]`useForm()`. They apply to the part.
+
+The validators of a field include the validators of its Bean Validation constraints. Calling [methodname]`setValidators()` replaces them, too.
+
+
+[[use-form-array-part]]
+== useFormArrayPart
+
+`useFormArrayPart(model)` returns the state and functions of a list or an array in a form, like [methodname]`useFormPart()`, but without `field()`. Its `items` property contains a model for each item. The model must be non-nullable. See <<nested-objects-arrays#arrays,Arrays>>.
+
+
+[[validation-types]]
+== Validation Types
+
+The `@vaadin/hilla-lit-form` package has these types for validation:
+
+[classname]`Validator`::
+An object with a `message`, a [methodname]`validate(value)` function, and an optional `impliesRequired` flag. See <<validation#validators,Validators in the View>>.
+
+[classname]`ValueError`::
+A validation error, with the `property` that identifies the field, the `message`, the `value`, and the `validator` that failed.
+
+[classname]`ValidationError`::
+The error that [methodname]`submit()` rejects with when the validation fails. Its `errors` property contains the [classname]`ValueError` objects.
+
+[classname]`BinderRoot`::
+Its static `interpolateMessageCallback` property replaces the placeholders in the messages of constraints. See <<validation#messages,Error Messages>>.
+
+The package also has a validator class for each Bean Validation constraint that the browser checks, such as [classname]`NotBlank`, [classname]`Size`, and [classname]`Pattern`. They take an options object with a `message` and the attributes of the constraint, such as `new Size({ min: 3, max: 20 })`.
+
+
+[[models]]
+== Form Models
+
+A generated form model, such as `PersonModel`, is both a value and a type with the same name. Pass the value to the hooks, and use the type for the properties of components that get a part of the form.
+
+The `$defaultValue` symbol from `@vaadin/hilla-models` gives the default value of a model, such as `PersonModel[$defaultValue]`.
