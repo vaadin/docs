@@ -1,0 +1,139 @@
+---
+title: SwingBridge Emulators
+page-title: Migrate Swing Apps with SwingBridge Emulators | Vaadin Tools
+description: Recompile an existing Swing application against a Vaadin-backed emulation of the Swing API and run it on the web.
+meta-description: Learn how SwingBridge Emulators moves a Swing desktop app to the web by swapping its imports and recompiling against a Vaadin emulation of the Swing API.
+order: 150
+---
+
+= SwingBridge Emulators
+
+SwingBridge Emulators -- SB-Emulators for short -- migrates an existing Swing desktop application to the web by *import-swap*: you rewrite `javax.swing.*` imports to `vaadinx.swing.*`, and the AWT component, layout manager, and component event imports from `java.awt.*` to `vaadinx.awt.*`. Then you recompile and run the result as a Vaadin web application. The bulk of a codebase migrates as a find-and-replace on import lines.
+
+It's a *migration bridge*, not a permanent target. SB-Emulators gets a desktop app running in the browser cheaply, so you can then iterate it toward idiomatic Vaadin view-by-view — it isn't a 1:1 reimplementation of Swing you're meant to stay on.
+
+The migration is designed to be run by an AI agent, with you making the decisions: tools do the mechanical work, the agent follows a step-by-step migration guide, and the few judgment calls are put to you. SB-Emulators is open source; the https://github.com/vaadin/swingbridge-emulators[project on GitHub] has the migration kit, the guide, and the full list of supported components.
+
+[NOTE]
+SB-Emulators differs from <<swing-bridge#, SwingBridge Streamer>>. SwingBridge Streamer runs your *actual Swing application on the server* and streams its UI to the browser — the Swing runtime stays in the loop. SB-Emulators instead recompiles your code against a Vaadin-backed emulation of the Swing API. No Swing toolkit runs on the server: there are no AWT windows or AWT event queue, and Vaadin handles the events. The JDK only supplies data types such as [classname]`Color` and the table models. Your app becomes a real Vaadin application, which is what makes the later native rewrite possible.
+
+
+== How It Works
+
+- `vaadinx.awt.*` mirrors `java.awt.*` for the [classname]`Component`/[classname]`Container` hierarchy, the layout managers ([classname]`BorderLayout`, [classname]`FlowLayout`, [classname]`GridBagLayout`, and so on), and the events that carry a component ([classname]`MouseEvent`, [classname]`KeyEvent`, [classname]`WindowEvent`, and so on). `vaadinx.swing.*` mirrors `javax.swing.*`: the components ([classname]`JFrame`, [classname]`JButton`, [classname]`JLabel`, [classname]`JTextField`, and so on) and the helper classes they use ([classname]`BorderFactory`, [classname]`BoxLayout`, and so on).
+- Every emulated component is backed by a real Vaadin component — its _peer_ — and forwards behavior to it. You write Swing-shaped code; the browser renders Vaadin.
+- Data types that aren't components ([classname]`Color`, [classname]`Font`, [classname]`Dimension`, [classname]`ActionEvent`, [interfacename]`ActionListener`, table and list models) are reused straight from the JDK, so their imports don't change. The migration tool knows exactly which imports to swap, so you don't sort them by hand.
+- A method with no Vaadin counterpart logs a warning and returns a sensible default rather than crashing the app. Genuine programming errors — a bad index, orphan-component state — still throw the same exception Swing would, so real bugs aren't hidden.
+
+This is an import-swap, not a binary drop-in: you need source access for the Swing code you depend on, because compiled Swing JARs must be recompiled against the emulation.
+
+
+== What the Swap Looks Like
+
+Below is a view from a small employee-CRUD example — pure Swing on the left, the same view after migrating onto the emulation on the right. *Only the import lines differ.* The body is character-for-character identical:
+
+[cols="1,1"]
+|===
+|Stage 1 — Swing (`javax.swing.*`) |Stage 2 — emulators (`vaadinx.swing.*`)
+
+a|
+[source,java]
+----
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import java.awt.BorderLayout;
+
+public final class EmployeePreviewPanel extends JPanel {
+
+    private final JLabel nameValue = new JLabel(EMPTY);
+    // … more label fields …
+
+    public EmployeePreviewPanel() {
+        super(new BorderLayout());
+        setBorder(BorderFactory.createTitledBorder("Preview"));
+
+        JPanel rows = new JPanel();
+        rows.setLayout(new BoxLayout(rows, BoxLayout.Y_AXIS));
+        rows.add(row("Name", nameValue));
+        // … more rows …
+        add(rows, BorderLayout.NORTH);
+    }
+}
+----
+
+a|
+[source,java]
+----
+import vaadinx.swing.BorderFactory;
+import vaadinx.swing.BoxLayout;
+import vaadinx.swing.JLabel;
+import vaadinx.swing.JPanel;
+import vaadinx.awt.BorderLayout;
+
+public final class EmployeePreviewPanel extends JPanel {
+
+    private final JLabel nameValue = new JLabel(EMPTY);
+    // … more label fields …
+
+    public EmployeePreviewPanel() {
+        super(new BorderLayout());
+        setBorder(BorderFactory.createTitledBorder("Preview"));
+
+        JPanel rows = new JPanel();
+        rows.setLayout(new BoxLayout(rows, BoxLayout.Y_AXIS));
+        rows.add(row("Name", nameValue));
+        // … more rows …
+        add(rows, BorderLayout.NORTH);
+    }
+}
+----
+|===
+
+That sameness is the point: for most of a codebase, migrating is find-and-replace on imports. A small set of files need genuine hand-edits — splitting [methodname]`main()`, marking the main window, handling exit paths, and making state that was global on the desktop per-user on the server — but those are the exception. Most apps land 80% or more of the migration mechanically.
+
+Blocking dialogs are a notable case that works unchanged. In Swing, [methodname]`JOptionPane.showConfirmDialog()` and a modal dialog's [methodname]`setVisible()` block until the user responds, and Swing code reads straight down the page relying on that. A web request/response cycle can't normally block waiting for fresh user input, which is why most web toolkits force a rewrite into callbacks. SB-Emulators keeps the blocking code intact: the call blocks, the dialog renders in the browser, and it returns the user's choice exactly as under Swing.
+
+
+== The Migration Arc
+
+An app moves through three stages:
+
+1. *Your Swing app.* The existing desktop application — no tooling involved yet.
+2. *Emulators.* After the mechanical import-swap, recompiled and running in the browser. The `vaadinx.*` packages reproduce the Swing API on Vaadin peers, so your code stays Swing-shaped.
+3. *Stock Vaadin.* Idiomatic Vaadin, with SB-Emulators fully removed. The destination.
+
+The emulator stage is a working web app, not a waiting room: you can stay there for as long as you like, styling it as an ordinary Vaadin app. When you want Vaadin-shaped code, you rewrite it view-by-view. Views you haven't rewritten keep running on the emulation, but within a single view, your code is at one layer, not a mix.
+
+
+== When to Use It
+
+SB-Emulators fits when:
+
+- The app is large or complex, or its behavior is undocumented, and you want a running web version fast rather than after a from-scratch rebuild.
+- Your team is fluent in Swing but not yet in Vaadin, and you'd rather defer that learning curve until the idiomatic rewrite.
+- You can't freeze Swing development for the migration's duration. Because the import-swap is a mostly-mechanical, idempotent transform, you can keep shipping features on the Swing mainline and re-run the swap on the merged delta rather than reimplementing each feature twice.
+- You want to validate the web target before committing to a full rewrite.
+
+The trade-off is honest: this path reaches _running_ cheaply and preserves behavior by construction, but it leaves you with Swing-shaped code you still have to rewrite toward idiomatic Vaadin eventually. A direct, spec-driven rewrite reaches the idiomatic destination sooner, but asks you to reproduce a working app's behavior from a specification — for a large app with years of accreted edge cases, that specification is the hard part. A common pattern combines the two: use SB-Emulators to get the app running and behaving correctly first, then treat that running app as the living specification you rewrite against, view-by-view.
+
+
+== Out of Scope
+
+Some Swing capabilities are permanently out of scope:
+
+- *[classname]`JApplet`* — browsers dropped applet support years ago, and the class was removed from the JDK in Java 26.
+- *Look-and-Feel dispatch* — styling is handled in a later Vaadin and CSS pass, outside SB-Emulators.
+- *User-authored painting of components via [classname]`Graphics`* — [methodname]`paintComponent()`, custom-painted components, and component printing such as [methodname]`JTable.print()`; there is no [classname]`Graphics2D` surface to override. Hand-written [interfacename]`Printable` implementations are the exception: an optional module prints them into a PDF the user downloads.
+
+
+== Requirements
+
+- *JDK 24 or later at runtime.* The virtual-thread machinery that makes blocking dialogs work deadlocks on JDK 21. Your migrated app's bytecode may still target Java 21 — only the JVM it _runs_ on must be 24 or later.
+- *`--add-opens java.base/java.lang=ALL-UNNAMED`* on that JVM, both for tests and in production.
+- A *Vaadin host application* with server push ([annotationname]`@Push`) enabled. The runtime relies on push to render modal dialogs.
+- *HTTP requests served by platform threads*, not virtual threads. This is the default in https://github.com/mvysny/vaadin-boot[Vaadin Boot], and in Spring Boot as long as `spring.threads.virtual.enabled` stays off.
+- *The SB-Emulators servlet*, or on Spring Boot, the `swingbridge-emulators-spring` dependency, which registers it for you.
+
+The host application that the migration kit copies into your project already meets all of these.

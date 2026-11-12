@@ -1,8 +1,8 @@
 ---
 title: Logging pass:[&] Identifying Logs per User
-page-title: Identify logs per user in SwingBridge | Vaadin Tools
+page-title: Identify Logs per User in SwingBridge Streamer | Vaadin
 description: Attribute server log output to the Swing application user who produced it, and integrate old and new logging frameworks.
-meta-description: Tag SwingBridge log output per user session, publish the logged-in user from Swing or Vaadin, and integrate Log4j, SLF4J, and Spring Boot logging.
+meta-description: Tag SwingBridge Streamer log output per user session, publish the logged-in user from Swing or Vaadin, and integrate Log4j, SLF4J, and Spring Boot logging.
 order: 7
 ---
 
@@ -12,13 +12,13 @@ include::{articles}/_vaadin-version.adoc[]
 = Logging & Identifying Logs per User
 :toc:
 
-_Available since SwingBridge 1.3._
+_Available since SwingBridge Streamer 1.3._
 
-On the desktop, one Swing application serves one user, so its log file belongs to that user. With SwingBridge, many users run the same application inside a single server JVM, and everything they produce (log statements, stack traces, `System.out` output) lands interleaved in one server log. When a user reports a problem, support needs to follow that user's trail through the log.
+On the desktop, one Swing application serves one user, so its log file belongs to that user. With SwingBridge Streamer, many users run the same application inside a single server JVM, and everything they produce (log statements, stack traces, `System.out` output) lands interleaved in one server log. When a user reports a problem, support needs to follow that user's trail through the log.
 
-SwingBridge solves this with automatic log attribution: every application instance gets a short run ID, and each log line it produces is tagged with that ID. Turning it on takes one JVM flag on the server, with no changes to the Swing application. From there you can, step by step, tag your log files too, add the user's name, and reach a full "user reports a bug" support workflow.
+SwingBridge Streamer solves this with automatic log attribution: every application instance gets a short run ID, and each log line it produces is tagged with that ID. Turning it on takes one JVM flag on the server, with no changes to the Swing application. From there you can, step by step, tag your log files too, add the user's name, and reach a full "user reports a bug" support workflow.
 
-If you are new to SwingBridge, read the next section top to bottom: it takes you from nothing to tagged logs in two steps, then points to the optional extras.
+If you are new to SwingBridge Streamer, read the next section top to bottom: it takes you from nothing to tagged logs in two steps, then points to the optional extras.
 
 In this article:
 
@@ -62,7 +62,7 @@ Server output, and lines from other users, keep their own (different) prefixes, 
 
 File lines now carry the run ID in the `%X{swingSession}` column. Other frameworks are covered too, see <<swing-bridge.logging.channels.files,Log Files and Structured Logs>>.
 
-At each application start, SwingBridge also logs one correlation line that ties the run ID to the session and (once known) the user:
+At each application start, SwingBridge Streamer also logs one correlation line that ties the run ID to the session and (once known) the user:
 
 [source,text]
 ----
@@ -85,7 +85,7 @@ Correlation line::
 One log line per application start: `Swing app run <runId>: vaadinSession=... app=... [user=...]`. It joins the run ID to the HTTP session and the user, so the per-line tag can stay minimal: just the run ID, unless you opt in to per-line user names (Step 3 above).
 
 Per-thread attribution::
-SwingBridge runs each application instance in an isolated group of threads. Any output produced on those threads, from the Event Dispatch Thread to worker threads the application creates, is attributed to that instance automatically, at the moment of the write. Neither the Swing application nor the Vaadin application does anything to make this work.
+SwingBridge Streamer runs each application instance in an isolated group of threads. Any output produced on those threads, from the Event Dispatch Thread to worker threads the application creates, is attributed to that instance automatically, at the moment of the write. Neither the Swing application nor the Vaadin application does anything to make this work.
 
 [[swing-bridge.logging.levels]]
 == Choosing an Integration Level
@@ -130,7 +130,7 @@ Log output leaves a server through two different kinds of channels, and each nee
 [[swing-bridge.logging.channels.console]]
 === Console Output
 
-With `-Dswingbridge.consoleLogPrefix=true`, SwingBridge wraps `System.out` and `System.err`. Every line written by an application-instance thread is prefixed with `[swing:<runId>]`; server output passes through unchanged. This catches, regardless of the logging framework the Swing application uses:
+With `-Dswingbridge.consoleLogPrefix=true`, SwingBridge Streamer wraps `System.out` and `System.err`. Every line written by an application-instance thread is prefixed with `[swing:<runId>]`; server output passes through unchanged. This catches, regardless of the logging framework the Swing application uses:
 
 * plain `System.out.println(...)` and `exception.printStackTrace()`, which is how a lot of legacy Swing code reports problems;
 * console output of any logging framework, old or new, including multi-line stack traces (each line gets the prefix).
@@ -142,7 +142,7 @@ When you also opt in to per-line user names (see <<swing-bridge.logging.identity
 [[swing-bridge.logging.channels.files]]
 === Log Files and Structured Logs
 
-File appenders write straight to disk. They never pass through the console streams, so the prefix above can't reach them. For those, SwingBridge ships logging-framework adapters (inside `swing-bridge-flow`; no extra dependency). They're passive: nothing changes until your pattern references a token.
+File appenders write straight to disk. They never pass through the console streams, so the prefix above can't reach them. For those, SwingBridge Streamer ships logging-framework adapters (inside `swing-bridge-flow`; no extra dependency). They're passive: nothing changes until your pattern references a token.
 
 *Log4j2* is the common case, since `swing-bridge-flow` itself brings Log4j2. Add the token to any pattern:
 
@@ -151,7 +151,7 @@ File appenders write straight to disk. They never pass through the console strea
 <PatternLayout pattern="%d %-5p [%X{swingSession}] [%c{1}] %m%n"/>
 ----
 
-`%X{swingSession}` is filled in automatically: SwingBridge registers a Log4j2 `ContextDataProvider` that captures the run ID at the logging call site, on the calling thread. Because the value travels with the log event, it stays correct even with async appenders, where the actual formatting happens on a background thread. Server lines render an empty value.
+`%X{swingSession}` is filled in automatically: SwingBridge Streamer registers a Log4j2 `ContextDataProvider` that captures the run ID at the logging call site, on the calling thread. Because the value travels with the log event, it stays correct even with async appenders, where the actual formatting happens on a background thread. Server lines render an empty value.
 
 Alternatively, `%swingSession` (a pattern converter, discovered automatically) renders the same ID with an explicit `-` for server lines.
 
@@ -193,7 +193,7 @@ Because the run ID (and user) become normal context fields, they flow into JSON 
 
 Attribution tags tell log lines apart by run ID; adding the user's name ties that ID to a person. There are two parts to it:
 
-. *Publish the name once.* Someone has to tell SwingBridge who the user is. The rule in one line: whoever learns the user's name calls the method on their side of the bridge. Where that call goes depends on where login happens, and is covered in the subsections below. Once published, the name appears in the correlation line.
+. *Publish the name once.* Someone has to tell SwingBridge Streamer who the user is. The rule in one line: whoever learns the user's name calls the method on their side of the bridge. Where that call goes depends on where login happens, and is covered in the subsections below. Once published, the name appears in the correlation line.
 . *Choose where it shows.* By default the name stays in the correlation line only, keeping per-line tags short and free of personal data. Opt in, and it appears on every line as well.
 
 Start with whichever "publish" subsection matches your application; the simplest is a single line in the Swing app.
@@ -227,7 +227,7 @@ In many migrations, the Swing application keeps its own login dialog, and the Va
 System.setProperty("swingbridge.log.user", loggedInUserName);
 ----
 
-This is plain JDK API: the Swing project gains no dependency on SwingBridge and behaves identically as a desktop application (where the property is simply unused). SwingBridge routes the value per session, so concurrent users can't overwrite each other, and logs a correlation line the moment it's set. This is the recommended starting point.
+This is plain JDK API: the Swing project gains no dependency on SwingBridge Streamer and behaves identically as a desktop application (where the property is simply unused). SwingBridge Streamer routes the value per session, so concurrent users can't overwrite each other, and logs a correlation line the moment it's set. This is the recommended starting point.
 
 *Option 2 - the log context API (more capabilities).* If the Swing project already depends on `swing-bridge-annotations` (or accepts it, a small JAR with zero transitive dependencies), the `SwingBridgeLogContext` facade offers more than the property, and every method is desktop-safe:
 
@@ -290,7 +290,7 @@ The Swing application needs nothing in this setup, but `SwingBridgeLogContext.ru
 
 Some Swing applications route everything through a homegrown logging subsystem that needs the identity before first use. There are two directions, depending on where the identity lives.
 
-*Pulling from the Swing side.* The application asks SwingBridge for the values whenever its subsystem initializes:
+*Pulling from the Swing side.* The application asks SwingBridge Streamer for the values whenever its subsystem initializes:
 
 [source,java]
 ----
@@ -361,7 +361,7 @@ The Swing application's JARs are loaded by a class loader that delegates to the 
 
 * *Bundled frameworks are shadowed.* If the Swing application ships its own `log4j-core` (or Logback) inside its JARs, those copies are ignored whenever the server classpath provides the same classes, which it does for Log4j2, since `swing-bridge-flow` depends on it. The application's log statements execute against the server's Log4j2.
 * *Old APIs are bridged.* Code written against Log4j 1.x (`org.apache.log4j.Logger`) works through the `log4j-1.2-api` bridge and ends up in the same place. A 2008-era Swing codebase needs no logging changes.
-* *The application's own logging configuration is inert.* Because the log statements run against the server's Log4j2 context, the `log4j2.xml` (or `log4j.properties`) bundled inside the Swing JAR, including its file appenders, never activates. If support is used to finding the application's own log file (say, `~/.myapp/log/client.log`), that file doesn't exist in the SwingBridge deployment: the same lines are in the server's log instead, attributed per user. This is the intended outcome, but it's a workflow change worth communicating.
+* *The application's own logging configuration is inert.* Because the log statements run against the server's Log4j2 context, the `log4j2.xml` (or `log4j.properties`) bundled inside the Swing JAR, including its file appenders, never activates. If support is used to finding the application's own log file (say, `~/.myapp/log/client.log`), that file doesn't exist in the SwingBridge Streamer deployment: the same lines are in the server's log instead, attributed per user. This is the intended outcome, but it's a workflow change worth communicating.
 
 The practical upshot: tag the server's appender patterns (see <<swing-bridge.logging.channels.files,above>>), and every framework generation inside the Swing application is covered.
 
@@ -378,11 +378,11 @@ In own-context setups, also give each session its own log file path (for example
 [[swing-bridge.logging.frameworks.slf4j]]
 === SLF4J, Spring Boot, and Provider Selection
 
-SLF4J is a facade: at startup it picks one provider (binding) that decides where all SLF4J log statements go. Two pitfalls in SwingBridge deployments:
+SLF4J is a facade: at startup it picks one provider (binding) that decides where all SLF4J log statements go. Two pitfalls in SwingBridge Streamer deployments:
 
-*Spring Boot defaults to Logback, SwingBridge brings Log4j2.* Running both backends splits your logs in two. The <<installation-from-scratch#,Installation from Scratch>> template resolves the clash in Logback's favor: it excludes `log4j-slf4j2-impl` from `swing-bridge-flow`, so SLF4J traffic (Spring, SwingBridge itself) goes to Logback. That setup works with the <<swing-bridge.logging.channels.files,Logback adapters>>, with one caveat: a Swing application calling Log4j APIs directly still logs through Log4j2's own default configuration, which writes to the console only (prefixed, but absent from your Logback-managed files).
+*Spring Boot defaults to Logback, SwingBridge Streamer brings Log4j2.* Running both backends splits your logs in two. The <<installation-from-scratch#,Installation from Scratch>> template resolves the clash in Logback's favor: it excludes `log4j-slf4j2-impl` from `swing-bridge-flow`, so SLF4J traffic (Spring, SwingBridge Streamer itself) goes to Logback. That setup works with the <<swing-bridge.logging.channels.files,Logback adapters>>, with one caveat: a Swing application calling Log4j APIs directly still logs through Log4j2's own default configuration, which writes to the console only (prefixed, but absent from your Logback-managed files).
 
-To get everything (Spring, SwingBridge, and every Swing application) into one set of tagged appenders, standardize on Log4j2 instead: keep the `swing-bridge-flow` binding by removing the template's exclusion, and exclude Logback in the Vaadin application's `pom.xml`:
+To get everything (Spring, SwingBridge Streamer, and every Swing application) into one set of tagged appenders, standardize on Log4j2 instead: keep the `swing-bridge-flow` binding by removing the template's exclusion, and exclude Logback in the Vaadin application's `pom.xml`:
 
 [source,xml]
 ----
@@ -404,7 +404,7 @@ To get everything (Spring, SwingBridge, and every Swing application) into one se
 
 and configure Log4j2 via `log4j2-spring.xml` on the classpath.
 
-*Multiple providers on the classpath.* SLF4J warns (`Class path contains multiple SLF4J providers`) and then silently picks one, not necessarily the one you want. Notably, Vaadin's development tooling ships a shaded JAR embedding `slf4j-simple`, which can win the auto-selection: the symptom is that SLF4J-routed lines (Spring, SwingBridge's own correlation lines) never reach your Log4j2 appenders, while direct Log4j calls from the Swing application do. The fix is one JVM property that pins the provider explicitly:
+*Multiple providers on the classpath.* SLF4J warns (`Class path contains multiple SLF4J providers`) and then silently picks one, not necessarily the one you want. Notably, Vaadin's development tooling ships a shaded JAR embedding `slf4j-simple`, which can win the auto-selection: the symptom is that SLF4J-routed lines (Spring, SwingBridge Streamer's own correlation lines) never reach your Log4j2 appenders, while direct Log4j calls from the Swing application do. The fix is one JVM property that pins the provider explicitly:
 
 [source,terminal]
 ----
@@ -444,7 +444,7 @@ One structural limit applies everywhere: output produced on shared JVM threads t
 [[swing-bridge.logging.desktop]]
 == Desktop Builds Are Unaffected
 
-Every mechanism on this page is safe outside SwingBridge. The system properties (`consoleLogPrefix`, `includeUserInLogs`, and the `swingbridge.log.user` value in Option 1) are unused properties on the desktop; `SwingBridgeLogContext` reads return `null`, `setUser()` is a no-op, and `reportIncident()` prints to `System.err`; the pattern tokens live in the server's configuration, which desktop builds never see. One Swing codebase serves both distributions.
+Every mechanism on this page is safe outside SwingBridge Streamer. The system properties (`consoleLogPrefix`, `includeUserInLogs`, and the `swingbridge.log.user` value in Option 1) are unused properties on the desktop; `SwingBridgeLogContext` reads return `null`, `setUser()` is a no-op, and `reportIncident()` prints to `System.err`; the pattern tokens live in the server's configuration, which desktop builds never see. One Swing codebase serves both distributions.
 
 [[swing-bridge.logging.troubleshooting]]
 == Troubleshooting
