@@ -52,25 +52,39 @@ ButtonElement button = $(ButtonElement.class).id("ok");
 
 [source,java]
 ----
-// Find the first label inside the layout with id="content"
+// Find the span inside the layout with id="content"
 VerticalLayoutElement layout = $(VerticalLayoutElement.class).id("content");
-LabelElement label = layout.$(LabelElement.class).first();
+SpanElement span = layout.$(SpanElement.class).single();
 ----
 
 [NOTE]
 If there is no suitable element class available, you can also use the [methodname]`$("tag-name")` method to find an element of a given type.
 
-You can use the `ElementQuery` instance returned by [methodname]`$()` to refine the search query using one of the available methods:
+You can use the `ElementQuery` instance returned by [methodname]`$()` to refine the search query. The following methods narrow the search and return the query, so you can chain them:
 
-- [methodname]`id("some-id")` Returns the element with the given id;
-- [methodname]`attribute("attributeName", "attributeValue")` Adds a filter to include only elements with the given attribute set to the given value;
-- [methodname]`onPage()` Redefines the search context to cover the whole page;
-- [methodname]`first()` Returns the first matching element;
-- [methodname]`waitForFirst()` Returns the first matching element -- if no matches are found, it keeps waiting until there is a matching element;
-- [methodname]`last()` Returns the last matching element;
-- [methodname]`get(N)` Returns the Nth matching element;
-- [methodname]`exists()` Returns `true` if the query matches at least one element; and
-- [methodname]`all()` Returns a list of all matching elements.
+- [methodname]`withId()` keeps the elements with the given id.
+- [methodname]`withAttribute()` keeps the elements that have the given attribute, or that have it with the given value. [methodname]`withAttributeContaining()` matches a part of the value. [methodname]`withAttributeContainingWord()` matches a word in a space-separated value, such as one of several class names.
+- [methodname]`withClassName()` and [methodname]`withTheme()` keep the elements with the given class names or theme.
+- [methodname]`withText()`, [methodname]`withLabel()` and [methodname]`withPlaceholder()` keep the elements whose text, label or placeholder equals the given value.
+- [methodname]`withCaption()` compares the given value with the label of the element. When the label is empty, it compares with the placeholder. For an element that has neither, such as a button, it compares with the text.
+- [methodname]`withTextContaining()`, [methodname]`withLabelContaining()`, [methodname]`withPlaceholderContaining()` and [methodname]`withCaptionContaining()` match a part of the value.
+- [methodname]`withPropertyValue()` keeps the elements whose property getter returns the given value, for example `withPropertyValue(TextFieldElement::getHelperText, "Required")`.
+- [methodname]`withCondition()` keeps the elements that satisfy the given predicate, for example `withCondition(TestBenchElement::isEnabled)`.
+- [methodname]`onPage()` searches the whole page instead of the current element.
+
+The attribute, class name and theme filters have counterparts that exclude the matching elements, such as [methodname]`withoutAttribute()` and [methodname]`withoutClassName()`.
+
+The following methods run the query and return the result:
+
+- [methodname]`id("some-id")` returns the element with the given id.
+- [methodname]`single()` returns the only matching element. It throws a `NoSuchElementException` when no element or more than one element matches.
+- [since:com.vaadin:vaadin@V25.3]#[methodname]`waitForSingle()`# returns the only matching element. Until exactly one element matches, it keeps searching, by default for up to ten seconds.
+- [methodname]`get(N)` returns the element at index N among the matching elements, counting from zero.
+- [methodname]`last()` returns the last matching element.
+- [methodname]`exists()` returns `true` if the query matches at least one element.
+- [methodname]`all()` returns a list of all matching elements.
+
+Use [methodname]`single()` when the query should match exactly one element. If a change in the UI makes the query match several elements, the test fails instead of picking one of them. Use [methodname]`get()` only when picking one of several matching elements is intentional.
 
 
 == Writing Tests
@@ -87,7 +101,7 @@ public void fillForm() {
     $(TextFieldElement.class).id("firstName").setValue("John");
     $(TextFieldElement.class).id("lastName").setValue("Doe");
     $(ButtonElement.class).id("ok").click();
-    Assert.assertEquals("Thank you for submitting the form", $(DivElement.class).id("result"))
+    Assert.assertEquals("Thank you for submitting the form", $(DivElement.class).id("result").getText());
 }
 ----
 
@@ -101,7 +115,7 @@ public void fillForm() {
     $(TextFieldElement.class).id("firstName").setValue("John");
     $(TextFieldElement.class).id("lastName").setValue("Doe");
     $(ButtonElement.class).id("ok").click();
-    Assertions.assertEquals("Thank you for submitting the form", $(DivElement.class).id("result"))
+    Assertions.assertEquals("Thank you for submitting the form", $(DivElement.class).id("result").getText());
 }
 ----
 --
