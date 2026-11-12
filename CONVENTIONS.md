@@ -15,8 +15,8 @@ dive — before writing, and do not mix types on one page. See
 in.
 
 Put new how-to content in `articles/building-apps`, not in `articles/flow`.
-`articles/flow` is reference documentation. Put new framework content in
-`articles/flow`, not in `articles/hilla`.
+`articles/flow` is the Reference Guide, the reference documentation of the
+framework for both Flow views and React views.
 
 Search for the topic before adding a page or a section. When it is already
 covered, extend that page or link to it instead of explaining it again.
@@ -87,6 +87,11 @@ Vale reports long sentences as suggestions.
 Use the term that means exactly one thing: "UI component" rather than
 "component" when other kinds of component could be meant, and "Vaadin views"
 rather than "Flow and React views" when a statement holds for both.
+
+Write "React views" and "browser-callable services" rather than "Hilla", the
+former name of that part of Vaadin. Keep the name where it is part of an
+identifier, such as `hilla-spring-boot-starter` or the `@vaadin/hilla-*`
+packages.
 
 Verify every statement about behavior against the code or by running it.
 Document the API as it is in the released code, with the exact class and
