@@ -112,7 +112,10 @@ Long setup instructions do not belong there. Move them to a page of their own
 in the section, such as `setup.adoc`, and list that page with the other topics.
 A topic that is already covered elsewhere becomes an entry in the list, not a
 section of the overview page. In the reference, the overview page is also the
-one place that points to the Building Apps guides for the area.
+one place that points to the Building Apps guides for the area. None of this
+applies to a component's `index.adoc`. It is the component page, not the
+overview of a section, and documents the component's features, as described in
+[Component Pages](component-pages.md).
 
 Some features are configured differently for different kinds of applications,
 such as Spring applications and plain servlet applications. Give each kind its

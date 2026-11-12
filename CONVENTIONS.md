@@ -40,7 +40,9 @@ class that implements it: "Security Configuration", not
 Keep the `index.adoc` of a section to a short introduction of the area and a
 list of its topics. Put setup instructions on a page of their own. Put
 configuration that applies to one kind of application, such as a Spring or a
-plain servlet application, in the section for that kind.
+plain servlet application, in the section for that kind. A component's
+`index.adoc` is the component page, not a section overview: it documents the
+component's features, as `guidelines/component-pages.md` describes.
 
 Show the common path on a getting-started or setup page: the standard entry
 points and the defaults. Give optional and advanced APIs sections of their own,
