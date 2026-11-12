@@ -47,6 +47,32 @@ Do not write facts into a page that change independently of it:
 - Versions of third-party dependencies — use the attributes in `articles/_vaadin-version.adoc` (`{spring-boot-version}`, …), which are kept in sync with `pom.xml`.
 - Lists that enumerate everything of a kind when the reader only needs the rule that covers them.
 
+## Titles Say What the Reader Gets
+
+Name a page or a section after what the reader does or learns there — the task
+or the topic — not after the class that implements it. A reader who is new to
+the topic does not know the class yet, so a title such as
+`VaadinSecurityConfigurer` does not tell them whether the page answers their
+question. "Security Configuration" does. A class name can stay as the title
+when it is also the name of the concept, and no title in the reader's terms is
+clearer.
+
+Check that the title promises what the page delivers. "Security Practices"
+reads like a list of best practices. A page about how Vaadin handles security
+issues needs a title that says so, such as "Security Process at Vaadin".
+
+## Lists and Tables
+
+Do not end the items of a bulleted or numbered list with a semicolon. The style
+guide's semicolon rule separates complex items in a list that runs inside a
+sentence, not the items of a bulleted list.
+
+When every item of a list starts with inline code — class, method or property
+names, each with a short description — turn the list into a table. Put the names
+in the first column and the descriptions in the second. A run of inline code at
+the start of every item is hard to read. Do not also list the same names in the
+prose above the table.
+
 ## Stay on Topic
 
 Each section answers the question its heading asks. Leave out what the reader

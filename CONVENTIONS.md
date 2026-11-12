@@ -21,6 +21,33 @@ framework for both Flow views and React views.
 Search for the topic before adding a page or a section. When it is already
 covered, extend that page or link to it instead of explaining it again.
 
+Keep a reference page complete on its own. Only the overview page of a
+reference section, its `index.adoc`, links into Building Apps, to point to the
+guides for the area. No other reference page does, not even for a worked
+example. Add a missing detail to the reference instead, or link to the
+reference section that covers it. A component's `index.adoc` is the component
+page, not a section overview, so it does not link into Building Apps either.
+
+Link to the section that holds the answer, with its anchor, rather than to a
+page that only links on again.
+
+## Page Structure
+
+Title a page or a section after what the reader gets from it, not after the
+class that implements it: "Security Configuration", not
+`VaadinSecurityConfigurer`.
+
+Keep the `index.adoc` of a section to a short introduction of the area and a
+list of its topics. Put setup instructions on a page of their own. Put
+configuration that applies to one kind of application, such as a Spring or a
+plain servlet application, in the section for that kind.
+
+Show the common path on a getting-started or setup page: the standard entry
+points and the defaults. Give optional and advanced APIs sections of their own,
+and document the basic utilities that the setup needs on the setup page itself.
+
+See `guidelines/information-architecture.md` and `guidelines/writing.md`.
+
 ## Front Matter
 
 Each `.adoc` file starts with YAML front matter between `---` delimiters:
@@ -69,7 +96,10 @@ When a change moves or removes a page, add a redirect from the old URL to
 replaces it. Write both paths without the path prefix and keep the entries
 sorted by source path. Run `npm run check-redirects`.
 
-Update the cross references to the old page in the same change.
+Update the cross references to the old page in the same change. When you move,
+split or rename a section, update the path, the anchor and the label of every
+cross reference to it. A heading without an explicit `[[id]]` takes its anchor
+from its text.
 
 ## Writing
 
@@ -99,6 +129,10 @@ method names.
 
 Keep each section to the question its heading asks. Leave out details the
 reader does not need for that task.
+
+Do not end the items of a bulleted or numbered list with a semicolon. Turn a
+list whose items each start with inline code, such as class or method names
+with a short description, into a table.
 
 Describe the product as it is. What changed, and why, belongs in the commit
 message and the release notes, not on the page.
