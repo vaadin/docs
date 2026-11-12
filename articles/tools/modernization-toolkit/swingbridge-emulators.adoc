@@ -8,7 +8,7 @@ order: 150
 
 = SwingBridge Emulators
 
-SwingBridge Emulators -- SB-Emulators for short -- migrates an existing Swing desktop application to the web by *import-swap*: you rewrite `javax.swing.*` imports to `vaadinx.swing.*`, recompile, and run the result as a Vaadin web application. The bulk of a codebase migrates as a find-and-replace on import lines.
+SwingBridge Emulators -- SB-Emulators for short -- migrates an existing Swing desktop application to the web by *import-swap*: you rewrite `javax.swing.*` imports to `vaadinx.swing.*`, and the AWT component, layout manager, and component event imports from `java.awt.*` to `vaadinx.awt.*`. Then you recompile and run the result as a Vaadin web application. The bulk of a codebase migrates as a find-and-replace on import lines.
 
 It's a *migration bridge*, not a permanent target. SB-Emulators gets a desktop app running in the browser cheaply, so you can then iterate it toward idiomatic Vaadin view-by-view — it isn't a 1:1 reimplementation of Swing you're meant to stay on.
 
@@ -20,9 +20,9 @@ SB-Emulators differs from <<swing-bridge#, SwingBridge Streamer>>. SwingBridge S
 
 == How It Works
 
-- `vaadinx.awt.*` mirrors `java.awt.*` for the [classname]`Component`/[classname]`Container` hierarchy; `vaadinx.swing.*` mirrors `javax.swing.*` for the [classname]`JComponent` subclasses ([classname]`JFrame`, [classname]`JButton`, [classname]`JLabel`, [classname]`JTextField`, and so on).
+- `vaadinx.awt.*` mirrors `java.awt.*` for the [classname]`Component`/[classname]`Container` hierarchy, the layout managers ([classname]`BorderLayout`, [classname]`FlowLayout`, [classname]`GridBagLayout`, and so on), and the events that carry a component ([classname]`MouseEvent`, [classname]`KeyEvent`, [classname]`WindowEvent`, and so on). `vaadinx.swing.*` mirrors `javax.swing.*` for the [classname]`JComponent` subclasses ([classname]`JFrame`, [classname]`JButton`, [classname]`JLabel`, [classname]`JTextField`, and so on).
 - Every emulated component is backed by a real Vaadin component — its _peer_ — and forwards behavior to it. You write Swing-shaped code; the browser renders Vaadin.
-- Data types that aren't components ([classname]`Color`, [classname]`Font`, [classname]`Dimension`, [classname]`ActionEvent`, [interfacename]`ActionListener`, table and list models) are reused straight from the JDK, so their imports don't change.
+- Data types that aren't components ([classname]`Color`, [classname]`Font`, [classname]`Dimension`, [classname]`ActionEvent`, [interfacename]`ActionListener`, table and list models) are reused straight from the JDK, so their imports don't change. The migration tool knows exactly which imports to swap, so you don't sort them by hand.
 - A method with no Vaadin counterpart logs a warning and returns a sensible default rather than crashing the app. Genuine programming errors — a bad index, orphan-component state — still throw the same exception Swing would, so real bugs aren't hidden.
 
 This is an import-swap, not a binary drop-in: you need source access for the Swing code you depend on, because compiled Swing JARs must be recompiled against the emulation.
@@ -133,7 +133,7 @@ Some Swing capabilities are permanently out of scope:
 - *JDK 24 or later at runtime.* The virtual-thread machinery that makes blocking dialogs work deadlocks on JDK 21. Your migrated app's bytecode may still target Java 21 — only the JVM it _runs_ on must be 24 or later.
 - *`--add-opens java.base/java.lang=ALL-UNNAMED`* on that JVM, both for tests and in production.
 - A *Vaadin host application* with server push ([annotationname]`@Push`) enabled. The runtime relies on push to render modal dialogs.
-- *HTTP requests served by platform threads*, not virtual threads. This is the default in Vaadin Boot, and in Spring Boot as long as `spring.threads.virtual.enabled` stays off.
+- *HTTP requests served by platform threads*, not virtual threads. This is the default in https://github.com/mvysny/vaadin-boot[Vaadin Boot], and in Spring Boot as long as `spring.threads.virtual.enabled` stays off.
 - *The SB-Emulators servlet*, or on Spring Boot, the `swingbridge-emulators-spring` dependency, which registers it for you.
 
 The host application that the migration kit copies into your project already meets all of these.
