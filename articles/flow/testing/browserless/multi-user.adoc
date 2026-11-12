@@ -30,7 +30,7 @@ The same API also covers tests that need several participants: application-wide 
 [#contexts-and-base-classes]
 == Contexts and Base Classes
 
-The base classes -- <<{articles}/building-apps/testing/browserless/setup-without-spring#base-class-or-extension, [classname]`BrowserlessTest`>>, <<{articles}/building-apps/testing/browserless/setup-spring-boot#base-class, [classname]`SpringBrowserlessTest`>>, and <<quarkus#, [classname]`QuarkusBrowserlessTest`>> -- and the <<extensions#, JUnit 6 extensions>> create one user with one window for each test method, or for each test class with [classname]`BrowserlessClassExtension`, and provide the same testing methods on the test class or the extension.
+The base classes -- <<getting-started#minimal-test-class, [classname]`BrowserlessTest`>>, <<getting-started#minimal-test-class, [classname]`SpringBrowserlessTest`>>, and <<quarkus#, [classname]`QuarkusBrowserlessTest`>> -- and the <<extensions#, JUnit 6 extensions>> create one user with one window for each test method, or for each test class with [classname]`BrowserlessClassExtension`, and provide the same testing methods on the test class or the extension.
 They differ from an application context as follows:
 
 - A base class or an extension supports one user and one window. An application context creates as many as the test needs.
@@ -208,9 +208,9 @@ When the test calls a DSL method on any [classname]`BrowserlessUIContext`, the A
 
 The application context owns the users and windows it creates. It implements explicit resource cleanup through [methodname]`close()`: closing the application context cascades to every user and window it created.
 
-A test creates the context in a [annotationname]`@BeforeEach` method and closes it in an [annotationname]`@AfterEach` method, or creates it with try-with-resources in the test method itself. Creating it in a static [annotationname]`@BeforeAll` method shares it across the tests of a class; see <<{articles}/building-apps/testing/browserless/speed-up-tests#sharing-the-vaadin-environment-across-tests,Sharing the Vaadin Environment>>.
+A test creates the context in a [annotationname]`@BeforeEach` method and closes it in an [annotationname]`@AfterEach` method, or creates it with try-with-resources in the test method itself. Creating it in a static [annotationname]`@BeforeAll` method shares it across the tests of a class.
 
-In Spring Boot, a test configuration can define the context as a bean, which every test that uses the same Spring application context shares, and which Spring closes together with the Spring application context. Each test then opens a user of its own, and closes it after the test; see <<{articles}/building-apps/testing/browserless/setup-spring-boot#shared-application-context,Set Up Browserless Tests with Spring Boot>>. Closing a user ends its session and clears the Vaadin and security state from the thread.
+In Spring Boot, a test configuration can define the context as a bean, which every test that uses the same Spring application context shares, and which Spring closes together with the Spring application context. Each test then opens a user of its own, and closes it after the test. Closing a user ends its session and clears the Vaadin and security state from the thread.
 
 [methodname]`create()` accepts the packages that contain [annotationname]`@Route`-annotated views, either as package names or as classes whose packages should be scanned. Passing classes plays well with IDE refactoring and is the preferred form.
 
@@ -394,8 +394,6 @@ Common gotchas worth keeping in mind:
 - *Calling Vaadin APIs directly.* DSL methods on [classname]`BrowserlessUIContext` activate the window automatically. If the test reaches for [methodname]`UI.getCurrent()`, [methodname]`VaadinSession.getCurrent()`, or [classname]`SecurityContextHolder` between DSL calls, call [methodname]`window.activate()` first to make sure the thread-locals reflect the intended window. A window stays active after it's created and after each DSL call, so in a test with a single window these APIs already reflect that window.
 - [since:com.vaadin:vaadin@V25.2]#*Spring request and session scopes follow the user.*# A [annotationname]`@SessionScope` or [annotationname]`@RequestScope` bean is resolved against the active user's own request, so two users never share one instance. [annotationname]`@VaadinSessionScope` has always behaved this way, because it resolves against [methodname]`VaadinSession.getCurrent()`. See <<environment-differences#session-scoped-beans, Session-Scoped Beans>> for why such a bean can't be autowired into a test class field. Resolving it from the test method instead gives the active user's instance, so activate the intended user's window first.
 - *Anonymous users still go through the handler.* On a secured context, [methodname]`newUser()` with no arguments delegates to the handler, which installs its anonymous-equivalent state (for example, Spring's [classname]`AnonymousAuthenticationToken`).
-
-[[setting-up-the-application-context]]For worked examples, see the <<{articles}/building-apps/testing/browserless#choose-your-framework,setup guides>> for a single user, and <<{articles}/building-apps/testing/browserless/test-multiple-users#,Test Multiple Users and Windows>> for several.
 
 
 
