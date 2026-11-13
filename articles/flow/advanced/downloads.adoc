@@ -52,6 +52,34 @@ Using [classname]`DownloadEvent` and lambda is particularly useful for:
 * Update UI or owner component during the download
 * Having access to the [classname]`VaadinRequest`, [classname]`VaadinResponse`, and [classname]`VaadinSession` instances
 
+[#ui-state]
+=== Reading UI State in a Download Handler
+
+The browser requests the download in a request of its own, apart from the requests of the UI. Vaadin calls the handler for that request without holding the session lock. This applies to every `DownloadHandler`, including the callback of [methodname]`fromInputStream`.
+
+The [classname]`DownloadEvent` gives access to the session, the UI, and the owner component, but the lock isn't held while the handler uses them. Reading the value of a UI component in the handler races with the requests of the UI that change it. Changing the UI needs [methodname]`UI.access()`, as in the example above.
+
+When the content depends on what the user sees, such as the filter of a grid, copy the values that the handler needs in a listener. Listeners run while holding the lock. The handler then reads the copy:
+
+[source,java]
+----
+AtomicReference<String> filter = new AtomicReference<>("");
+TextField filterField = new TextField("Filter");
+filterField.addValueChangeListener(e -> filter.set(e.getValue()));
+
+Anchor export = new Anchor(DownloadHandler.fromInputStream(event -> {
+    try {
+        byte[] csv = reportService.exportCsv(filter.get());
+        return new DownloadResponse(new ByteArrayInputStream(csv),
+                "report.csv", "text/csv", csv.length);
+    } catch (Exception e) {
+        return DownloadResponse.error(500, e);
+    }
+}), "Export");
+----
+
+Catch exceptions inside the handler, as the example does. An exception that the handler throws goes to the error handler of the session and then to the servlet container. The browser gets the container's error response, and nothing in the UI shows that the download failed. [methodname]`DownloadResponse.error()` sets the status code of the response instead. In both cases, the handlers that the [classname]`DownloadHandler` factory methods create notify their progress listeners of the failure, so a [methodname]`whenComplete()` listener can tell the user -- see <<#progress,Download Progress Listeners>>.
+
 === Download Content from InputStream
 
 The `fromInputStream` method allows you to serve content from any [classname]`InputStream`.
@@ -318,7 +346,7 @@ The [classname]`DownloadEvent` gives the access to the following information and
 * The helper [methodname]`setContentLength` method sets the content length for the download or does nothing if the `-1` value is given
 
 [NOTE]
-`UI.access` is needed for updating the UI and also session locking if you want to access the session.
+The handler runs without the session lock. `UI.access` is needed for updating the UI and also session locking if you want to access the session. See <<#ui-state,Reading UI State in a Download Handler>>.
 
 [NOTE]
 Methods [methodname]`getOutputStream` and [methodname]`getWriter` cannot be used simultaneously for the same response, either one or the other.
