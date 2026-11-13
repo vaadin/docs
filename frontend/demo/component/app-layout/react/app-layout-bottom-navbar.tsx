@@ -2,7 +2,7 @@ import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { AppLayout, HorizontalLayout, Icon } from '@vaadin/react-components';
-import { enableTouchOptimizedMode, patchAppLayoutNavigation } from '../app-layout-helper'; // hidden-source-line
+import { patchAppLayoutNavigation } from '../app-layout-helper'; // hidden-source-line
 
 const h1Style = {
   fontSize: '1.125rem',
@@ -19,7 +19,7 @@ function Example() {
   return (
     // tag::snippet[]
     <AppLayout
-      ref={enableTouchOptimizedMode} // hidden-source-line-trim
+      style={{ '--vaadin-app-layout-touch-optimized': 'true' }} // hidden-source-line-trim
     >
       <h1 slot="navbar" style={h1Style}>
         MyApp
