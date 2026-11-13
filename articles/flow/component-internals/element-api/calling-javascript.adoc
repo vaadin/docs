@@ -74,7 +74,7 @@ public void greet(String message) {
 ----
 ====
 
-A method returns either `void` or [classname]`PendingJavaScriptResult`, to retrieve a return value the same way an expression does (see <<#return-values,Return Values>>).
+A method returns `void`, [classname]`PendingJavaScriptResult`, or [classname]`JavaScriptResult` with a type argument, to retrieve a return value the same way an expression does (see <<#return-values,Return Values>>). Declaring [classname]`JavaScriptResult` with a type argument hands the value to its handlers already converted to that type, with no type token needed at the call site.
 
 .Declaring JavaScript that returns a value
 [example]
@@ -102,7 +102,7 @@ public void updateTooltip() {
 Nothing about the JavaScript is decided at the call site: the build generates one function per declared expression into the bundle, and the client runs that function after looking it up by an identifier of the JavaScript. The expression itself is never sent to the browser, and a production bundle carries the generated functions only -- the Java names stay on the server.
 
 [NOTE]
-The interface is checked when [methodname]`executeJs(Class)` hands out the implementation. It must be annotated with [annotationname]`@JsDefinition`, and every method must be annotated with [annotationname]`@JsExpression` and return `void` or [classname]`PendingJavaScriptResult`. A `default` or `static` method is refused, since it's implemented in Java rather than declaring JavaScript to run in the browser.
+The interface is checked when [methodname]`executeJs(Class)` hands out the implementation. It must be annotated with [annotationname]`@JsDefinition`, and every method must be annotated with [annotationname]`@JsExpression` and return `void`, [classname]`PendingJavaScriptResult`, or [classname]`JavaScriptResult` with a type argument that's known from the interface -- either a concrete type, or a type variable that an interface the definition extends binds to a concrete type. A raw or wildcard [classname]`JavaScriptResult`, or one whose type argument is a type variable the interface doesn't bind to a concrete type, is refused, since nothing says what to convert the value to. A `default` or `static` method is refused, since it's implemented in Java rather than declaring JavaScript to run in the browser.
 
 When the JavaScript isn't about a particular element, declare it the same way and run it through [methodname]`Page.executeJs(Class)`, which works with global browser APIs instead of with an element (see <</flow/advanced/browser-access#declaring-javascript-in-java,Accessing the Browser Page>>).
 
@@ -110,7 +110,7 @@ When the JavaScript isn't about a particular element, declare it the same way an
 [[return-values]]
 == Return Values
 
-Add a listener to the [classname]`PendingJavaScriptResult` instance that a call answers with to access the value from a `return` statement in the JavaScript. This works the same way for a declared expression, an <<#execute-js,[methodname]`executeJs()` expression>>, and a function called through <<#call-js-function,[methodname]`callJsFunction()`>>. A declared method has to declare [classname]`PendingJavaScriptResult` as its return type to give access to the result.
+Add a listener to the [classname]`PendingJavaScriptResult` instance that a call answers with to access the value from a `return` statement in the JavaScript. This works the same way for a declared expression, an <<#execute-js,[methodname]`executeJs()` expression>>, and a function called through <<#call-js-function,[methodname]`callJsFunction()`>>. A declared method has to declare [classname]`PendingJavaScriptResult`, or [classname]`JavaScriptResult` with a type argument (see <<#typed-results,Typed Results>>), as its return type to give access to the result.
 
 .Checking for support of Constructable Stylesheets in the browser
 [example]
@@ -147,6 +147,42 @@ If the return value is a JavaScript `Promise`, the client only sends the return 
 // TODO What happens if the Promise is rejected?
 
 
+[[typed-results]]
+=== Typed Results
+
+Declare [classname]`JavaScriptResult` with a type argument instead of [classname]`PendingJavaScriptResult` to get the value already converted to that type, with no type token needed at the call site:
+
+.Declaring a method that returns a typed result
+[example]
+====
+[source,java]
+----
+@JsDefinition
+public interface DeepThoughtJs extends Serializable {
+
+    @JsExpression("return 42")
+    JavaScriptResult<Integer> getAnswer();
+}
+----
+
+[source,java]
+----
+public void revealAnswer() {
+    getElement().executeJs(DeepThoughtJs.class).getAnswer()
+            .then(answer -> Notification.show(
+                    "The answer is " + answer));
+}
+----
+====
+
+The value is converted with Jackson, so any type Jackson can deserialize works, including beans and generic types such as `List<Person>`. A value that can't be converted to the declared type goes to the error handler passed to [methodname]`then()`, and fails a future obtained from [methodname]`toCompletableFuture()`; without an error handler, it's logged as a warning.
+
+The type argument has to be known from the interface: either a concrete type, such as `JavaScriptResult<Integer>`, or a type variable of an interface the definition extends and binds to a concrete type -- `T` in `JavaScriptResult<T>` when the definition extends `ValueJs<Integer>`. A raw or wildcard [classname]`JavaScriptResult`, or a type variable the definition doesn't bind to a concrete type, is refused (see <<#declaring-javascript,Declaring JavaScript in Java>>).
+
+[classname]`JavaScriptResult<JsonNode>` behaves like [classname]`PendingJavaScriptResult`: its handlers get the JSON as the browser sent it, and [methodname]`then()` can still be called with a [classname]`Class` or [classname]`TypeReference` to choose the Java type to convert to (see <<#deserializing-generic-types-with-typereference,Deserializing Generic Types with TypeReference>>).
+
+
+[[deserializing-generic-types-with-typereference]]
 === Deserializing Generic Types with TypeReference
 
 The [methodname]`then()` method accepts a [classname]`Class` parameter for simple types, but this doesn't work for generic types like `List<Person>` due to Java type erasure. For these cases, use the Jackson [classname]`TypeReference` overloads.
