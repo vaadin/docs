@@ -1,14 +1,14 @@
 ---
 title: Server Push
-page-title: Server Push Configuration Reference - Vaadin Docs
-description: Configuration reference for server push in Vaadin Flow applications.
-meta-description: Reference documentation for server push configuration options, annotations, and transport modes in Vaadin Flow.
+page-title: Server Push Configuration and UI Updates - Vaadin Docs
+description: Configuring server push, and updating the UI from other threads in Vaadin Flow applications.
+meta-description: Vaadin Flow server push reference, covering @Push, push modes, transports, and updating the UI from background threads with UI.access() and accessLater().
 order: 620
 ---
 
 
 [[push.configuration]]
-= Server Push Configuration
+= Server Push
 
 Server push is based on a client-server connection established by the client. The server can then use the connection to send updates to the client. Vaadin uses the link:https://github.com/Atmosphere/atmosphere[Atmosphere framework] internally for server push communication.
 
@@ -140,16 +140,22 @@ On the server side, the push endpoint is mapped to the `VAADIN/push` path. This 
 
 
 [[push.access]]
-== UI.access() Method
+== Updating the UI from Another Thread
 
-Making changes to a UI from another thread requires locking the user session to prevent conflicts with regular event-driven updates. Use the `UI.access()` method to safely update the UI from background threads:
+Flow locks the user session while it handles a request, for example while it runs an event listener. Code that runs in another thread has to lock the session as well before it reads or changes the components of a UI. Otherwise, its changes can conflict with those of a request.
+
+A component bound to a <<{articles}/flow/ui-state#,signal>> is the exception. Another thread can change the signal without locking the session, and the component updates itself, as described in <<{articles}/flow/ui-state/local-signals#thread-safety,Thread Safety>>.
+
+For other changes, the [methodname]`UI.access()` method runs a task with the session locked:
 
 [source,java]
 ----
 ui.access(() -> statusLabel.setText(statusText));
 ----
 
-With manual push mode, call `UI.push()` explicitly:
+While the task runs, [methodname]`UI.getCurrent()`, [methodname]`VaadinSession.getCurrent()` and [methodname]`VaadinService.getCurrent()` return that UI, its session and its service. [methodname]`VaadinService.getCurrentRequest()` and [methodname]`VaadinService.getCurrentResponse()` return `null`.
+
+With automatic push, the changes are pushed to the browser when the session lock is released after the task. With manual push, call [methodname]`UI.push()` in the task:
 
 [source,java]
 ----
@@ -159,6 +165,120 @@ ui.access(() -> {
 });
 ----
 
+If the UI has been detached, for example because its session has expired, [methodname]`access()` throws a [classname]`UIDetachedException`. A queued task whose UI is detached before the task runs doesn't run.
+
 For detailed patterns and best practices for using `UI.access()`, including how to avoid memory leaks and flooding, see <<{articles}/building-apps/server-push/updates#,Pushing UI Updates>>.
+
+
+[[push.access.ui]]
+=== Getting the UI Instance
+
+Call [methodname]`access()` on the [classname]`UI` instance whose components the task changes. Get the instance while the session is locked, and pass it to the other thread. The other thread can't get it in the usual ways:
+
+- [methodname]`UI.getCurrent()` returns the UI that Flow has set for the current thread. Flow sets it in the thread that handles a request for the UI, and while a task passed to [methodname]`access()` runs. A background thread has no current UI: [methodname]`UI.getCurrent()` returns `null` there, and [methodname]`UI.getCurrentOrThrow()` throws an [classname]`IllegalStateException`.
+- [methodname]`Component.getUI()` reads the component tree. Like other component methods, it's only safe to call while holding the session lock.
+
+In the following example, the click listener gets the UI instance in the request thread, before it starts the background work:
+
+[source,java]
+----
+button.addClickListener(event -> {
+    UI ui = UI.getCurrentOrThrow(); // <1>
+    executor.execute(() -> {
+        String status = reportService.generateReport(); // <2>
+        ui.access(() -> statusLabel.setText(status));
+    });
+});
+----
+<1> The listener runs in the request thread, which holds the session lock.
+<2> The background thread uses the instance that the listener got.
+
+In [methodname]`onAttach()`, the [classname]`AttachEvent` gives the UI instance through its [methodname]`getUI()` method.
+
+
+[[push.access.order]]
+=== When the Task Runs
+
+The [methodname]`access()` method adds the task to a queue of the session. The tasks in the queue run in the order they were added, with the session locked. When they run depends on which thread holds the session lock:
+
+[cols="1,2"]
+|===
+|Session Lock |When the Task Runs
+
+|Not held by any thread
+|[methodname]`access()` acquires the lock and runs the task in the calling thread, before it returns.
+
+|Held by another thread
+|[methodname]`access()` returns right away. The task runs in the thread that holds the lock, before that thread releases it.
+
+|Held by the calling thread, for example in an event listener
+|[methodname]`access()` returns right away. The task runs later in the same thread, before the thread releases the lock. In a request, it runs after the event listeners have returned, before the response is written.
+|===
+
+As the task can run in a thread other than the one that called [methodname]`access()`, it can't rely on the thread-local values of the calling thread.
+
+The changes that a request thread makes after calling [methodname]`access()` are applied before the changes of the task. In the following example, the listener adds its [classname]`Div` first, although it calls [methodname]`access()` before that:
+
+[source,java]
+----
+Button button = new Button("Add", event -> {
+    UI.getCurrentOrThrow().access(() -> add(new Div("Added by the task")));
+    add(new Div("Added by the listener"));
+});
+----
+
+After a click, the view shows "Added by the listener" above "Added by the task".
+
+A thread that holds the session lock can change the UI directly, without [methodname]`access()`. Code that runs both in request threads and in other threads can check whether the current thread holds the lock with [methodname]`VaadinSession.hasLock()`:
+
+[source,java]
+----
+if (ui.getSession().hasLock()) {
+    statusLabel.setText(statusText);
+} else {
+    ui.access(() -> statusLabel.setText(statusText));
+}
+----
+
+
+[[push.access.later]]
+=== Callbacks That Update the UI
+
+The [methodname]`UI.accessLater()` method wraps a task in a callback that runs the task through [methodname]`access()` on that UI. Pass the callback to code that calls it from another thread without locking the session, such as a [classname]`CompletableFuture` or an event bus:
+
+[source,java]
+----
+button.addClickListener(event -> {
+    UI ui = UI.getCurrentOrThrow();
+    reportService.generateReportAsync().thenAccept(ui.accessLater(
+            report -> showReport(report),
+            null)); // No detach handler
+});
+----
+
+The method has two variants:
+
+[cols="1,1"]
+|===
+|Method |Returns
+
+|`accessLater(SerializableRunnable accessTask, SerializableRunnable detachHandler)`
+|A [classname]`SerializableRunnable` that runs `accessTask` through [methodname]`access()`.
+
+|`accessLater(SerializableConsumer<T> accessTask, SerializableRunnable detachHandler)`
+|A [classname]`SerializableConsumer<T>` that runs `accessTask` through [methodname]`access()`, and passes it the value that the consumer receives.
+|===
+
+The `accessTask` argument is the task that changes the UI. It can't be `null`.
+
+The `detachHandler` argument is a handler that runs instead of the task when the UI has been detached. That applies both when the UI is detached by the time the callback is called, and when it's detached by the time the queued task would run. With `null`, a detached UI is handled as with [methodname]`access()`: the callback throws a [classname]`UIDetachedException`, or the queued task doesn't run.
+
+
+[[push.access.undelivered]]
+=== Undelivered Updates
+
+The changes to a UI and its JavaScript invocations are held in memory on the server until a response is written for the browser. That takes an open push connection, or a request from the UI in the browser, for example after a user interaction. Heartbeat requests don't carry updates. Until then, the updates that a background task makes pile up. This happens, for example, when a laptop has gone to sleep, the push connection has closed, or the browser has discarded the tab. For a browser that doesn't come back, the updates pile up until the UI is detached, at the latest when the session expires.
+
+To stop updating a UI whose browser isn't receiving the updates, compare [since:com.vaadin:vaadin@V25.3]#[methodname]`UI.getLastUpdateSentTimestamp()`# against the current time before calling [methodname]`access()`. The method can be called without holding the session lock. See <<{articles}/flow/component-internals/element-api/calling-javascript#undelivered-invocations,Undelivered Invocations>> for an example, and for the warning that Flow logs when JavaScript invocations pile up.
 
 [discussion-id]`77E22B23-4E6A-4D32-AFCC-2423F633F81D`
