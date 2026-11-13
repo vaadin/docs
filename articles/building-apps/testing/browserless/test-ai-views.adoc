@@ -1,0 +1,500 @@
+---
+title: Test AI-Powered Views
+page-title: Test AI-Powered Views | Vaadin
+description: Replace the LLM with a scripted provider, drive the chat with testers, and start a Spring AI application without a real model.
+meta-description: Test Vaadin views built with the AI Orchestrator in browserless tests using a scripted LLM provider, and run Spring AI tests without a real model or API key.
+order: 95
+section-nav: badge-preview
+---
+
+
+= Test AI-Powered Views
+
+:preview-feature: AI integration features
+:feature-flag: com.vaadin.experimental.aiComponents
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+A view built with the <<{articles}/flow/ai-support#,AI Orchestrator>> sends each prompt to an LLM provider.
+A browserless test replaces that provider with a scripted one.
+The scripted provider answers at once, the same way on every run, and without any cost.
+It can also fail on purpose.
+The test then sends messages and reads the conversation the way a user does.
+
+The examples use the plain Java setup, and test the chat as a single component, as described in <<test-custom-components#,Test a Custom Component>>.
+To test a whole view in a Spring Boot application, see <<#spring-boot,Test the View with Spring Boot>>.
+
+
+== Enable the Feature Flag
+
+The AI integration features are a preview.
+Unless their feature flag is enabled, the orchestrator throws an [classname]`AIComponentsExperimentalFeatureException` on the first prompt.
+In a test, that's the call that sends the message.
+
+Browserless tests read the flag from the same [filename]`src/main/resources/vaadin-featureflags.properties` file as the application, so a project that enables the flag there needs nothing more.
+
+To enable the flag for the <<#spring-boot,Spring Boot test>> alone, enable the `aiComponents` feature on the builder of the browserless application context bean:
+
+[source,java]
+----
+return SpringBrowserlessApplicationContext.create(applicationContext,
+        builder -> builder.withViewPackages(Application.class)
+                .withFeatureFlags("aiComponents"));
+----
+
+See <<{articles}/flow/testing/browserless/test-configuration#configuring-without-annotations,Configuring without Annotations>> for the other forms.
+
+
+== Pass the Provider to the Chat
+
+Build the orchestrator in a component that takes the provider as a constructor argument.
+The view creates the real provider, and a test passes the scripted one.
+
+This support chat has the parts that the tests on this page exercise.
+It has a Message List and a Message Input, an Upload for attachments, a tool that shows an order, and a response listener that reports failed turns:
+
+.`SupportChat.java`
+[source,java]
+----
+import com.vaadin.flow.component.ai.orchestrator.AIOrchestrator;
+import com.vaadin.flow.component.ai.provider.LLMProvider;
+import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.messages.MessageInput;
+import com.vaadin.flow.component.messages.MessageList;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.upload.Upload;
+
+public class SupportChat extends VerticalLayout {
+
+    public SupportChat(LLMProvider provider) {
+        var selectedOrder = new Span();
+        selectedOrder.setId("selected-order");
+        var messageList = new MessageList();
+        messageList.setMarkdown(true);
+        var messageInput = new MessageInput();
+        var upload = new Upload();
+
+        AIOrchestrator.builder(provider,
+                        "You are a customer support assistant.")
+                .withMessageList(messageList)
+                .withInput(messageInput)
+                .withFileReceiver(upload)
+                .withTools(new OrderTools(selectedOrder))
+                .withResponseListener(event -> event.getError()
+                        .ifPresent(error -> Notification
+                                .show("The assistant is not available.")))
+                .build();
+
+        add(selectedOrder, messageList, upload, messageInput);
+    }
+}
+----
+
+The view uses Spring AI, so the tool has the Spring AI [annotationname]`@Tool` annotation.
+A streaming provider calls the tool on a background thread, so the tool gets the [classname]`UI` when the component is attached, while the session is locked:
+
+.`OrderTools.java`
+[source,java]
+----
+import org.springframework.ai.tool.annotation.Tool;
+import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.html.Span;
+
+public class OrderTools {
+
+    private final Span selectedOrder;
+    private volatile UI ui;
+
+    OrderTools(Span selectedOrder) {
+        this.selectedOrder = selectedOrder;
+        selectedOrder.addAttachListener(event -> ui = event.getUI());
+    }
+
+    @Tool(description = "Shows the order with the given number to the user")
+    public String showOrder(String orderNumber) {
+        ui.access(() -> selectedOrder.setText("Order " + orderNumber));
+        return "The order is now shown to the user.";
+    }
+}
+----
+
+See <<{articles}/flow/advanced/server-push#push.access.ui,Getting the UI Instance>> for why the tool can't call [methodname]`getUI()` itself.
+
+The view creates the provider from the model that Spring AI configures, as in the <<{articles}/building-apps/ai/quickstart-guide#,Quick Start-Guide>>:
+
+.`ChatView.java`
+[source,java]
+----
+import org.springframework.ai.chat.model.ChatModel;
+import com.vaadin.flow.component.ai.provider.SpringAILLMProvider;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.router.Route;
+
+@Route("support")
+public class ChatView extends VerticalLayout {
+
+    public ChatView(ChatModel chatModel) {
+        add(new SupportChat(new SpringAILLMProvider(chatModel)));
+    }
+}
+----
+
+
+== Write a Scripted Provider
+
+The scripted provider answers each prompt with the next reply in its queue.
+A reply is a function of the request, so it can depend on the prompt, the attachments, and the tools.
+The provider also records the requests, so that a test can check what the model would have received:
+
+.`ScriptedLLMProvider.java`
+[source,java]
+----
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Queue;
+import java.util.function.Function;
+import com.vaadin.flow.component.ai.provider.LLMProvider;
+import reactor.core.publisher.Flux;
+
+public class ScriptedLLMProvider implements LLMProvider {
+
+    private final Queue<Function<LLMRequest, Flux<String>>> replies =
+            new ArrayDeque<>();
+    private final List<LLMRequest> requests = new ArrayList<>();
+
+    /** Answers the next prompt with the given chunks. */
+    public void reply(String... chunks) {
+        replyWith(request -> Flux.just(chunks));
+    }
+
+    /** Fails the next prompt with the given error. */
+    public void fail(Throwable error) {
+        replyWith(request -> Flux.error(error));
+    }
+
+    /** Answers the next prompt with a function of its request. */
+    public void replyWith(Function<LLMRequest, Flux<String>> reply) {
+        replies.add(reply);
+    }
+
+    /** Returns the requests that the orchestrator has sent. */
+    public List<LLMRequest> requests() {
+        return requests;
+    }
+
+    @Override
+    public Flux<String> stream(LLMRequest request) {
+        requests.add(request);
+        var reply = replies.poll();
+        if (reply == null) {
+            return Flux.error(new IllegalStateException(
+                    "No reply scripted for: " + request.userMessage()));
+        }
+        return Flux.defer(() -> reply.apply(request));
+    }
+}
+----
+
+Each element of the [classname]`Flux` that a reply returns is one chunk of the streamed response.
+[methodname]`Flux.just()` and [methodname]`Flux.error()` emit on the thread that subscribes to them, which is the test thread.
+The turn has therefore ended by the time the call that sends the message returns.
+A prompt without a scripted reply fails its turn, and the assertions that follow it fail.
+
+The provider doesn't implement [methodname]`setHistory()`, which only a restored conversation needs.
+Implement it if the chat restores a conversation with [methodname]`withHistory()` or [methodname]`reconnect()`.
+See <<{articles}/flow/ai-support/conversation-history#,Conversation History & Session Persistence>> for how the orchestrator restores a conversation.
+
+
+== Test a Conversation
+
+The test sends a message through the Message Input and reads the conversation from the Message List:
+
+.`SupportChatTest.java`
+[source,java]
+----
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import com.vaadin.browserless.BrowserlessUIContext;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
+
+class SupportChatTest {
+
+    private ScriptedLLMProvider provider;
+    private BrowserlessUIContext window;
+
+    @BeforeEach
+    void setUp() {
+        provider = new ScriptedLLMProvider();
+        window = BrowserlessUIContext.forComponent(
+                () -> new SupportChat(provider));
+    }
+
+    @AfterEach
+    void tearDown() {
+        window.close();
+    }
+
+    @Test
+    void sendMessage_assistantAnswers() {
+        provider.reply("Your order ", "ships tomorrow.");
+
+        window.findMessageInput().send("When does my order ship?");
+
+        var messages = window.findMessageList().getMessages();
+        Assertions.assertEquals(2, messages.size());
+        Assertions.assertEquals("You", messages.get(0).getUserName());
+        Assertions.assertEquals("When does my order ship?",
+                messages.get(0).getText());
+        Assertions.assertEquals("Assistant", messages.get(1).getUserName());
+        Assertions.assertEquals("Your order ships tomorrow.",
+                messages.get(1).getText());
+
+        var request = provider.requests().getFirst();
+        Assertions.assertEquals("When does my order ship?",
+                request.userMessage());
+        Assertions.assertEquals("You are a customer support assistant.",
+                request.systemPrompt());
+    }
+}
+----
+
+The orchestrator updates the Message List with [methodname]`UI.access()`.
+In a browserless test, such an update waits until the test runs its next component query.
+Read the conversation with a new query after each step, such as [methodname]`window.findMessageList()`.
+A component that the test already holds, for example in a field, shows the update only after the next query.
+See <<{articles}/flow/testing/browserless/test-environment#access-tasks,Tasks Submitted with UI.access()>> for the details.
+
+The recorded requests show what the model would have received: the user message, the system prompt, the attachments, and the tools.
+For the other methods of the Message Input and Message List testers, see <<{articles}/flow/testing/browserless/component-testers#common-testers,Component Testers>>.
+Add the remaining tests on this page to the same class.
+
+
+== Follow a Streamed Response
+
+To assert on a message while it's still streaming, reply with a Reactor [classname]`Sinks.Many`, and emit the chunks from the test:
+
+[source,java]
+----
+@Test
+void responseStreams_messageGrowsWithEachChunk() {
+    Sinks.Many<String> response = Sinks.many().unicast()
+            .onBackpressureBuffer();
+    provider.replyWith(request -> response.asFlux());
+
+    window.findMessageInput().send("When does my order ship?");
+    // Only the user's message, until the first chunk arrives
+    Assertions.assertEquals(1, window.findMessageList().size());
+
+    response.tryEmitNext("Your order ");
+    Assertions.assertEquals("Your order ",
+            window.findMessageList().getMessage(1).getText());
+
+    response.tryEmitNext("ships tomorrow.");
+    response.tryEmitComplete();
+    Assertions.assertEquals("Your order ships tomorrow.",
+            window.findMessageList().getMessage(1).getText());
+}
+----
+
+
+== Simulate a Failure
+
+Fail the turn with the exception that the model client would throw, and check how the chat reports it:
+
+[source,java]
+----
+@Test
+void providerFails_notificationIsShown() {
+    provider.fail(new IOException("Connection refused"));
+
+    window.findMessageInput().send("When does my order ship?");
+
+    Assertions.assertEquals("The assistant is not available.",
+            window.findNotification().getText());
+}
+----
+
+The error reaches the response listener, which shows the notification.
+The Message List shows a generic error message in place of the response, and the orchestrator logs the error, so it also appears in the test output.
+
+
+== Simulate a Tool Call
+
+The scripted provider can't decide to call a tool, so the reply calls it, as the model would.
+The tool objects that the chat passes to [methodname]`withTools()` are in the request:
+
+[source,java]
+----
+@Test
+void modelCallsTool_orderIsShown() {
+    provider.replyWith(request -> {
+        // Call the tool, as the model would
+        var tools = (OrderTools) request.tools()[0];
+        tools.showOrder("1001");
+        return Flux.just("Here is order 1001.");
+    });
+
+    window.findMessageInput().send("Show my latest order");
+
+    Assertions.assertEquals("Order 1001",
+            window.findSpan().withId("selected-order").getText());
+}
+----
+
+The tool updates the UI with [methodname]`UI.access()`, and the query that reads the result runs the update.
+Tools that a <<{articles}/flow/ai-support/controllers#,controller>> contributes are in [methodname]`request.explicitTools()` instead.
+Call [methodname]`execute()` on such a tool with the arguments the model would pass.
+
+
+== Attach a File
+
+The Upload tester sends the file to the upload handler that the orchestrator installs.
+The file then waits for the next prompt, which takes it along:
+
+[source,java]
+----
+@Test
+void attachFile_fileIsSentWithPrompt(@TempDir File folder)
+        throws IOException {
+    var invoice = new File(folder, "invoice.txt");
+    Files.writeString(invoice.toPath(), "Invoice 1001: 49.90 EUR");
+    provider.reply("The invoice is for 49.90 EUR.");
+
+    window.findUpload().upload(invoice);
+    window.findMessageInput().send("How much is this invoice for?");
+
+    var attachment = provider.requests().getFirst().attachments()
+            .getFirst();
+    Assertions.assertEquals("invoice.txt", attachment.name());
+    Assertions.assertEquals("text/plain", attachment.mimeType());
+    Assertions.assertEquals("invoice.txt", window.findMessageList()
+            .getAttachments(0).getFirst().name());
+}
+----
+
+The first assertions check what the model received, and the last one checks that the user's message shows the attachment.
+
+
+[#spring-boot]
+== Test the View with Spring Boot
+
+A Spring Boot test starts the whole application, including the Spring AI auto-configuration.
+The model beans that it creates need credentials, even when no test sends a prompt.
+With the OpenAI starter, for example, the application context fails to start without an API key.
+
+Set the key to a placeholder for the tests, and add a fake model in a test configuration:
+
+.`ChatViewTest.java`
+[source,java]
+----
+import static org.awaitility.Awaitility.await;
+
+import java.time.Duration;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
+import com.vaadin.browserless.BrowserlessApplicationContext;
+import com.vaadin.browserless.BrowserlessUIContext;
+
+@SpringBootTest(properties = "spring.ai.openai.api-key=unused") // <1>
+class ChatViewTest {
+
+    @TestConfiguration
+    static class FakeModelConfiguration {
+
+        @Bean
+        @Primary // <2>
+        ChatModel fakeChatModel() {
+            return new FakeChatModel();
+        }
+    }
+
+    @Autowired
+    private BrowserlessApplicationContext app;
+
+    private BrowserlessUIContext window;
+
+    @BeforeEach
+    void openWindow() {
+        window = app.newUser().newWindow();
+    }
+
+    @AfterEach
+    void closeUser() {
+        window.getUser().close();
+    }
+
+    @Test
+    void sendMessage_assistantAnswers() {
+        window.navigate(ChatView.class);
+
+        window.findMessageInput().send("When does my order ship?");
+
+        await().pollInSameThread() // <3>
+                .atMost(Duration.ofSeconds(5))
+                .until(() -> window.findMessageList().size() == 2);
+        Assertions.assertEquals("Your order ships tomorrow.",
+                window.findMessageList().getMessage(1).getText());
+    }
+}
+----
+<1> The model beans start with the placeholder, and the test never calls them. Use the API key property of your model provider.
+<2> Views that inject a [classname]`ChatModel` get the fake model. The [classname]`ChatClient.Builder` that Spring AI configures uses it too, so views that build a [classname]`ChatClient` get the fake model as well.
+<3> Waits for the response, polling on the test thread, which is the only thread that can use the window.
+
+The test uses the browserless application context bean from <<setup-spring-boot#,Set Up Browserless Tests with Spring Boot>>.
+The fake model answers every prompt with the same text:
+
+.`FakeChatModel.java`
+[source,java]
+----
+import java.util.List;
+import org.springframework.ai.chat.messages.AssistantMessage;
+import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.model.Generation;
+import org.springframework.ai.chat.prompt.Prompt;
+import reactor.core.publisher.Flux;
+
+class FakeChatModel implements ChatModel {
+
+    @Override
+    public ChatResponse call(Prompt prompt) {
+        return response("Your order ships tomorrow.");
+    }
+
+    @Override
+    public Flux<ChatResponse> stream(Prompt prompt) {
+        return Flux.just("Your order ", "ships tomorrow.")
+                .map(FakeChatModel::response);
+    }
+
+    private static ChatResponse response(String text) {
+        return new ChatResponse(
+                List.of(new Generation(new AssistantMessage(text))));
+    }
+}
+----
+
+The real [classname]`SpringAILLMProvider` runs between the view and the fake model, and it streams the response on a background thread, as it does in production.
+That's why the test waits for the response with Awaitility, which Spring Boot's test starter includes.
+Test the conversation itself with the scripted provider, as shown earlier on this page.
+Keep Spring Boot tests for what needs the application, such as navigation, access control, and the beans that the view uses.
+
+
+[discussion-id]`6DA55BE0-E53D-49C0-BEAC-C518D6DC5C01`
