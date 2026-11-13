@@ -31,7 +31,28 @@ Unless their feature flag is enabled, the orchestrator throws an [classname]`AIC
 In a test, that's the call that sends the message.
 
 Browserless tests read the flag from the same [filename]`src/main/resources/vaadin-featureflags.properties` file as the application, so a project that enables the flag there needs nothing more.
-To enable the flag for the tests alone, add the `aiComponents` feature to the test configuration, as described in <<{articles}/flow/testing/browserless/test-configuration#,Test Configuration>>.
+
+To enable the flag for the tests alone, [since:com.vaadin:vaadin@V25.4]#pass a configuration with the `aiComponents` feature to [methodname]`forComponent()`#, which the tests on this page use to create the window:
+
+[source,java]
+----
+var configuration = BrowserlessConfiguration.builder()
+        .withFeatureFlags("aiComponents")
+        .build();
+window = BrowserlessUIContext.forComponent(configuration,
+        () -> new SupportChat(provider));
+----
+
+In the <<#spring-boot,Spring Boot test>>, enable it on the builder of the browserless application context bean instead:
+
+[source,java]
+----
+return SpringBrowserlessApplicationContext.create(applicationContext,
+        builder -> builder.withViewPackages(Application.class)
+                .withFeatureFlags("aiComponents"));
+----
+
+See <<{articles}/flow/testing/browserless/test-configuration#configuring-without-annotations,Configuring without Annotations>> for the other forms.
 
 
 == Pass the Provider to the Chat
@@ -80,31 +101,35 @@ public class SupportChat extends VerticalLayout {
 }
 ----
 
-The view uses Spring AI, so the tool has the Spring AI [annotationname]`@Tool` annotation:
+The view uses Spring AI, so the tool has the Spring AI [annotationname]`@Tool` annotation.
+A streaming provider calls the tool on a background thread, so the tool gets the [classname]`UI` when the component is attached, while the session is locked:
 
 .`OrderTools.java`
 [source,java]
 ----
 import org.springframework.ai.tool.annotation.Tool;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.html.Span;
 
 public class OrderTools {
 
     private final Span selectedOrder;
+    private volatile UI ui;
 
     OrderTools(Span selectedOrder) {
         this.selectedOrder = selectedOrder;
+        selectedOrder.addAttachListener(event -> ui = event.getUI());
     }
 
     @Tool(description = "Shows the order with the given number to the user")
     public String showOrder(String orderNumber) {
-        // A streaming provider calls the tool on a background thread
-        selectedOrder.getUI().ifPresent(ui -> ui.access(
-                () -> selectedOrder.setText("Order " + orderNumber)));
+        ui.access(() -> selectedOrder.setText("Order " + orderNumber));
         return "The order is now shown to the user.";
     }
 }
 ----
+
+See <<{articles}/flow/advanced/server-push#push.access.ui,Getting the UI Instance>> for why the tool can't call [methodname]`getUI()` itself.
 
 The view creates the provider from the model that Spring AI configures, as in the <<{articles}/building-apps/ai/quickstart-guide#,Quick Start-Guide>>:
 
