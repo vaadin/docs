@@ -1,14 +1,8 @@
 import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useRef } from 'react';
-import {
-  AppLayout,
-  type AppLayoutElement,
-  HorizontalLayout,
-  type HorizontalLayoutElement,
-  Icon,
-} from '@vaadin/react-components';
-import { patchAppLayoutNavigation } from '../app-layout-helper';
+import React from 'react';
+import { AppLayout, HorizontalLayout, Icon } from '@vaadin/react-components';
+import { enableTouchOptimizedMode, patchAppLayoutNavigation } from '../app-layout-helper'; // hidden-source-line
 
 const h1Style = {
   fontSize: '1.125rem',
@@ -22,27 +16,11 @@ const linkStyle = {
 };
 
 function Example() {
-  const appLayoutRef = useRef<AppLayoutElement>(null);
-  const horizontalLayoutRef = useRef<HorizontalLayoutElement>(null);
-  useEffect(() => {
-    const appLayout = appLayoutRef.current;
-    if (appLayout) {
-      // --vaadin-app-layout-touch-optimized is only enforced as part of this example
-      appLayout.style.setProperty('--vaadin-app-layout-touch-optimized', 'true');
-      (appLayout as any)._updateTouchOptimizedMode();
-    }
-  }, [appLayoutRef.current]);
-
-  useEffect(() => {
-    const horizontalLayout = horizontalLayoutRef.current;
-    if (horizontalLayout) {
-      patchAppLayoutNavigation(horizontalLayout);
-    }
-  }, [horizontalLayoutRef.current]);
-
   return (
     // tag::snippet[]
-    <AppLayout ref={appLayoutRef}>
+    <AppLayout
+      ref={enableTouchOptimizedMode} // hidden-source-line-trim
+    >
       <h1 slot="navbar" style={h1Style}>
         MyApp
       </h1>
@@ -50,7 +28,7 @@ function Example() {
       <HorizontalLayout
         slot="navbar touch-optimized"
         style={{ width: '100%', justifyContent: 'space-evenly' }}
-        ref={horizontalLayoutRef}
+        ref={patchAppLayoutNavigation} // hidden-source-line
       >
         <a href="/dashboard" aria-label="Dashboard" style={linkStyle}>
           <Icon icon="vaadin:dashboard" />

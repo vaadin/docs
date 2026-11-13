@@ -1,6 +1,10 @@
 import type { SideNav } from '@vaadin/side-nav';
 
-export function patchSideNavNavigation(sideNav: SideNav) {
+// Accepts null so that React examples can pass it as a callback ref
+export function patchSideNavNavigation(sideNav: SideNav | null) {
+  if (!sideNav) {
+    return;
+  }
   setTimeout(() => {
     // Patch anchors of side-nav-items to prevent page navigation
     const items = sideNav.querySelectorAll('vaadin-side-nav-item');

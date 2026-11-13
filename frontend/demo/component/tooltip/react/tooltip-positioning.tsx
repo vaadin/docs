@@ -1,34 +1,24 @@
 import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import {
   AppLayout,
   DrawerToggle,
   Icon,
   SideNav,
-  type SideNavElement,
   SideNavItem,
   Tooltip,
 } from '@vaadin/react-components';
-import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper';
+import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper'; // hidden-source-line
 
 function Example() {
-  const sideNavRef = useRef<SideNavElement>(null);
-
-  useEffect(() => {
-    if (sideNavRef.current) {
-      // Example-specific workaround
-      patchSideNavNavigation(sideNavRef.current);
-    }
-  }, [sideNavRef.current]);
-
   return (
     <AppLayout theme="narrow-drawer">
       <DrawerToggle slot="navbar" />
 
       <SideNav
         slot="drawer"
-        ref={sideNavRef}
+        ref={patchSideNavNavigation} // hidden-source-line
         style={{ margin: '0 var(--vaadin-gap-xs)', '--vaadin-icon-size': '1.5rem' }}
       >
         {/* tag::snippet[] */}

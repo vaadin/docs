@@ -1,11 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useRef } from 'react';
-import {
-  AppLayout,
-  HorizontalLayout,
-  type HorizontalLayoutElement,
-} from '@vaadin/react-components';
-import { patchAppLayoutNavigation } from '../app-layout-helper';
+import React from 'react';
+import { AppLayout, HorizontalLayout } from '@vaadin/react-components';
+import { patchAppLayoutNavigation } from '../app-layout-helper'; // hidden-source-line
 
 const h1Style: React.CSSProperties = {
   fontSize: '1.125rem',
@@ -23,15 +19,6 @@ const linkStyle = {
 };
 
 function Example() {
-  const horizontalLayoutRef = useRef<HorizontalLayoutElement>(null);
-
-  useEffect(() => {
-    const horizontalLayout = horizontalLayoutRef.current;
-    if (horizontalLayout) {
-      patchAppLayoutNavigation(horizontalLayout);
-    }
-  }, [horizontalLayoutRef.current]);
-
   return (
     // tag::snippet[]
     <AppLayout>
@@ -39,7 +26,7 @@ function Example() {
         MyApp
       </h1>
       <HorizontalLayout
-        ref={horizontalLayoutRef}
+        ref={patchAppLayoutNavigation} // hidden-source-line
         slot="navbar"
         style={{ width: '100%', height: '2.25rem', justifyContent: 'center', gap: '0.5rem' }}
       >

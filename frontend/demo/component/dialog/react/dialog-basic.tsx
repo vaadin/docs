@@ -6,7 +6,7 @@ import { Button } from '@vaadin/react-components/Button.js';
 import { Dialog } from '@vaadin/react-components/Dialog.js';
 import { FormLayout } from '@vaadin/react-components/FormLayout.js';
 import { TextField } from '@vaadin/react-components/TextField.js';
-import dialogBasicStyles from './dialog-basic-styles';
+import dialogBasicStyles from './dialog-basic-styles'; // hidden-source-line
 
 function Example() {
   useSignals(); // hidden-source-line

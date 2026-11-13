@@ -1,6 +1,10 @@
 import type { Breadcrumbs } from '@vaadin/breadcrumbs';
 
-export function patchBreadcrumbsNavigation(breadcrumbs: Breadcrumbs) {
+// Accepts null so that React examples can pass it as a callback ref
+export function patchBreadcrumbsNavigation(breadcrumbs: Breadcrumbs | null) {
+  if (!breadcrumbs) {
+    return;
+  }
   setTimeout(() => {
     // Patch anchors of breadcrumbs-items to prevent page navigation
     const items = breadcrumbs.querySelectorAll('vaadin-breadcrumbs-item');

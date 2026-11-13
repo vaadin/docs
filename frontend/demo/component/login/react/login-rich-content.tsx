@@ -1,7 +1,7 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
-import { css } from 'lit'; // hidden-source-line
 import { LoginForm } from '@vaadin/react-components/LoginForm.js';
+import loginRichContentStyles from './login-rich-content-styles'; // hidden-source-line
 
 function Example() {
   return (
@@ -13,10 +13,4 @@ function Example() {
   );
 }
 
-const hostStyles = css`
-  :host {
-    color-scheme: dark;
-  }
-`;
-
-export default reactExample(Example, hostStyles); // hidden-source-line
+export default reactExample(Example, loginRichContentStyles); // hidden-source-line

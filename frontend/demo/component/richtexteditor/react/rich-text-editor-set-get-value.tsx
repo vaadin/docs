@@ -1,7 +1,6 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useRef } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { css } from 'lit'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { TextArea, type TextAreaChangeEvent } from '@vaadin/react-components/TextArea.js';
 import type {
@@ -9,6 +8,7 @@ import type {
   RichTextEditorValueChangedEvent,
 } from '@vaadin/react-components-pro/RichTextEditor.js';
 import { RichTextEditor } from '@vaadin/react-components-pro/RichTextEditor.js';
+import richTextEditorSetGetValueStyles from './rich-text-editor-set-get-value-styles'; // hidden-source-line
 
 function Example() {
   useSignals(); // hidden-source-line
@@ -64,10 +64,4 @@ function Example() {
   // end::snippet[]
 }
 
-const hostStyles = css`
-  :host([theme~='aura']) [has-label] {
-    padding-top: var(--vaadin-padding-m);
-  }
-`;
-
-export default reactExample(Example, hostStyles); // hidden-source-line
+export default reactExample(Example, richTextEditorSetGetValueStyles); // hidden-source-line
