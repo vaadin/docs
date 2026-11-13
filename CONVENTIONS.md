@@ -177,6 +177,16 @@ passed for a filter.
 Run `mvn spotless:apply` after changing Java examples and `npm run lint` after
 changing TypeScript examples. `mvn compile` must pass.
 
+## Images & Diagrams
+
+Draw a diagram as an SVG source next to the PNG that the page shows, and start
+the SVG with the command that regenerates the PNG. Use the colors, font and
+sizes in `guidelines/images.md`, and give the same role the same color as in
+the other diagrams.
+
+Give every image an alt text, and explain in the text everything the image
+shows.
+
 ## Component Pages
 
 Include the shared text from `_input-field-common-features.adoc` and the other

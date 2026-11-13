@@ -29,5 +29,6 @@ remain the source of truth and are not repeated here:
 | [Information Architecture](information-architecture.md) | The documentation sections, the types of documentation, where content goes, how a section's pages are structured. |
 | [Writing](writing.md)                                   | What reviewers ask for beyond the style guide: precision, staleness, titles, lists, scope.                        |
 | [Code Examples](code-examples.md)                       | Compiled versus inline examples, snippet tags, hidden lines, rendering.                                           |
+| [Images & Diagrams](images.md)                          | SVG sources, the diagram palette, text, arrows, alt text.                                                         |
 | [Component Pages](component-pages.md)                   | The structure of a page under `articles/components`.                                                              |
 | [Versions & Lifecycle](versions-and-lifecycle.md)       | `since` badges, feature flags, moving and removing pages.                                                         |
