@@ -14,6 +14,7 @@ public class AIOrchestratorProgrammaticPrompt extends Div {
     public AIOrchestratorProgrammaticPrompt() {
         // tag::snippet[]
         MessageList messageList = new MessageList();
+        messageList.setMarkdown(true);
 
         LLMProvider provider = getLLMProvider();
 
