@@ -56,7 +56,8 @@ public class GridContextMenuExample extends Div {
                         // person.getFullName());
                     }));
 
-            setDynamicContentHandler(person -> {
+            setDynamicContentProvider(context -> {
+                Person person = context.item();
                 // Do not show context menu when header is clicked
                 if (person == null)
                     return false;
