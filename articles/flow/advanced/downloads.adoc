@@ -49,7 +49,7 @@ Using [classname]`DownloadEvent` and lambda is particularly useful for:
 
 * Writing arbitrary data to the response output stream
 * Setting file meta-data like file name, content type, and content length
-* Update UI or owner component during the download
+* Update UI or owner component during the download, with [methodname]`UI.access()`
 * Having access to the [classname]`VaadinRequest`, [classname]`VaadinResponse`, and [classname]`VaadinSession` instances
 
 [#ui-state]
@@ -339,7 +339,7 @@ The [classname]`DownloadEvent` gives the access to the following information and
 * [classname]`VaadinRequest`, [classname]`VaadinResponse`, [classname]`VaadinSession` instances
 * [methodname]`getOutputStream` method to write the download content represented as a stream of bytes to response
 * [methodname]`getWriter` method to write the download content represented as a formatted text to response
-* The owner component and element of the download that you can change when download is in progress, e.g. disable the component, or get attributes or properties
+* The owner component and element of the download that you can change with [methodname]`UI.access()` when download is in progress, e.g. disable the component, or get attributes or properties
 * [classname]`UI` instance that you can use to call `UI.access()` for asynchronous updates
 * The helper [methodname]`setFileName` method sets the file name for the download, empty name gives a default name and `null` value doesn't set anything
 * The helper [methodname]`setContentType` method sets the content type for the download
@@ -359,22 +359,21 @@ TextField name = new TextField("Input a name...");
 HtmlObject image = new HtmlObject();
 image.setType("image/svg+xml");
 image.getStyle().set("display", "block");
-Button button = new Button("Generate Image", click -> image.setData(
-    DownloadHandler.fromInputStream(event -> new DownloadResponse(
-            getImageInputStream(name), "image.svg", "image/svg+xml", -1))));
+Button button = new Button("Generate Image", click -> {
+    String value = name.getValue();
+    image.setData(DownloadHandler.fromInputStream(event -> new DownloadResponse(
+            getImageInputStream(value), "image.svg", "image/svg+xml", -1)));
+});
 ----
 
 The `HtmlObject` component is used to render the SVG image in the browser that is generated dynamically based on the input from the `TextField`.
 On a button click the [classname]`DownloadHandler` is created with the [methodname]`fromInputStream` method that is set to `HtmlObject` component and that sends content to a client.
+The click listener reads the value of the `TextField`, because the handler runs without the session lock.
 And here is an example of how to generate a svg image and create an input stream:
 
 [source,java]
 ----
-private InputStream getImageInputStream(TextField name) {
-    String value = name.getValue();
-    if (value == null) {
-        value = "";
-    }
+private InputStream getImageInputStream(String value) {
     String svg = "<?xml version='1.0' encoding='UTF-8' standalone='no'?>"
         + "<svg xmlns='http://www.w3.org/2000/svg' "
         + "xmlns:xlink='http://www.w3.org/1999/xlink'>"
