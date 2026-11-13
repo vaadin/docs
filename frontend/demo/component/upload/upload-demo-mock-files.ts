@@ -53,6 +53,36 @@ export function createFakeFilesUploadErrorMessagesB() {
   ]);
 }
 
+// Used by `upload-clear-button.ts`
+export function createFakeFilesUploadClearButton() {
+  return createFakeUploadFiles([
+    {
+      name: 'Workflow.pdf',
+      progress: 60,
+      status: '19.7 MB: 60% (remaining time: 00:12:34)',
+    },
+    { name: 'Financials.xlsx', complete: true },
+  ]);
+}
+
+// Used by `upload-start-button.ts`
+export function createFakeFilesUploadStartButton() {
+  return createFakeUploadFiles([
+    {
+      name: 'Workflow.pdf',
+      status: 'Queued',
+      held: true,
+    },
+  ]);
+}
+
+// Used by `upload-retry-button.ts`
+export function createFakeFilesUploadRetryButton() {
+  return createFakeUploadFiles([
+    { name: 'Financials.xlsx', error: 'Something went wrong, please try again' },
+  ]);
+}
+
 // Expose functions for Java examples
 Upload.prototype.createFakeFilesUploadBasic = createFakeFilesUploadBasic;
 Upload.prototype.createFakeFilesUploadAutoUploadDisabled = createFakeFilesUploadAutoUploadDisabled;

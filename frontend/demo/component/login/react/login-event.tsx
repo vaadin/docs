@@ -6,7 +6,7 @@ import {
   LoginForm,
   type LoginFormDisabledChangedEvent,
 } from '@vaadin/react-components/LoginForm.js';
-import { loginHostStyles } from './login-host-styles';
+import { loginHostStyles } from './login-host-styles'; // hidden-source-line
 
 function Example() {
   useSignals(); // hidden-source-line

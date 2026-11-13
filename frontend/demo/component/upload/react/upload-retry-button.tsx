@@ -1,20 +1,15 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { Upload } from '@vaadin/react-components/Upload.js';
-import { createFakeUploadFiles } from './upload-demo-helpers';
-
-function createFakeFiles() {
-  return createFakeUploadFiles([
-    { name: 'Financials.xlsx', error: 'Something went wrong, please try again' },
-  ]);
-}
+import { createFakeFilesUploadRetryButton } from './upload-demo-mock-files'; // hidden-source-line
 
 function Example() {
-  const files = createFakeFiles();
-
+  const files = createFakeFilesUploadRetryButton(); // hidden-source-line
   return (
     // tag::snippet[]
-    <Upload files={files} />
+    <Upload
+      files={files} // hidden-source-line-trim
+    />
     // end::snippet[]
   );
 }

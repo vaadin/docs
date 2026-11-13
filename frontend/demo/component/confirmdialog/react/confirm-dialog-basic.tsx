@@ -5,7 +5,7 @@ import { useSignal } from '@vaadin/hilla-react-signals';
 import { Button } from '@vaadin/react-components/Button.js';
 import { ConfirmDialog } from '@vaadin/react-components/ConfirmDialog.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
-import confirmDialogBasicStyles from './confirm-dialog-basic-styles';
+import confirmDialogBasicStyles from './confirm-dialog-basic-styles'; // hidden-source-line
 
 function Example() {
   useSignals(); // hidden-source-line

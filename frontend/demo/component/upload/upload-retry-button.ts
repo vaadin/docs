@@ -3,13 +3,7 @@ import '@vaadin/upload';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { applyTheme } from 'Frontend/demo/theme';
-import { createFakeUploadFiles } from './upload-demo-helpers'; // hidden-source-line
-
-function createFakeFiles() {
-  return createFakeUploadFiles([
-    { name: 'Financials.xlsx', error: 'Something went wrong, please try again' },
-  ]);
-}
+import { createFakeFilesUploadRetryButton } from './upload-demo-mock-files'; // hidden-source-line
 
 @customElement('upload-retry-button')
 export class Example extends LitElement {
@@ -20,6 +14,10 @@ export class Example extends LitElement {
   }
 
   protected override render() {
-    return html`<vaadin-upload .files="${createFakeFiles()}"></vaadin-upload>`;
+    return html`
+      <vaadin-upload
+        .files="${createFakeFilesUploadRetryButton() /* hidden-source-line-trim */}"
+      ></vaadin-upload>
+    `;
   }
 }

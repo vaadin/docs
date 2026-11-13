@@ -1,25 +1,18 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { useComputed } from '@vaadin/hilla-react-signals';
+import { useComputed } from '@vaadin/hilla-react-signals'; // hidden-source-line
 import { Upload } from '@vaadin/react-components/Upload.js';
-import { createFakeUploadFiles } from './upload-demo-helpers';
-
-function createFakeFiles() {
-  return createFakeUploadFiles([
-    {
-      name: 'Workflow.pdf',
-      progress: 60,
-      status: '19.7 MB: 60% (remaining time: 00:12:34)',
-    },
-    { name: 'Financials.xlsx', complete: true },
-  ]);
-}
+import { createFakeFilesUploadClearButton } from './upload-demo-mock-files'; // hidden-source-line
 
 function Example() {
   useSignals(); // hidden-source-line
-  const files = useComputed(createFakeFiles);
-  return <Upload files={files.value} />;
+  const files = useComputed(createFakeFilesUploadClearButton); // hidden-source-line
+  return (
+    <Upload
+      files={files.value} // hidden-source-line-trim
+    />
+  );
 }
 
 export default reactExample(Example); // hidden-source-line
