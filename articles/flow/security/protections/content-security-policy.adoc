@@ -133,9 +133,39 @@ evalCalls.set("'The value for <b>' + this.x + '</b> is <b>' + this.y + '</b>'",
 ----
 
 
-== Checking Compatibility
+[[built-in-strict-csp]]
+== Built-in Strict CSP
 
-[since:com.vaadin:vaadin@V25.4]#The `csp` configuration parameter is a separate mechanism, which prepares applications for a strict, nonce-based policy that Vaadin sends itself, without `'unsafe-inline'` and `'unsafe-eval'` in `script-src`.# Set it to `warn` to log every call in the application that wouldn't work under such a policy. Its `strict` mode can't be used for applications yet, because Vaadin itself still uses APIs that need `eval`, for example for the event data of click listeners. See <<{articles}/flow/configuration/properties#,Configuration Properties>> for the parameter. Until then, use the overrides described in <<#function-execution-eval-calls,Function Execution & Eval Calls>> to run under a strict policy.
+[since:com.vaadin:vaadin@V25.4]#The `csp` configuration parameter is a separate mechanism, with which Vaadin sends a strict, nonce-based policy itself, without `'unsafe-inline'` and `'unsafe-eval'` in `script-src`.# See <<{articles}/flow/configuration/properties#,Configuration Properties>> for how to set the parameter.
+
+The `strict` mode can't be used for applications yet: with it, calls that need `eval` throw an exception, and Vaadin itself still makes such calls, for example for the event data of click listeners. Until then, use the approach described in <<#creating-random-nonce,Creating Random Nonce>> and <<#function-execution-eval-calls,Function Execution & Eval Calls>> to run under a strict policy.
+
+Set the parameter to `warn` to log every call in the application that wouldn't work under such a policy.
+
+Set the parameter to `strict` to have Vaadin send the policy. In production mode, Vaadin then generates a new nonce for every index HTML response, puts it on every `<script>` element and script preload link of the page -- including ones added by an [interfacename]`IndexHtmlRequestListener`, an `@Inline` annotation, or the license checker -- and sends a header such as:
+
+[source]
+----
+Content-Security-Policy: default-src 'self'; script-src 'nonce-...' 'strict-dynamic'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'
+----
+
+In development mode, no `Content-Security-Policy` header is sent and no nonce is added to the page, because the development server and the development tools need `eval`.
+
+To allow a resource that the default policy doesn't, such as an external API the application calls, add an [interfacename]`IndexHtmlRequestListener` and add sources to the [classname]`ContentSecurityPolicy` of the response:
+
+[source,java]
+----
+@Bean
+VaadinServiceInitListener cspSources() {
+    return event -> event.addIndexHtmlRequestListener(response -> response
+            .getContentSecurityPolicy()
+            .addSources("connect-src", "https://api.example.com"));
+}
+----
+
+Leave `script-src` unchanged: it holds the nonce and `'strict-dynamic'`, so replacing it blocks every script on the page, and host sources added to it are ignored by the browser. To load a script from another origin instead, add a `<script>` element to the document, which gets the nonce automatically.
+
+Setting the `Content-Security-Policy` header another way, such as from a servlet filter that runs before Vaadin or the listener in <<#creating-random-nonce,Creating Random Nonce>>, isn't compatible with this: in production mode, the request fails if the header is already set when the page is written, so that the page is never sent without Vaadin's own policy.
 
 
 [discussion-id]`B5E8EEC6-0F7E-49C5-8121-0906827BE4A5`
