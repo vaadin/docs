@@ -49,8 +49,43 @@ Using [classname]`DownloadEvent` and lambda is particularly useful for:
 
 * Writing arbitrary data to the response output stream
 * Setting file meta-data like file name, content type, and content length
-* Update UI or owner component during the download
+* Update UI or owner component during the download, with [methodname]`UI.access()`
 * Having access to the [classname]`VaadinRequest`, [classname]`VaadinResponse`, and [classname]`VaadinSession` instances
+
+[#ui-state]
+=== Reading UI State in a Download Handler
+
+The browser requests the download in a request of its own, apart from the requests of the UI. Vaadin calls the handler for that request without holding the session lock. This applies to every `DownloadHandler`, including the callback of [methodname]`fromInputStream`.
+
+The [classname]`DownloadEvent` gives access to the session, the UI, and the owner component, but the lock isn't held while the handler uses them. Reading the value of a UI component in the handler races with the requests of the UI that change it. Changing the UI needs [methodname]`UI.access()`, as in the example above.
+
+When the content depends on what the user sees, such as the filter of a grid, copy the values that the handler needs in a listener. Listeners run while holding the lock. The handler then reads the copy:
+
+[source,java]
+----
+AtomicReference<String> filter = new AtomicReference<>("");
+TextField filterField = new TextField("Filter");
+filterField.addValueChangeListener(e -> filter.set(e.getValue()));
+
+Anchor export = new Anchor(DownloadHandler.fromInputStream(event -> {
+    try {
+        byte[] csv = reportService.exportCsv(filter.get());
+        return new DownloadResponse(new ByteArrayInputStream(csv),
+                "report.csv", "text/csv", csv.length);
+    } catch (Exception e) {
+        return DownloadResponse.error(500, e);
+    }
+}), "Export");
+----
+
+The copy holds the last value that the server has received. An [classname]`Anchor` or [methodname]`Download.onClick()` starts the download on the click, without waiting for a server round trip. A value that the user has typed last may reach the server only after that, for example when a [classname]`TextField` sends its value on blur. For content that the browser loads by itself, such as the data of an [classname]`HtmlObject`, you can create the handler in a server-side click listener instead, as in the dynamic image example in <<#custom-examples,Custom Download Handler Examples>>.
+
+[#errors]
+=== Handling Errors in a Download Handler
+
+Catch exceptions inside the handler and return [methodname]`DownloadResponse.error()`, as the example above does. The browser then gets a response with that status code. An exception that the handler throws goes to the error handler of the session and then to the servlet container, which answers with its own error response.
+
+In neither case does the UI show that the download failed. The handlers that the [classname]`DownloadHandler` factory methods create notify their progress listeners of the failure in both cases, so a [methodname]`whenComplete()` listener can tell the user -- see <<#progress,Download Progress Listeners>>.
 
 === Download Content from InputStream
 
@@ -257,6 +292,7 @@ Anchor downloadLink = new Anchor(new DownloadHandler() {
 }, "Download me!");
 ----
 
+[#custom-examples]
 === Custom Download Handler Examples
 
 Here's an example of how a custom download handler can be written with lambda.
@@ -311,14 +347,14 @@ The [classname]`DownloadEvent` gives the access to the following information and
 * [classname]`VaadinRequest`, [classname]`VaadinResponse`, [classname]`VaadinSession` instances
 * [methodname]`getOutputStream` method to write the download content represented as a stream of bytes to response
 * [methodname]`getWriter` method to write the download content represented as a formatted text to response
-* The owner component and element of the download that you can change when download is in progress, e.g. disable the component, or get attributes or properties
+* The owner component and element of the download that you can change with [methodname]`UI.access()` when download is in progress, e.g. disable the component, or get attributes or properties
 * [classname]`UI` instance that you can use to call `UI.access()` for asynchronous updates
 * The helper [methodname]`setFileName` method sets the file name for the download, empty name gives a default name and `null` value doesn't set anything
 * The helper [methodname]`setContentType` method sets the content type for the download
 * The helper [methodname]`setContentLength` method sets the content length for the download or does nothing if the `-1` value is given
 
 [NOTE]
-`UI.access` is needed for updating the UI and also session locking if you want to access the session.
+The handler runs without the session lock. `UI.access` is needed for updating the UI and also session locking if you want to access the session. See <<#ui-state,Reading UI State in a Download Handler>>.
 
 [NOTE]
 Methods [methodname]`getOutputStream` and [methodname]`getWriter` cannot be used simultaneously for the same response, either one or the other.
@@ -331,22 +367,21 @@ TextField name = new TextField("Input a name...");
 HtmlObject image = new HtmlObject();
 image.setType("image/svg+xml");
 image.getStyle().set("display", "block");
-Button button = new Button("Generate Image", click -> image.setData(
-    DownloadHandler.fromInputStream(event -> new DownloadResponse(
-            getImageInputStream(name), "image.svg", "image/svg+xml", -1))));
+Button button = new Button("Generate Image", click -> {
+    String value = name.getValue();
+    image.setData(DownloadHandler.fromInputStream(event -> new DownloadResponse(
+            getImageInputStream(value), "image.svg", "image/svg+xml", -1)));
+});
 ----
 
 The `HtmlObject` component is used to render the SVG image in the browser that is generated dynamically based on the input from the `TextField`.
 On a button click the [classname]`DownloadHandler` is created with the [methodname]`fromInputStream` method that is set to `HtmlObject` component and that sends content to a client.
+The click listener reads the value of the `TextField`, because the handler runs without the session lock.
 And here is an example of how to generate a svg image and create an input stream:
 
 [source,java]
 ----
-private InputStream getImageInputStream(TextField name) {
-    String value = name.getValue();
-    if (value == null) {
-        value = "";
-    }
+private InputStream getImageInputStream(String value) {
     String svg = "<?xml version='1.0' encoding='UTF-8' standalone='no'?>"
         + "<svg xmlns='http://www.w3.org/2000/svg' "
         + "xmlns:xlink='http://www.w3.org/1999/xlink'>"
