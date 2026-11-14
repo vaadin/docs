@@ -323,4 +323,29 @@ Quarkus Bill-of-Materials (BOM) may pin libraries to a version that conflicts wi
 
 If you encounter such errors, try swapping the order of the BOMs in the dependency management section of the project's [filename]`pom.xml` file so that the Vaadin BOM is located immediately above the Quarkus BOM. This ensures that Vaadin's dependency versions take precedence.
 
+[[quarkus.vaadin.knownissues.native-jackson]]
+=== Native Image Build Fails with Quarkus 3.33.3.3 or Later
+
+With Quarkus 3.33.3.3 and the later 3.33 releases (3.33.4, 3.33.4.1, and 3.33.4.2), the native image build of a Vaadin application fails while it analyzes the application:
+
+[source]
+----
+Error: Class initialization of io.vertx.core.json.Json failed.
+...
+Caused by: java.lang.NoClassDefFoundError: com/fasterxml/jackson/core/util/ByteArrayBuilder
+----
+
+Vert.x needs Jackson 2 core, but the Quarkus Undertow extension excludes it from Vert.x, and from these releases on, no other dependency adds it. Vaadin uses Jackson 3, which doesn't help here. This is a Quarkus bug, tracked in https://github.com/quarkusio/quarkus/issues/56989[quarkusio/quarkus#56989].
+
+Until a fixed Quarkus release is available, either use Quarkus 3.33.3.2 or earlier, or add Jackson 2 core to the application. The Quarkus BOM manages its version:
+
+.`pom.xml`
+[source,xml]
+----
+<dependency>
+    <groupId>com.fasterxml.jackson.core</groupId>
+    <artifactId>jackson-core</artifactId>
+</dependency>
+----
+
 [discussion-id]`45A37C7E-2C03-44CA-B59E-C756F05CE3D2`
