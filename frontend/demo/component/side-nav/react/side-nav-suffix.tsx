@@ -1,27 +1,21 @@
 import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { Badge } from '@vaadin/react-components/Badge.js';
 import { Icon } from '@vaadin/react-components/Icon.js';
-import { SideNav, type SideNavElement } from '@vaadin/react-components/SideNav.js';
+import { SideNav } from '@vaadin/react-components/SideNav.js';
 import { SideNavItem } from '@vaadin/react-components/SideNavItem.js';
 import { patchSideNavNavigation } from './side-nav-helper'; // hidden-source-line
 
 function Example() {
-  const sideNavRef = useRef<SideNavElement>(null);
-
-  useEffect(() => {
-    if (sideNavRef.current) {
-      // Example-specific workaround
-      patchSideNavNavigation(sideNavRef.current);
-    }
-  }, [sideNavRef.current]);
-
   return (
     <div className="side-nav-sample">
       <div>
         {/* tag::snippet[] */}
-        <SideNav style={{ width: '100%' }} ref={sideNavRef}>
+        <SideNav
+          style={{ width: '100%' }}
+          ref={patchSideNavNavigation} // hidden-source-line
+        >
           <SideNavItem path="/inbox">
             <Icon icon="vaadin:envelope" slot="prefix" />
             Inbox
