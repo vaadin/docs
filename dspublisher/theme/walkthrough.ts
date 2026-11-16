@@ -59,8 +59,16 @@ function setUpVideos(block: HTMLElement) {
     video.muted = true;
     video.playsInline = true;
     video.autoplay = false;
+    // The browser may have started it already, before the reduced-motion check and the step it's in.
+    video.pause();
     video.preload = 'none';
     video.addEventListener('click', () => togglePlay(video));
+    // A spinner while a clip that should play is still loading, instead of a still that looks done.
+    const loading = (on: boolean) => () =>
+      video.parentElement!.classList.toggle('walkthrough-loading', on);
+    video.addEventListener('waiting', loading(true));
+    for (const done of ['playing', 'pause', 'emptied'])
+      video.addEventListener(done, loading(false));
     const pause = document.createElement('button');
     pause.type = 'button';
     pause.className = 'walkthrough-pause';
@@ -157,6 +165,22 @@ function enhance(block: HTMLElement) {
 
   setUpVideos(block);
 
+  // The clips are small: once the first can play, load the rest, so that Next doesn't wait.
+  const loadRest = () => {
+    for (const video of block.querySelectorAll('video')) {
+      if (video.preload !== 'auto') {
+        video.preload = 'auto';
+        if (video.readyState === HTMLMediaElement.HAVE_NOTHING) video.load();
+      }
+    }
+  };
+  const first = steps[0].querySelector('video');
+  if (first && first.readyState < HTMLMediaElement.HAVE_ENOUGH_DATA) {
+    first.addEventListener('canplaythrough', loadRest, { once: true });
+  } else {
+    loadRest();
+  }
+
   show = (i: number) => {
     at = Math.max(0, Math.min(steps.length - 1, i));
     steps.forEach((step, j) => {
@@ -168,8 +192,6 @@ function enhance(block: HTMLElement) {
           if (!REDUCED_MOTION.matches) video.play().catch(() => {});
         } else {
           video.pause();
-          // The next clip loads while this one plays, so Next doesn't wait.
-          if (j === at + 1) video.preload = 'auto';
         }
       }
     });
