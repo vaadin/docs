@@ -14,7 +14,7 @@ An AI framework -- such as Spring AI or LangChain4j -- is a Java library that ha
 
 .Memory Window Limit
 [IMPORTANT]
-Both built-in providers maintain a 30-message memory window of their own, except a [classname]`SpringAILLMProvider` created from a [classname]`ChatClient`, where the application owns the memory. Older messages are evicted from the provider's working memory. The orchestrator's [methodname]`getHistory()` retains the full conversation, but the LLM only sees the most recent 30 messages.
+Both built-in providers maintain a memory window of their own, except a [classname]`SpringAILLMProvider` created from a [classname]`ChatClient` that has a chat memory advisor, where the application owns the memory. The window holds only the most recent messages, and older messages are evicted from the provider's working memory. The orchestrator's [methodname]`getHistory()` retains the full conversation, but the LLM only sees the messages in the window.
 
 
 == Spring AI
@@ -34,7 +34,7 @@ ChatClient chatClient = ChatClient.builder(...)
 SpringAILLMProvider provider = new SpringAILLMProvider(chatClient);
 ----
 
-When created from a [classname]`ChatModel`, the provider manages its own conversation memory using a 30-message window. When created from a [classname]`ChatClient`, memory must be configured externally on the client.
+The provider manages its own conversation memory. A provider created from a [classname]`ChatClient` does so too, unless the client already has a chat memory advisor, such as Spring AI's [classname]`MessageChatMemoryAdvisor`. The application then owns the client's memory. The same applies to a custom [classname]`ChatClient` implementation that doesn't create its requests with a client built by [methodname]`ChatClient.builder()`, because the provider can't inspect its configuration.
 
 Streaming is enabled by default. To disable it, call [methodname]`setStreaming(false)`:
 
@@ -45,9 +45,9 @@ provider.setStreaming(false);
 
 In synchronous mode, the whole exchange runs in the request that triggered it and blocks the UI until the response is complete. See <<#background-execution,Background Execution>> for keeping the UI responsive during long prompts.
 
-.History Restoration with ChatClient
+.History Restoration with an Application-Owned Memory
 [NOTE]
-A provider created from a [classname]`ChatModel` restores the conversation into its own memory, so [methodname]`withHistory()` and [methodname]`reconnect()` need no extra work. A provider created from a [classname]`ChatClient` cannot do that -- the application owns that client's memory -- so its [methodname]`setHistory()` does nothing beyond logging what it observed: a warning when the client carries no chat memory advisor or no default conversation id, since a restored conversation then never reaches the LLM. Load the conversation into the client's own [classname]`ChatMemory` before passing the client to the provider, or use `new SpringAILLMProvider(chatModel)` and let the provider handle it. The orchestrator's own conversation history and the Message List are restored either way.
+A provider with its own memory restores the conversation into it, so [methodname]`withHistory()` and [methodname]`reconnect()` need no extra work. When the application owns the client's memory, the provider can't do that, and its [methodname]`setHistory()` does nothing. It logs a warning when the client's memory advisor has no default conversation id, since the restored conversation then never reaches the LLM. Load the conversation into the client's own [classname]`ChatMemory` before passing the client to the provider, or leave the memory advisor out and let the provider handle it. The orchestrator's own conversation history and the Message List are restored either way.
 
 
 == LangChain4j
@@ -67,7 +67,7 @@ ChatModel chatModel = OpenAiChatModel.builder()
 LangChain4JLLMProvider provider = new LangChain4JLLMProvider(chatModel);
 ----
 
-The provider manages its own conversation memory using a 30-message window.
+The provider manages its own conversation memory.
 
 Synchronous mode blocks the UI for the duration of each exchange; see <<#background-execution,Background Execution>>.
 
@@ -90,7 +90,7 @@ ChatClient chatClient = ChatClient.builder(chatModel)
 SpringAILLMProvider provider = new SpringAILLMProvider(chatClient);
 ----
 
-The MCP tools then reach the model on every turn, next to any tools registered on the orchestrator through <<tool-calling#,[methodname]`withTools()`>> or a <<controllers#,controller>>. The model calls all of them the same way, so tool names have to be unique across every source and match `^[a-zA-Z0-9_-]{1,64}$` -- validated when a controller is registered, but not for names that come from an MCP server. Give the client a chat memory advisor and a default conversation id as well, since a provider created from a [classname]`ChatClient` leaves conversation memory to the application.
+The MCP tools then reach the model on every turn, next to any tools registered on the orchestrator through <<tool-calling#,[methodname]`withTools()`>> or a <<controllers#,controller>>. The model calls all of them the same way, so tool names have to be unique across every source and match `^[a-zA-Z0-9_-]{1,64}$` -- validated when a controller is registered, but not for names that come from an MCP server.
 
 Retrieval-augmented generation against a vector store, guardrails and moderation, observability, model options such as temperature and token limits, and structured output with schema validation all work the same way: configure them on the framework's client, then wrap it in a provider. The framework's own reference documentation is where to look for the details:
 
