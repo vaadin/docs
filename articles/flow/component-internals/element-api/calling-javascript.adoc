@@ -14,7 +14,7 @@ The Element API contains methods for executing JavaScript in the browser from th
 
 Declare the JavaScript in a Java interface and call it through [methodname]`Element.executeJs(Class)`. The build collects the declared JavaScript into the frontend bundle, and the client runs it from there. Nothing is compiled from a string in the browser, so the call works under a content security policy that doesn't allow `unsafe-eval`. [methodname]`callJsFunction()` [since:com.vaadin:vaadin@V25.4]#works under such a policy as well#, since it calls a function that already exists on the element -- unless an argument is a [classname]`JsFunction`.
 
-The other methods described on this page -- [methodname]`executeJs(String, Object...)`, [classname]`JsFunction`, and [methodname]`addJsInitializer()` -- send the JavaScript to the browser as a string that's compiled there. Avoid them for anything a declaration can express.
+The other methods described on this page -- [methodname]`executeJs(String, Object...)`, [classname]`JsFunction`, and [methodname]`addJsInitializer(String, Object...)` -- send the JavaScript to the browser as a string that's compiled there. Avoid them for anything a declaration can express. [methodname]`addJsInitializer(JsFunction)` works under such a policy as well, when the function it's given is declared as a snippet rather than built with [methodname]`JsFunction.of()`.
 
 
 [[declaring-javascript]]
@@ -403,11 +403,15 @@ If the body always needs to reference the same element regardless of how the fun
 [role="since:com.vaadin:vaadin@V25.2"]
 == Client-Side Lifecycle With `addJsInitializer`
 
-The [methodname]`Element.addJsInitializer()` method registers a JavaScript expression that runs each time a client-side DOM node is created for the element, and whose returned cleanup callback runs when that DOM node is discarded or the returned [classname]`Registration` is removed.
+The [methodname]`Element.addJsInitializer()` method registers a JavaScript initializer that runs each time a client-side DOM node is created for the element, and whose returned cleanup callback runs when that DOM node is discarded or the returned [classname]`Registration` is removed.
 
 Use this when you need to install something on the client-side DOM &ndash; an event listener, a third-party widget, an observer &ndash; and reliably tear it down. A one-shot [methodname]`executeJs()` call doesn't cover two cases: a real re-attach gives the element a brand-new DOM node that no longer has your listener, and cleanup from a server-side detach listener cannot be delivered because the element is leaving the tree.
 
-The expression is compiled in the browser, so [methodname]`addJsInitializer()` needs a content security policy that allows `unsafe-eval`. No declaration-based counterpart exists; under a stricter policy, install and tear down from a client-side module of your own instead.
+Pass the initializer as a `String` expression, or as a [classname]`JsFunction` declared as a snippet.
+
+=== Passing an Expression
+
+The [methodname]`addJsInitializer(String, Object...)` overload takes the initializer as a JavaScript expression. The expression is compiled in the browser, so it needs a content security policy that allows `unsafe-eval`.
 
 The expression syntax is the same as [methodname]`executeJs()`: `this` is the host element on the client, and parameters are referenced as `$0`, `$1`, &hellip;. If the expression returns a function, that function is invoked at teardown.
 
@@ -426,7 +430,36 @@ Registration registration = getElement().addJsInitializer("""
 
 Here `$0` is `"click"` and `$1` is `"clicked"`, so the event type and the log label come from the server rather than being hard-coded in the expression.
 
-Remove the registration on the server when the listener is no longer needed; the cleanup callback then runs on the client.
+=== Passing a Declared Function
+
+The [methodname]`addJsInitializer(JsFunction)` overload takes the initializer as a function instead of as an expression. Declare it as a method of a [annotationname]`@JsDefinition` interface (see <<#declaring-javascript,Declaring JavaScript in Java>>) and obtain it through [methodname]`JsSnippets.of()`, so nothing is compiled from a string in the browser and the initializer works under a content security policy that doesn't allow `unsafe-eval`:
+
+.Declaring an initializer and passing it to `addJsInitializer`
+[example]
+====
+[source,java]
+----
+@JsDefinition
+public interface ListenJs extends Serializable {
+
+    @JsExpression("""
+            const listener = () => this.classList.toggle($0);
+            this.addEventListener('click', listener);
+            return () => this.removeEventListener('click', listener);""")
+    JsFunction toggleOnClick(String className);
+}
+----
+
+[source,java]
+----
+getElement().addJsInitializer(
+        JsSnippets.of(ListenJs.class).toggleOnClick("active"));
+----
+====
+
+The function runs with the element as `this` and no arguments, at the same moments as a `String` initializer. The arguments of the call that created the snippet are available as `$0`, `$1`, &hellip; in its expression, same as for a declared expression. Declare it without runtime arguments: a method annotated with [annotationname]`@JsFunctionParameterNames`, or a [classname]`JsFunction` built with [methodname]`withArguments()`, is refused, since those arguments would never be passed. Pass the values the function needs as arguments of the snippet method instead.
+
+Remove the registration on the server when the listener is no longer needed; the cleanup callback then runs on the client, for either overload.
 
 
 === Re-Attach Semantics
@@ -436,7 +469,7 @@ The initializer is re-run after a real re-attach &ndash; when the element is rem
 
 === Cleanup Constraints
 
-The return value of the expression is read synchronously. A function is treated as the cleanup callback; returning `null`, `undefined`, or nothing at all (no `return`) means there's no cleanup. Returning any other value &ndash; including a `Promise` resolving to a function &ndash; is logged as an error on the client.
+The return value of the initializer is read synchronously. A function is treated as the cleanup callback; returning `null`, `undefined`, or nothing at all (no `return`) means there's no cleanup. Returning any other value &ndash; including a `Promise` resolving to a function &ndash; is logged as an error on the client.
 
 If setup is asynchronous, don't return the `Promise`. Keep a reference to the pending work and return a cleanup function that awaits it before tearing down. Awaiting the same promise in the cleanup callback ensures the resource is torn down even if cleanup runs before the asynchronous setup has finished &ndash; otherwise a slow import could create the widget after cleanup has already run, leaking it:
 
