@@ -1,19 +1,22 @@
 ---
-title: Testing with Playwright
+title: E2E Testing with Playwright
 page-title: How to use Playwright for Vaadin application testing
 description: How to set up end-to-end testing of a Vaadin application with Playwright.
 meta-description: Learn how to perform robust end-to-end testing for Vaadin applications with Playwright.
-order: 100
+order: 32
 ---
 
+include::{articles}/_vaadin-version.adoc[]
 
-= Testing Applications with Playwright
+= End-to-End Testing with Playwright
 
-link:https://playwright.dev/java/[Playwright] is an open source end-to-end testing library developed by Microsoft. Similarly to Selenium, it provides Java API to simulate user interactions via browsers. Compared to <<end-to-end#,TestBench>> it lacks a high-level API for Vaadin components and it doesn't automatically wait for the client-server communication to stabilize after user interaction.
+link:https://playwright.dev/java/[Playwright] is an open source end-to-end testing library developed by Microsoft. It works well with Vaadin applications. Its Java API runs your tests in Chromium, Firefox, and WebKit, and its locators find Vaadin components by their role, label, and text, including the parts inside shadow DOM.
 
-Still, this page describes how to set up Playwright for a Spring Boot-based Vaadin application. It also shows how to create a simple Playwright test and the basics of finding and interacting with components in a Playwright test.
+Playwright doesn't track when the Vaadin server has processed a request. Instead, its actions and assertions retry until the page reaches the expected state or a timeout passes, which covers the server round-trips of a Vaadin application in most tests. For UI components with a more complex structure, such as [classname]`ComboBox`, [classname]`DatePicker`, and [classname]`Grid`, the <<dramafinder,DramaFinder>> library adds a typed Java API on top of Playwright.
 
-Although these instructions are Spring Boot specific, the same principles can be adapted to other architectures. The primary difference is that you need to control the starting and stopping of the server in a different manner. For example, you can use the `pre-integration-test` and `post-integration-test` phases -- as shown in <<end-to-end/getting-started#, Getting Started with End-to-End Testing>>. You can also adopt the `@SpringBootTest` based approach described here for <<selenium#,Testing with Selenium>>.
+This page describes how to set up Playwright for a Spring Boot-based Vaadin application. It also shows how to create a simple Playwright test and the basics of finding and interacting with components in a Playwright test.
+
+Although these instructions are Spring Boot specific, the same principles can be adapted to other architectures. The primary difference is that you need to control the starting and stopping of the server in a different manner. For example, you can use the `pre-integration-test` and `post-integration-test` phases -- as shown in <<end-to-end/getting-started#, Getting Started with End-to-End Testing>>. You can also adopt the `@SpringBootTest` based approach described here for <<selenium#,End-to-End Testing with Selenium>>.
 
 
 == Set Up Playwright
@@ -126,9 +129,70 @@ public class TrivialPlaywrightTest {
 <8> Asserts that there is an element with id `msg` in the page that contains the text, `Clicked!`. If you get instead the text using `+page.locator("#msg").textContent()+` and assert using standard JUnit API, it might fail as the server round-trip response might not yet be completed. Again, using the assertion method from Playwright helpers gives a bit of time for a single-page web application to render the response. Alternatively, you could add, for example, a `+page.getByText("Clicked!").waitFor();+` line before the assertion to ensure the server round-trip has been completed.
 
 
-== Selecting Components
+[[dramafinder]]
+== Vaadin Components with DramaFinder
 
-Vaadin components are Web Components, so part of their structure lives in shadow DOM and part in slotted light DOM. Because Playwright has no Vaadin-specific element API, a couple of cases trip up hand-written selectors.
+Some Vaadin components take several steps to operate with plain Playwright. Selecting an item in a [classname]`ComboBox`, for example, means opening the overlay, finding the item, and clicking it. https://github.com/parttio/dramafinder[DramaFinder] is an open source library that wraps Vaadin components in typed Java classes for Playwright. Its elements find a component by its label or text, operate it in one call, and wait for the server round-trip. DramaFinder is maintained by the Vaadin community.
+
+Add the dependency next to Playwright:
+
+.`pom.xml`
+[source,xml,subs="+attributes"]
+----
+<dependency>
+    <groupId>org.vaadin.addons</groupId>
+    <artifactId>dramafinder</artifactId>
+    <version>{dramafinder-version}</version> <!-- Check the latest version at https://github.com/parttio/dramafinder -->
+    <scope>test</scope>
+</dependency>
+----
+
+The elements only need a Playwright [classname]`Page`, such as the one in the test above. The following view has a combo box and a date picker:
+
+.`OrderView.java`
+[source,java]
+----
+@Route("order")
+public class OrderView extends VerticalLayout {
+
+    public OrderView() {
+        var country = new ComboBox<String>("Country");
+        country.setItems("Finland", "Germany", "Sweden");
+
+        var delivery = new DatePicker("Delivery date");
+
+        var order = new Button("Order", e -> Notification.show("Delivery to "
+                + country.getValue() + " on " + delivery.getValue()));
+
+        add(country, delivery, order);
+    }
+}
+----
+
+A test that has opened the `order` route in `page` fills in the fields and checks the notification:
+
+.`OrderViewTest.java`
+[source,java]
+----
+@Test
+void orderShowsConfirmation() {
+    ComboBoxElement.getByLabel(page, "Country").selectItem("Germany");
+    DatePickerElement.getByLabel(page, "Delivery date")
+            .setValue(LocalDate.of(2030, 1, 15));
+    ButtonElement.getByText(page, "Order").click();
+
+    NotificationElement
+            .getByText(page, "Delivery to Germany on 2030-01-15")
+            .assertOpen();
+}
+----
+
+DramaFinder has elements for most Vaadin components, and base classes that replace the setup code shown above. See the https://parttio.github.io/dramafinder/[DramaFinder documentation].
+
+
+== Selecting Components with Plain Playwright
+
+Vaadin components are Web Components, so part of their structure lives in shadow DOM and part in slotted light DOM. Without a helper library, a couple of cases trip up hand-written selectors.
 
 === Dialog Action Buttons Are Slotted
 
@@ -181,6 +245,7 @@ mvn test -DexcludedGroups="playwright"
 For more information about using Playwright, check out these pages:
 
 - link:https://playwright.dev/java/[Official Playwright Java documentation]
+- link:https://parttio.github.io/dramafinder/[DramaFinder documentation]
 - link:https://www.lumme.dev/2021/04/15/using-playwright-and-junit.html/[Using Playwright]
 - link:https://martinelli.ch/ui-testing-with-vaadin-and-playwright/[Testing with Playwright]
 
