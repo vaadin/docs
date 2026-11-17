@@ -138,11 +138,13 @@ evalCalls.set("'The value for <b>' + this.x + '</b> is <b>' + this.y + '</b>'",
 
 [since:com.vaadin:vaadin@V25.4]#The `csp` configuration parameter is a separate mechanism, with which Vaadin sends a strict, nonce-based policy itself, without `'unsafe-inline'` and `'unsafe-eval'` in `script-src`.# See <<{articles}/flow/configuration/properties#,Configuration Properties>> for how to set the parameter.
 
-The `strict` mode can't be used for applications yet: with it, calls that need `eval` throw an exception, and Vaadin itself still makes such calls, for example for the event data of click listeners. Until then, use the approach described in <<#creating-random-nonce,Creating Random Nonce>> and <<#function-execution-eval-calls,Function Execution & Eval Calls>> to run under a strict policy.
+The `strict` mode is a preview. A view runs under the policy when everything it uses works without `eval`, but not every Vaadin UI component does yet. See <<#preview-limitations,Preview Limitations>>. For an application that such a limitation affects, use the approach described in <<#creating-random-nonce,Creating Random Nonce>> and <<#function-execution-eval-calls,Function Execution & Eval Calls>> to run under a strict policy.
 
-Set the parameter to `warn` to log every call in the application that wouldn't work under such a policy.
+Set the parameter to `warn` to log every call in the application that wouldn't work under such a policy. Each log entry is a [classname]`CspViolationException`, whose stack trace leads to the code that made the call.
 
-Set the parameter to `strict` to have Vaadin send the policy. In production mode, Vaadin then generates a new nonce for every index HTML response, puts it on every `<script>` element and script preload link of the page -- including ones added by an [interfacename]`IndexHtmlRequestListener`, an `@Inline` annotation, or the license checker -- and sends a header such as:
+Set the parameter to `strict` to have Vaadin send the policy. An API that sends JavaScript to the browser as a string, such as [methodname]`executeJs()` with a string expression, then throws a [classname]`CspViolationException`. It does so in development mode as well.
+
+In production mode, Vaadin generates a new nonce for every index HTML response. It puts the nonce on every `<script>` element and script preload link of the page. This includes the ones added by an [interfacename]`IndexHtmlRequestListener`, an `@Inline` annotation, or the license checker. Vaadin then sends a header such as:
 
 [source]
 ----
@@ -166,6 +168,37 @@ VaadinServiceInitListener cspSources() {
 Leave `script-src` unchanged: it holds the nonce and `'strict-dynamic'`, so replacing it blocks every script on the page, and host sources added to it are ignored by the browser. To load a script from another origin instead, add a `<script>` element to the document, which gets the nonce automatically.
 
 Setting the `Content-Security-Policy` header another way, such as from a servlet filter that runs before Vaadin or the listener in <<#creating-random-nonce,Creating Random Nonce>>, isn't compatible with this: in production mode, the request fails if the header is already set when the page is written, so that the page is never sent without Vaadin's own policy.
+
+
+[[preview-limitations]]
+=== Preview Limitations
+
+The `strict` mode has the following limitations:
+
+- Many Vaadin UI components, such as Grid and Combo Box, still send JavaScript to the browser as strings. Using such a UI component throws a [classname]`CspViolationException`. Run the application with `warn` first to see which of its UI components are affected.
+- Renderers don't work, because the browser compiles their template from a string. This applies to [classname]`LitRenderer`, and to the renderers built on it, such as [classname]`ComponentRenderer` and [classname]`TextRenderer`.
+- An add-on that calls a string-based JavaScript API throws the same exception.
+- The policy keeps `'unsafe-inline'` in `style-src`, because UI components add styles to the page while the application runs.
+
+
+[[spring-security]]
+=== Spring Security
+
+Spring Security can send a `Content-Security-Policy` header of its own, which an application configures with [methodname]`contentSecurityPolicy()` in the security filter chain. In the `strict` mode, the bootstrap page carries only the policy of Vaadin. The directives configured in Spring Security aren't merged into it, and nothing is logged about that.
+
+Add the directives that the bootstrap page needs to the [classname]`ContentSecurityPolicy` of the response instead:
+
+[source,java]
+----
+@Bean
+VaadinServiceInitListener cspDirectives() {
+    return event -> event.addIndexHtmlRequestListener(response -> response
+            .getContentSecurityPolicy()
+            .setDirective("frame-ancestors", "'none'"));
+}
+----
+
+The other responses of the application keep the policy configured in Spring Security. These are the files of the frontend bundle, downloads, and the responses that Spring Security writes itself, such as an access denied response.
 
 
 [discussion-id]`B5E8EEC6-0F7E-49C5-8121-0906827BE4A5`
