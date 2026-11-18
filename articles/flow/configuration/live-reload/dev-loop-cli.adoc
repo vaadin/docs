@@ -174,7 +174,7 @@ Launches the application in development mode. Blocks until it's serving or has f
 Makes the edits on disk live. Blocks until the outcome is terminal. `--no-restart` stops after the compile gate, which is useful when you want compile errors without touching the running application.
 
 `stop` / `restart [--jvm-args "<flags>"]` / `shutdown`::
-Stop the application; stop and start it again; or stop the daemon along with the application it owns. `--jvm-args` adds flags such as `-Xmx2g` or `--add-exports` to the application JVM -- see <<#configuration,Configuration>>. Use `restart` after changing anything the running JVM can't absorb, such as [filename]`package.json` or [filename]`vite.config.ts`. Use `shutdown` if the daemon seems wedged -- the next command starts a fresh one.
+Stop the application; stop and start it again; or stop the daemon along with the application it owns. `--jvm-args` adds flags such as `-Xmx2g` or `--add-exports` to the application JVM -- see <<#configuration,Configuration>>. Use `restart` after changing anything the running JVM can't absorb, such as [filename]`package.json` or [filename]`vite.config.ts`. `shutdown` stops a daemon that's running normally; one that doesn't answer at all doesn't respond to it either -- see <<#troubleshooting,Troubleshooting>>.
 
 `--help`::
 The full usage text, including every option and environment variable. Answers without starting a daemon, which is what makes it useful when the loop isn't working.
@@ -342,7 +342,7 @@ More edits restart than you expect::
 Check the daemon log for which JVM was chosen. Without a JetBrains Runtime, structural changes can't be hot-swapped at all. See <<hotswap-agent#,Live Reload with HotswapAgent>> for how to install one.
 
 The daemon seems wedged::
-Run `shutdown`. Any later command starts a fresh daemon.
+A killed daemon leaves a stale handshake, and every command but `status`/`ping` reaps it and spawns a fresh daemon without being asked. A daemon that's still running but not answering doesn't get reaped that way -- it still holds the daemon lock, so a fresh daemon can't come up beside it. Every command, `shutdown` included, waits a few seconds and then exits `70`, naming the pid to kill. Kill it yourself, then `start` spawns a fresh daemon.
 
 
 == Further Detail
