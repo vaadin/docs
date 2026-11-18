@@ -452,6 +452,85 @@ Labels ylabels = yaxis.getLabels();
 ylabels.setFormatter("function() {return this.value + ' km';}");
 ----
 
+The browser compiles the function from the string. A strict Content Security Policy doesn't allow this. See <<charts.configuration.format.csp>> for the alternatives.
+
+
+[role="since:com.vaadin:vaadin@V25.4"]
+[[charts.configuration.format.csp]]
+=== Formatting Under a Strict Content Security Policy
+
+Setters such as [methodname]`setFormatter()`, [methodname]`setPointFormatter()` and [methodname]`setLabelFormatter()` take the source code of a JavaScript function as a string. The browser compiles the function with `eval()`, which a Content Security Policy without `'unsafe-eval'` in `script-src` blocks. See <<{articles}/flow/security/protections/content-security-policy#,Content Security Policy>> for how Vaadin uses such a policy.
+
+When the `csp` configuration parameter is set, Vaadin reports a chart configuration that has such a function when it sends it to the browser. In the `warn` mode, it logs a warning. In the `strict` mode, it throws a [classname]`CspViolationException`.
+
+Use a format string or a declared function instead, as described next.
+
+
+==== Format Strings
+
+A format string is a template, not JavaScript, so a strict policy doesn't affect it. Many options that take a formatter also have a format string for the same purpose, for example tooltips, data labels, axis labels and legend items. Set it with [methodname]`setFormat()`, [methodname]`setPointFormat()`, [methodname]`setHeaderFormat()`, [methodname]`setFooterFormat()` or [methodname]`setLabelFormat()`.
+
+Besides variables, a format string can contain conditions and helpers for arithmetic, comparison and text, which replace many formatters. See the https://www.highcharts.com/docs/chart-concepts/templating[Highcharts templating documentation] for the full syntax. The following table shows a few formatters and the format strings that replace them:
+
+[cols="1,2,2"]
+|===
+|Option |Formatter |Format String
+
+|Axis labels
+|`function() { return this.value / 1000 + 'k'; }`
+|`{divide value 1000}k`
+
+|Data labels
+|`function() { return this.y > 5000 ? 'high' : 'low'; }`
+|`{#if (gt y 5000)}high{else}low{/if}`
+
+|Tooltip point
+|`function() { return this.series.name + ': ' + this.y + ' kg'; }`
+|`{series.name}: {point.y} kg`
+|===
+
+For example, the following sets the format of the tick labels on a chart axis:
+
+[source,java]
+----
+YAxis yaxis = chart.getConfiguration().getyAxis();
+yaxis.getLabels().setFormat("{divide value 1000}k");
+----
+
+
+==== Declared Functions
+
+When a format string isn't enough, declare the function in an interface annotated with [annotationname]`@JsDefinition`, and set it on the chart in the browser. The build adds the declared JavaScript to the bundle, so the browser doesn't compile it. See <<{articles}/flow/component-internals/element-api/calling-javascript#declaring-javascript,Declaring JavaScript in Java>> for how such interfaces work.
+
+The JavaScript runs on the chart element. Its `configuration` property is the Highcharts chart, which the script updates with the function. The chart fires a `chart-load` event when it's created, so the script also applies the function after that event:
+
+[source,java]
+----
+@JsDefinition
+interface ChartFunctionsJs extends Serializable {
+
+    @JsExpression("""
+            const apply = () => {
+              if (this.configuration) {
+                this.configuration.update({
+                  plotOptions: { column: { dataLabels: {
+                    formatter() { return this.y / 1000 + 'k'; }
+                  } } }
+                });
+              }
+            };
+            this.addEventListener('chart-load', () => setTimeout(apply));
+            apply();
+            """)
+    void applyDataLabelFormatter();
+}
+
+chart.addAttachListener(event -> chart.getElement()
+        .executeJs(ChartFunctionsJs.class).applyDataLabelFormatter());
+----
+
+The function isn't part of the chart configuration on the server, so [methodname]`getFormatter()` doesn't return it.
+
 
 [[charts.configuration.format.simplified]]
 === Simplified Formatting
