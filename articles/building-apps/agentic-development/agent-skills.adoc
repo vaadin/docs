@@ -130,6 +130,69 @@ The agent works in three steps:
 The skill only covers the layout and the components. Binding the fields to a Java bean, with converters and validation, is left to the agent working from the <<{articles}/building-apps/forms-data/add-form#,Forms guides>>, which it finds through the MCP server.
 
 
+[[self-hosted-server]]
+== Use a Self-Hosted MCP Server
+
+The plugin connects to the hosted Vaadin MCP server at `https://mcp.vaadin.com/docs`. If your organization <<mcp/self-hosting#,runs the MCP server itself>>, block the hosted server and add your own under the name `vaadin`. The skills refer to the MCP tools by name, such as `search_vaadin_docs` and `get_java_symbol`, so they work with your server unchanged.
+
+The commands below use `\https://mcp.example.com/docs` as the address of your server. Replace it with your own.
+
+
+=== Claude Code
+
+Block the hosted server in your user settings, [filename]`~/.claude/settings.json`:
+
+[source,json]
+----
+{
+  "deniedMcpServers": [
+    { "serverUrl": "https://mcp.vaadin.com/*" }
+  ]
+}
+----
+
+To block it for everyone in your organization, put the same entry in https://code.claude.com/docs/en/managed-mcp[managed settings] instead.
+
+Then add your own server:
+
+[source,terminal]
+----
+claude mcp add --transport http --scope user vaadin https://mcp.example.com/docs
+----
+
+Run `claude mcp list` to check the result. It lists your `vaadin` server, and no longer lists `plugin:vaadin-skills:vaadin`. Restart Claude Code to apply the change, and run `/mcp` in the new session to check that your server is connected.
+
+
+=== Codex
+
+Add your own server under the name `vaadin`. It replaces the plugin's server of the same name:
+
+[source,terminal]
+----
+codex mcp add vaadin --url https://mcp.example.com/docs
+----
+
+This saves the server in [filename]`~/.codex/config.toml`. You can also add it to that file by hand:
+
+[source,toml]
+----
+[mcp_servers.vaadin]
+url = "https://mcp.example.com/docs"
+----
+
+Run `codex mcp list` to check the result. The `vaadin` server shows your address instead of `https://mcp.vaadin.com/docs`. Restart Codex to apply the change, and run `/mcp` in the new session to check that your server is connected.
+
+Codex doesn't document that a server in [filename]`config.toml` replaces a plugin's server of the same name, so check the list again after you upgrade Codex.
+
+
+=== What Still Needs the Internet
+
+Your own server answers the documentation lookups. On a network without internet access, such as an <<mcp/self-hosting/air-gapped-operation#,air-gapped>> one, these still don't work:
+
+* *Installing and updating the plugin.* The marketplace and the plugin are fetched from GitHub. Instead, mirror https://github.com/vaadin/agent-skills[`vaadin/agent-skills`] on a Git host or a shared folder on your network, and list it in a marketplace of your own. See https://code.claude.com/docs/en/plugin-marketplaces[Create a Marketplace] for Claude Code, and https://developers.openai.com/codex/plugins/build[Build Plugins] for Codex.
+* *Creating a project with <<agent-tools#,Agent Tools>>.* Its `create-project` tool downloads the project skeleton from `start.vaadin.com`.
+
+
 == What It Doesn't Do
 
 * *It isn't for React.* The skills target Java and Flow. The MCP server included in the plugin also covers React, so a React project still benefits from the documentation lookup.
