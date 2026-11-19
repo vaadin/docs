@@ -142,16 +142,16 @@ The `strict` mode is a preview. A view runs under the policy when everything it 
 
 Set the parameter to `warn` to log every call in the application that wouldn't work under such a policy. Each log entry is a [classname]`CspViolationException`, whose stack trace leads to the code that made the call.
 
-Set the parameter to `strict` to have Vaadin send the policy. An API that sends JavaScript to the browser as a string, such as [methodname]`executeJs()` with a string expression, then throws a [classname]`CspViolationException`. It does so in development mode as well.
+Set the parameter to `strict` to have Vaadin send the policy. An API that sends JavaScript to the browser as a string, such as [methodname]`executeJs()` with a string expression, then throws a [classname]`CspViolationException`.
 
-In production mode, Vaadin generates a new nonce for every index HTML response. It puts the nonce on every `<script>` element and script preload link of the page. This includes the ones added by an [interfacename]`IndexHtmlRequestListener`, an `@Inline` annotation, or the license checker. Vaadin then sends a header such as:
+In production mode, Vaadin generates a new nonce for every index HTML response. It puts the nonce on every `<script>` element and script preload link of the page. This includes the ones added by an [interfacename]`IndexHtmlRequestListener` or an `@Inline` annotation. Vaadin then sends a header such as:
 
 [source]
 ----
 Content-Security-Policy: default-src 'self'; script-src 'nonce-...' 'strict-dynamic'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'
 ----
 
-In development mode, no `Content-Security-Policy` header is sent and no nonce is added to the page, because the development server and the development tools need `eval`.
+In development mode, no `Content-Security-Policy` header is sent and no nonce is added to the page, because the development server and the development tools need `eval`. Calls that need `eval` still throw in development mode, so violations show up before a production build.
 
 To allow a resource that the default policy doesn't, such as an external API the application calls, add an [interfacename]`IndexHtmlRequestListener` and add sources to the [classname]`ContentSecurityPolicy` of the response:
 
@@ -159,15 +159,18 @@ To allow a resource that the default policy doesn't, such as an external API the
 ----
 @Bean
 VaadinServiceInitListener cspSources() {
-    return event -> event.addIndexHtmlRequestListener(response -> response
-            .getContentSecurityPolicy()
-            .addSources("connect-src", "https://api.example.com"));
+    return event -> event.addIndexHtmlRequestListener(response -> {
+        ContentSecurityPolicy policy = response.getContentSecurityPolicy();
+        if (policy != null) { // null unless the csp mode is strict
+            policy.addSources("connect-src", "https://api.example.com");
+        }
+    });
 }
 ----
 
 Leave `script-src` unchanged: it holds the nonce and `'strict-dynamic'`, so replacing it blocks every script on the page, and host sources added to it are ignored by the browser. To load a script from another origin instead, add a `<script>` element to the document, which gets the nonce automatically.
 
-Setting the `Content-Security-Policy` header another way, such as from a servlet filter that runs before Vaadin or the listener in <<#creating-random-nonce,Creating Random Nonce>>, isn't compatible with this: in production mode, the request fails if the header is already set when the page is written, so that the page is never sent without Vaadin's own policy.
+Setting the `Content-Security-Policy` header another way, such as from a servlet filter that runs before Vaadin or the listener in <<#creating-random-nonce,Creating Random Nonce>>, isn't compatible with this: in production mode, the request fails if the header is already set when the page is written, so that the page is never sent without Vaadin's own policy. A policy configured in Spring Security doesn't fail the request. See <<#spring-security,Spring Security>> for how the two policies work together.
 
 
 [[preview-limitations]]
@@ -175,9 +178,9 @@ Setting the `Content-Security-Policy` header another way, such as from a servlet
 
 The `strict` mode has the following limitations:
 
-- Some Vaadin UI components, such as CRUD and Spreadsheet, still send JavaScript to the browser as strings. Using such a UI component throws a [classname]`CspViolationException`. Run the application with `warn` first to see which of its UI components are affected.
+- Some Vaadin UI components, such as Spreadsheet, still send JavaScript to the browser as strings. Using such a UI component throws a [classname]`CspViolationException`. Run the application with `warn` first to see which of its UI components are affected.
 - A renderer created with [methodname]`LitRenderer.of(String)` throws the same exception, because the browser compiles its template from a string. The built-in renderers, such as [classname]`ComponentRenderer` and [classname]`TextRenderer`, work.
-- Chart options that take a JavaScript function as a string, such as [methodname]`Tooltip.setFormatter()`, don't work, because the browser refuses to compile the function.
+- A chart option that takes a JavaScript function as a string, such as [methodname]`Tooltip.setFormatter()`, throws the same exception.
 - An add-on that calls a string-based JavaScript API throws the same exception.
 - The policy keeps `'unsafe-inline'` in `style-src`, because UI components add styles to the page while the application runs.
 
@@ -193,9 +196,12 @@ Add the directives that the bootstrap page needs to the [classname]`ContentSecur
 ----
 @Bean
 VaadinServiceInitListener cspDirectives() {
-    return event -> event.addIndexHtmlRequestListener(response -> response
-            .getContentSecurityPolicy()
-            .setDirective("frame-ancestors", "'none'"));
+    return event -> event.addIndexHtmlRequestListener(response -> {
+        ContentSecurityPolicy policy = response.getContentSecurityPolicy();
+        if (policy != null) { // null unless the csp mode is strict
+            policy.setDirective("frame-ancestors", "'none'");
+        }
+    });
 }
 ----
 
