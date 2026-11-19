@@ -1,11 +1,11 @@
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React, { useEffect } from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
-import { css } from 'lit'; // hidden-source-line
 import { useSignal } from '@vaadin/hilla-react-signals';
 import { AppLayout, Grid, GridColumn } from '@vaadin/react-components';
 import { getPeople } from 'Frontend/demo/domain/DataService';
 import type Person from 'Frontend/generated/com/vaadin/demo/domain/Person';
+import appLayoutHeightFullStyles from './app-layout-height-full-styles'; // hidden-source-line
 
 const h1Style = {
   fontSize: '1.125rem',
@@ -39,11 +39,4 @@ function Example() {
   );
 }
 
-const hostStyles = css`
-  :host {
-    height: 100vh;
-    margin: calc(-1 * var(--docs-space-l));
-  }
-`;
-
-export default reactExample(Example, hostStyles); // hidden-source-line
+export default reactExample(Example, appLayoutHeightFullStyles); // hidden-source-line
