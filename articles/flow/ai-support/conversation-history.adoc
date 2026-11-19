@@ -81,22 +81,21 @@ File attachments are represented as [classname]`AIAttachment` records with [meth
 
 == Session Persistence
 
-[classname]`AIOrchestrator` is serializable. Conversation history, UI component bindings, listener registrations, and display names are preserved across serialization. However, the LLM provider, tool objects, and the controller are transient -- they are not serialized and must be restored after deserialization.
+[classname]`AIOrchestrator` is serializable. Conversation history, UI component bindings, listener registrations, and display names are preserved across serialization. However, the LLM provider and the controller are transient -- they are not serialized and must be restored after deserialization.
 
 === Reconnecting after Deserialization
 
-After the session is restored, call [methodname]`reconnect(LLMProvider)` to supply a new provider and optionally restore tools and file attachments. The [methodname]`apply()` call replays the existing conversation history onto the new provider so that it has full context for subsequent prompts. The UI is not modified -- the message list, input, and file receiver components retain their state automatically.
+After the session is restored, call [methodname]`reconnect(LLMProvider)` to supply a new provider and optionally restore the controller and file attachments. The [methodname]`apply()` call replays the existing conversation history onto the new provider so that it has full context for subsequent prompts. The UI is not modified -- the message list, input, and file receiver components retain their state automatically.
 
 [source,java]
 ----
 orchestrator.reconnect(provider)
-        .withTools(tools)                   // optional
         .withController(controller)         // optional
         .withAttachments(savedAttachments)  // optional
         .apply();
 ----
 
-Provider settings such as the streaming mode and <<llm-providers#background-execution,background execution>> live on the provider and are not serialized; apply them to the new provider instance before passing it to [methodname]`reconnect()`.
+Provider settings such as the streaming mode and <<llm-providers#background-execution,background execution>> live on the provider and are not serialized; apply them to the new provider instance before passing it to [methodname]`reconnect()`. <<tool-calling#,Tool objects>> registered with the AI framework aren't part of the orchestrator either, so register them again when you create the new provider.
 
 .Controller Reattachment
 [NOTE]
