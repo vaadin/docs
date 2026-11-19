@@ -16,7 +16,9 @@ in.
 
 Put new how-to content in `articles/building-apps`, not in `articles/flow`.
 `articles/flow` is the Reference Guide, the reference documentation of the
-framework for both Flow views and React views.
+framework for both Flow views and React views. Content about setting up or
+using AI coding agents with Vaadin goes in `articles/agentic-development`,
+both how-to and reference.
 
 Search for the topic before adding a page or a section. When it is already
 covered, extend that page or link to it instead of explaining it again.
