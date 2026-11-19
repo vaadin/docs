@@ -247,6 +247,47 @@ return (
 ----
 
 
+== Item Count
+
+Auto Grid loads the number of items from the service when the service also implements the [interfacename]`CountService` interface. The [classname]`ListRepositoryService` and [classname]`CrudRepositoryService` base classes implement it already. For a custom service, implement the [methodname]`count()` method, as shown in <<#implementing-a-custom-service,Implementing a Custom Service>>.
+
+The interface changes how the grid scrolls:
+
+- With [interfacename]`CountService`, Auto Grid calls [methodname]`count()` with the current filter, and the grid has the exact number of rows. The scrollbar shows the full length of the data, and the user can drag it to any position.
+- Without it, Auto Grid uses infinite scrolling. The grid only knows about the pages it has loaded so far, and it grows as the user scrolls down.
+
+Auto Grid calls [methodname]`count()` again when the filter changes and when the data is refreshed. When a query that counts all matching items is expensive, use infinite scrolling instead. To do that, implement [interfacename]`ListService` or [interfacename]`CrudService` directly rather than extending one of the base classes, and leave out [interfacename]`CountService`.
+
+To show the number of items in the grid footer, set the `totalCount` property, the `filteredCount` property, or both. `totalCount` shows the number of all items, and `filteredCount` shows the number of items that match the current filter. Both properties require a service that implements [interfacename]`CountService`.
+
+[source,tsx]
+----
+<AutoGrid
+  service={ProductService}
+  model={ProductModel}
+  totalCount
+  filteredCount
+/>
+----
+
+To render the footer yourself, pass a component to the `footerCountRenderer` property, together with `totalCount`, `filteredCount`, or both. Without one of them, Auto Grid renders no footer. The component receives `filteredCount` as a prop, and also `totalCount` when you set the `totalCount` property.
+
+[source,tsx]
+----
+function ProductCount({ totalCount, filteredCount }: { totalCount?: number; filteredCount?: number }) {
+  return <span>{filteredCount} of {totalCount} products</span>;
+}
+
+<AutoGrid
+  service={ProductService}
+  model={ProductModel}
+  totalCount
+  filteredCount
+  footerCountRenderer={ProductCount}
+/>
+----
+
+
 == Grid Properties
 
 You can also customize the underlying Grid component properties in Auto Grid.
@@ -269,9 +310,9 @@ Auto Grid supports working with plain, non-JPA Java classes. This can be useful,
 
 === Implementing a Custom Service
 
-To use plain Java classes, you need to provide a custom implementation of the `ListService<T>` interface, as the `ListRepositoryService<T>` base class only works with JPA entities. The `List<T> list(Pageable pageable, Filter filter)` method needs to be implemented. It returns a list of paginated, sorted and filtered items.
+To use plain Java classes, write your own implementation of the `ListService<T>` interface, as the `ListRepositoryService<T>` base class only works with JPA entities. The `List<T> list(Pageable pageable, Filter filter)` method needs to be implemented. It returns a list of paginated, sorted and filtered items. To give the grid an exact number of rows, also implement the [interfacename]`CountService` interface and its `long count(Filter filter)` method, which returns the number of items that match the filter. See <<#item-count,Item Count>>.
 
-The following example shows a basic implementation of a custom `ListService` that wraps a JPA repository. The service only exposes DTO instances to the client and maps between the DTO instances and JPA entities internally. It also reuses the Hilla `JpaFilterConverter` for the filter implementation. In order for sorting and filtering to work, the DTO class and the JPA entity class must have the same structure, which means all properties that are sorted and filtered-by should have the same name and are at the same path in the data structure.
+The following example shows a basic implementation of a custom `ListService` that wraps a JPA repository. The service only exposes DTO instances to the client and maps between the DTO instances and JPA entities internally. It also reuses the Hilla `JpaFilterConverter` for the filter implementation, and counts the items with the same filter. In order for sorting and filtering to work, the DTO class and the JPA entity class must have the same structure. All properties that are sorted and filtered-by should have the same name and are at the same path in the data structure.
 
 [.example]
 --
