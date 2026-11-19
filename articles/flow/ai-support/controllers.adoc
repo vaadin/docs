@@ -111,6 +111,8 @@ The example returns a hardcoded string for clarity, but [methodname]`getSchema()
 
 When a query fails -- for example, because it references an unknown column -- the exception type determines what the LLM learns about the failure. The example above [since:com.vaadin:vaadin@V25.3]#throws a `ToolException`#, whose message is relayed to the LLM so it can correct the query on its next attempt; any other exception is replaced with a generic error message. See <<#tool-error-handling,Tool Error Handling>>.
 
+The controllers call the provider on more than one thread. They validate a query during the tool call that proposes it, which runs on a background thread with a streaming LLM provider or <<llm-providers#background-execution,background execution>>. [methodname]`VaadinSession.getCurrent()` and [methodname]`UI.getCurrent()` return `null` there, and Spring Security's [classname]`SecurityContextHolder` has no authentication by default. The grid loads its rows on the UI thread, which can happen while the next query is validated. The provider can therefore be called concurrently.
+
 .Read-Only Database Access
 [IMPORTANT]
 The LLM writes the SQL that gets executed. Always back a [classname]`DatabaseProvider` implementation with a database account that has read-only access to the tables and views you intend to expose. This prevents the LLM from modifying or deleting data and limits the impact of a prompt-injection attempt that tries to trick the LLM into running destructive statements.
