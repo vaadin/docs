@@ -3,7 +3,8 @@ package com.vaadin.demo.reference.componentinternals.element;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.junit.Test;
 
@@ -27,13 +28,13 @@ public class AttributeTest {
         assertTrue(nameField.hasAttribute("autofocus"));
 
         // Remove the "autofocus" attribute
-        assertEquals(List.of("autofocus", "id", "placeholder"),
-                nameField.getAttributeNames().toList());
+        assertEquals(Set.of("autofocus", "id", "placeholder"),
+                nameField.getAttributeNames().collect(Collectors.toSet()));
 
         nameField.removeAttribute("autofocus");
 
-        assertEquals(List.of("id", "placeholder"),
-                nameField.getAttributeNames().toList());
+        assertEquals(Set.of("id", "placeholder"),
+                nameField.getAttributeNames().collect(Collectors.toSet()));
         // end::getchange[]
     }
 }
