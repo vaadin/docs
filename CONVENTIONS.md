@@ -175,7 +175,7 @@ Comment arguments whose meaning is not obvious from the call, such as `null`
 passed for a filter.
 
 Run `mvn spotless:apply` after changing Java examples and `npm run lint` after
-changing TypeScript examples. `mvn compile` must pass.
+changing TypeScript examples. `mvn test` must pass.
 
 ## Component Pages
 
