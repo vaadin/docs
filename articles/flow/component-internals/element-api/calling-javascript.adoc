@@ -12,9 +12,9 @@ order: 3
 
 The Element API contains methods for executing JavaScript in the browser from the server side.
 
-Declare the JavaScript in a Java interface and call it through [methodname]`Element.executeJs(Class)`. The build collects the declared JavaScript into the frontend bundle, and the client runs it from there. Nothing is compiled from a string in the browser, so the call works under a content security policy that doesn't allow `unsafe-eval`. [methodname]`callJsFunction()` [since:com.vaadin:vaadin@V25.4]#works under such a policy as well#, since it calls a function that already exists on the element -- unless an argument is a [classname]`JsFunction`.
+Declare the JavaScript in a Java interface and call it through [methodname]`Element.executeJs(Class)`. The build collects the declared JavaScript into the frontend bundle, and the client runs it from there. Nothing is compiled from a string in the browser, so the call works under a content security policy that doesn't allow `unsafe-eval`. [methodname]`callJsFunction()` [since:com.vaadin:vaadin@V25.4]#works under such a policy as well#, since it calls a function that already exists on the element -- unless an argument is a [classname]`JsFunction` built with [methodname]`JsFunction.of()`.
 
-The other methods described on this page -- [methodname]`executeJs(String, Object...)`, [classname]`JsFunction`, and [methodname]`addJsInitializer(String, Object...)` -- send the JavaScript to the browser as a string that's compiled there. Avoid them for anything a declaration can express. [methodname]`addJsInitializer(JsFunction)` [since:com.vaadin:vaadin@V25.4]#works under such a policy as well#, when the function it's given is <<#declaring-snippets,declared as a snippet>> rather than built with [methodname]`JsFunction.of()`.
+The other methods described on this page -- [methodname]`executeJs(String, Object...)`, [methodname]`JsFunction.of()`, and [methodname]`addJsInitializer(String, Object...)` -- send the JavaScript to the browser as a string that's compiled there. Avoid them for anything a declaration can express. [methodname]`addJsInitializer(JsFunction)` [since:com.vaadin:vaadin@V25.4]#works under such a policy as well#, when the function it's given is <<#declaring-snippets,declared as a snippet>> rather than built with [methodname]`JsFunction.of()`.
 
 
 [[declaring-javascript]]
@@ -27,7 +27,7 @@ Each method of the interface is annotated with [annotationname]`@JsExpression`, 
 
 The arguments must be a type supported by the communication mechanism. The supported types are `String`, `Boolean`, `Integer`, `Double`, `JsonNode`, `Element`, `Component`, and `JsFunction`.
 
-Passing a [classname]`JsFunction` is allowed, but it brings the browser-side compilation back, since the client builds such a function from its body string. Declare a method for the JavaScript instead of passing a function into it.
+Passing a [classname]`JsFunction` built with [methodname]`JsFunction.of()` is allowed, but it brings the browser-side compilation back, since the client builds such a function from its body string. Declare a method for the JavaScript instead, or pass a function <<#declaring-snippets,declared as a snippet>>.
 
 The last parameter of a method can be declared variadic, such as `String...`, to accept a variable number of trailing arguments instead of a fixed one. The build turns it into a JavaScript rest parameter, so reference it the same way as any other parameter and spread it where the expression needs the individual values.
 
@@ -102,14 +102,14 @@ public void updateTooltip() {
 Nothing about the JavaScript is decided at the call site: the build generates one function per declared expression into the bundle, and the client runs that function after looking it up by an identifier of the JavaScript. The expression itself is never sent to the browser, and a production bundle carries the generated functions only -- the Java names stay on the server.
 
 [NOTE]
-The interface is checked when [methodname]`executeJs(Class)` hands out the implementation. It must be annotated with [annotationname]`@JsDefinition`, and every method must be annotated with [annotationname]`@JsExpression` and return `void` or [classname]`PendingJavaScriptResult` -- unless the interface declares snippets, as described in <<#declaring-snippets,Declaring Snippets>>. A `default` or `static` method is refused, since it's implemented in Java rather than declaring JavaScript to run in the browser.
+The interface is checked when [methodname]`executeJs(Class)` hands out the implementation. It must be annotated with [annotationname]`@JsDefinition`, and every method must be annotated with [annotationname]`@JsExpression` and return `void` or [classname]`PendingJavaScriptResult`. An interface that declares snippets is refused; get its implementation from [methodname]`JsSnippets.of()` instead (see <<#declaring-snippets,Declaring Snippets>>). A `default` or `static` method is refused, since it's implemented in Java rather than declaring JavaScript to run in the browser.
 
 When the JavaScript isn't about a particular element, declare it the same way and run it through [methodname]`Page.executeJs(Class)`, which works with global browser APIs instead of with an element (see <</flow/advanced/browser-access#declaring-javascript-in-java,Accessing the Browser Page>>).
 
 [[declaring-snippets]]
 === Declaring Snippets
 
-A method that returns [classname]`JsFunction` instead of `void` or [classname]`PendingJavaScriptResult` declares a _snippet_: JavaScript that isn't run when the method is called. Calling the method answers with a function, which is passed on to something that calls it later in the browser, such as <<#passing-a-declared-function,[methodname]`addJsInitializer(JsFunction)`>>. Like any other declaration, the build collects the snippet into the bundle, so nothing is compiled from a string in the browser.
+A method that returns a snippet type, such as [classname]`JsFunction`, instead of `void` or [classname]`PendingJavaScriptResult` declares a _snippet_: JavaScript that isn't run when the method is called. Calling the method answers with a function, which is passed on to something that calls it later in the browser, such as <<#passing-a-declared-function,[methodname]`addJsInitializer(JsFunction)`>>. Like any other declaration, the build collects the snippet into the bundle, so nothing is compiled from a string in the browser. The other snippet types are [classname]`JsSnippet`, [classname]`DomEventFilter`, [classname]`DomEventData`, and interfaces that extend [classname]`JsSnippet`.
 
 A snippet isn't bound to an element, so get the implementation of its interface from [methodname]`JsSnippets.of(Class)` rather than from [methodname]`executeJs(Class)`. The implementation holds no state, so it can be kept in a constant and shared.
 
@@ -256,7 +256,7 @@ The [methodname]`Element.callJsFunction()` method allows you to run a client-sid
 
 The name of the function and the arguments [since:com.vaadin:vaadin@V25.4]#are sent to the browser, which looks the function up on the element and calls it. Nothing is compiled from a string there, so the call works under a content security policy that doesn't allow `unsafe-eval`.# A dotted name, such as `$connector.method`, is resolved on the element property by property, and the function is called with the property it's read from as `this`.
 
-The arguments passed to the function must be a type supported by the communication mechanism. The supported types are `String`, `Boolean`, `Integer`, `Double`, `JsonNode`, `Element`, `Component`, and `JsFunction` (see <<#js-function,Passing JavaScript Functions>>). Passing a [classname]`JsFunction` brings the browser-side compilation back, since the client builds such a function from its body string.
+The arguments passed to the function must be a type supported by the communication mechanism. The supported types are `String`, `Boolean`, `Integer`, `Double`, `JsonNode`, `Element`, `Component`, and `JsFunction` (see <<#js-function,Passing JavaScript Functions>>). Passing a [classname]`JsFunction` built with [methodname]`JsFunction.of()` brings the browser-side compilation back, since the client builds such a function from its body string. A function <<#declaring-snippets,declared as a snippet>> doesn't.
 
 .Calling the `clearSelection()` JavaScript function on the root element from the server side
 [example]
