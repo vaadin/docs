@@ -94,6 +94,121 @@ endif::[]
 --
 
 
+== Drag Multiple Rows
+
+In <<selection#multi-select-mode,multi-select mode>>, dragging a selected row drags the other selected rows with it. The drag image shows the number of dragged rows.
+
+The drag includes only the selected rows that are visible. Selected rows that are scrolled out of view are missing from the dragged items of the drag start event, and the number in the drag image doesn't count them.
+
+To drag the whole selection, check in the drag start listener whether a selected row is dragged. If it is, use the selected items of the grid instead of the dragged items of the event. Set the number in the drag image to the number of selected rows.
+
+In Flow, set the number with [methodname]`setSelectionDragDetails()` before the drag starts, for example in a selection listener. The drag start listener runs on the server only after the browser has created the drag image. In Lit and React, call [methodname]`setDraggedItemsCount()` of the event in the drag start listener.
+
+[.example]
+--
+
+ifdef::lit[]
+[source,typescript]
+----
+<source-info group="Lit"></source-info>
+@state()
+private selectedItems: Person[] = [];
+
+@state()
+private draggedItems: Person[] = [];
+
+private startDraggingItems = (event: GridDragStartEvent<Person>) => {
+  // The event has only the dragged rows that are visible
+  const { draggedItems: visibleItems, setDraggedItemsCount } = event.detail;
+  // Dragging a selected row drags the whole selection
+  const selectionDragged = this.selectedItems.includes(visibleItems[0]);
+  this.draggedItems = selectionDragged ? this.selectedItems : visibleItems;
+  if (this.draggedItems.length > 1) {
+    // Show the number of all dragged rows in the drag image
+    setDraggedItemsCount(this.draggedItems.length);
+  }
+};
+
+<vaadin-grid
+  rows-draggable
+  .selectedItems="${this.selectedItems}"
+  @selected-items-changed="${(event: GridSelectedItemsChangedEvent<Person>) => {
+    this.selectedItems = event.detail.value;
+  }}"
+  @grid-dragstart="${this.startDraggingItems}"
+>
+  <vaadin-grid-selection-column></vaadin-grid-selection-column>
+  ...
+</vaadin-grid>
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+<source-info group="Flow"></source-info>
+grid.setSelectionMode(Grid.SelectionMode.MULTI);
+grid.setRowsDraggable(true);
+
+// Show the number of all selected rows in the drag image
+grid.addSelectionListener(e -> grid.setSelectionDragDetails(
+        e.getAllSelectedItems().size(),
+        // No custom drag data
+        null));
+
+grid.addDragStartListener(e -> {
+    // The event has only the dragged rows that are visible
+    List<Person> visibleItems = e.getDraggedItems();
+    Set<Person> selectedItems = grid.getSelectedItems();
+    // Dragging a selected row drags the whole selection
+    draggedItems = selectedItems.containsAll(visibleItems)
+            ? List.copyOf(selectedItems)
+            : visibleItems;
+});
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+<source-info group="React"></source-info>
+const selectedItems = useSignal<Person[]>([]);
+const draggedItems = useSignal<Person[]>([]);
+
+const startDraggingItems = (event: GridDragStartEvent<Person>) => {
+  // The event has only the dragged rows that are visible
+  const { draggedItems: visibleItems, setDraggedItemsCount } = event.detail;
+  // Dragging a selected row drags the whole selection
+  const selectionDragged = selectedItems.value.includes(visibleItems[0]);
+  draggedItems.value = selectionDragged ? selectedItems.value : visibleItems;
+  if (draggedItems.value.length > 1) {
+    // Show the number of all dragged rows in the drag image
+    setDraggedItemsCount(draggedItems.value.length);
+  }
+};
+
+<Grid
+  rowsDraggable
+  selectedItems={selectedItems.value}
+  onSelectedItemsChanged={(event) => {
+    selectedItems.value = event.detail.value;
+  }}
+  onGridDragstart={startDraggingItems}
+>
+  <GridSelectionColumn />
+  ...
+</Grid>
+----
+endif::[]
+--
+
+When the drop moves the dragged rows out of the grid, remove them from the selection as well. By default, Grid keeps removed items selected, so the next dragged selection would include them again.
+
+The selected items can include rows that a <<#drag-and-drop-filters,drag filter>> excludes from dragging. When the grid has a drag filter, leave those items out.
+
+The drag data that the browser transfers with the drag is also created only from the visible rows. To replace it for a dragged selection, pass a map of data types and values as the second argument of [methodname]`setSelectionDragDetails()` in Flow. In Lit and React, call [methodname]`setDragData()` of the event.
+
+
 [[drag-and-drop-filters]]
 == Drag & Drop Filters
 
