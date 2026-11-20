@@ -146,7 +146,7 @@ Set the parameter to `strict` to have Vaadin send the policy. In production mode
 
 [source]
 ----
-Content-Security-Policy: default-src 'self'; script-src 'nonce-...' 'strict-dynamic'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'
+Content-Security-Policy: default-src 'self'; script-src 'nonce-...' 'strict-dynamic'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' data:; worker-src 'self'; object-src 'none'; base-uri 'self'
 ----
 
 In development mode, no `Content-Security-Policy` header is sent and no nonce is added to the page, because the development server and the development tools need `eval`. Calls that need `eval` still throw in development mode, so violations show up before a production build.
@@ -164,6 +164,13 @@ VaadinServiceInitListener cspSources() {
         }
     });
 }
+----
+
+The `data:` source in `connect-src` lets an [classname]`SvgIcon` load an icon from a `data:image/svg+xml` URL, because the browser fetches the source of the icon. It allows the page to read inline data, but not to run it as code. If a security scanner of the application reports it, and the application doesn't use `data:` URLs for icons, remove it by setting the directive again, before adding other sources to it:
+
+[source,java]
+----
+policy.setDirective("connect-src", "'self'");
 ----
 
 Leave `script-src` unchanged: it holds the nonce and `'strict-dynamic'`, so replacing it blocks every script on the page, and host sources added to it are ignored by the browser. To load a script from another origin instead, add a `<script>` element to the document, which gets the nonce automatically.
