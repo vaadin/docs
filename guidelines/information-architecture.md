@@ -42,6 +42,10 @@ Action-oriented, opinionated how-to guides for building business applications. F
 
 Also contains deep dive articles that explore concepts, reasoning behind practices, and alternative approaches.
 
+### articles/components
+
+Component documentation covering capabilities, usage, and styling for each Vaadin component. See [Component Pages](component-pages.md).
+
 ### articles/agentic-development
 
 Setting up AI coding agents to build Vaadin applications: the Vaadin MCP server and the Directory MCP server, the agent skills and tools, and the Dev Loop tutorial.
@@ -53,10 +57,6 @@ Holds both how-to guides and reference pages. The setup guide for each AI tool, 
 The Reference Guide: reference documentation of the Vaadin framework, for both Flow views and React views. Technical, code-centric, unopinionated API documentation describing features and usage. Forms the foundation for Building Apps articles.
 
 **Note:** Legacy content exists here from when this contained all framework docs. Old tutorials and how-to content should be migrated to Building Apps.
-
-### articles/components
-
-Component documentation covering capabilities, usage, and styling for each Vaadin component. See [Component Pages](component-pages.md).
 
 ### articles/styling
 
