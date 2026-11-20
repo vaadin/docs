@@ -146,7 +146,7 @@ Set the parameter to `strict` to have Vaadin send the policy. In production mode
 
 [source]
 ----
-Content-Security-Policy: default-src 'self'; script-src 'nonce-...' 'strict-dynamic'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'
+Content-Security-Policy: default-src 'self'; script-src 'nonce-...' 'strict-dynamic'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' data:; worker-src 'self'; object-src 'none'; base-uri 'self'
 ----
 
 In development mode, no `Content-Security-Policy` header is sent and no nonce is added to the page, because the development server and the development tools need `eval`. Calls that need `eval` still throw in development mode, so violations show up before a production build.
@@ -163,6 +163,16 @@ VaadinServiceInitListener cspSources() {
             policy.addSources("connect-src", "https://api.example.com");
         }
     });
+}
+----
+
+The `data:` source in `connect-src` lets an [classname]`SvgIcon` load an icon from a `data:image/svg+xml` URL, because the browser fetches the source of the icon. It allows the page to read inline data, but not to run it as code. If a security scanner of the application reports it, and the application doesn't use `data:` URLs for icons, remove it by setting the directive again in the listener. Call it before any [methodname]`addSources()` call for `connect-src`, such as the one in the listener above, because [methodname]`setDirective()` replaces all the sources of the directive:
+
+[source,java]
+----
+ContentSecurityPolicy policy = response.getContentSecurityPolicy();
+if (policy != null) {
+    policy.setDirective("connect-src", "'self'"); // removes data:
 }
 ----
 
