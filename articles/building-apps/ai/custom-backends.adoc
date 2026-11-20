@@ -1,0 +1,180 @@
+---
+title: Custom Backends
+page-title: Custom Backends for AI-Powered Grids and Charts | Vaadin
+description: Give the LLM a SQL view of a REST API, a service, or files through an Apache Calcite adapter or a copy in a database.
+meta-description: Connect Vaadin's AI-powered Grid and Chart to backends without SQL. Use a built-in Apache Calcite adapter or a database copy, and integrate a DatabaseProvider.
+order: 30
+section-nav: commercial badge-preview
+---
+
+
+= [since:com.vaadin:vaadin@V25.4]#Custom Backends for AI-Powered Grids and Charts#
+
+:commercial-feature: the AI-powered Grid and Chart
+include::{articles}/_commercial-banner.adoc[opts=optional]
+
+:preview-feature: AI integration features
+:feature-flag: com.vaadin.experimental.aiComponents
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+The <<{articles}/flow/ai-support/ai-powered-grid#,AI-powered Grid>> and <<{articles}/flow/ai-support/ai-powered-chart#,Chart>> let users explore data in natural language. The LLM reads a schema description and writes SQL. A <<{articles}/flow/ai-support/controllers#database-provider,[classname]`DatabaseProvider`>> runs the query. When your data lives behind a REST API, in a service, or in files, it may have no SQL interface.
+
+This guide covers two ways to add that interface: an https://calcite.apache.org[Apache Calcite] adapter or a copy of the data in a database. Calcite's documentation covers adapter configuration and development. This guide focuses on connecting the resulting SQL interface to Vaadin.
+
+
+== Prerequisites
+
+* An application with an AI-powered Grid or Chart, set up as described on <<{articles}/flow/ai-support/ai-powered-grid#,AI-Powered Grid>> or <<{articles}/flow/ai-support/ai-powered-chart#,AI-Powered Chart>>.
+* The `com.vaadin.experimental.aiComponents` <<{articles}/flow/configuration/feature-flags#,feature flag>> enabled: add `com.vaadin.experimental.aiComponents=true` to [filename]`src/main/resources/vaadin-featureflags.properties`.
+* Access to the backend, through an adapter or a client that can read the data to copy into a database.
+
+
+== Choose an Approach
+
+For a data source with a JDBC driver, use a JDBC provider like the one on the <<{articles}/flow/ai-support/controllers#database-provider,Controllers>> page. For a backend that runs SQL through its own API, implement [classname]`DatabaseProvider` with that client. Override [methodname]`executeQuery(String sql, QueryPage page)` and [methodname]`count(String sql)` when it pages or counts in its own way.
+
+For data without a SQL interface, compare the two approaches:
+
+[cols="1,2,2",options="header"]
+|===
+| |Calcite Adapter |Database Copy
+
+|Query execution
+|The adapter sends supported operations to the backend, and Calcite runs the rest
+|The database runs queries against the copied data
+
+|Freshness
+|Queries read from the backend, subject to any caching in the adapter or client
+|The data as of the last refresh of the copy
+
+|Access rights
+|Configure the adapter's backend access for the users whose data it serves
+|The copy needs its own access controls. With one database account for all users, every user can query all its rows
+
+|Several sources
+|Calcite can expose several sources as tables for queries that join or aggregate their data
+|Tables that are copied from several sources can be joined in the database
+
+|What you maintain
+|Adapter configuration and a database provider. A custom adapter also requires implementation and maintenance
+|A scheduled job that fills the copy, and a JDBC provider
+|===
+
+Use <<#calcite,Calcite>> when a suitable built-in adapter can query the backend with the required performance and access controls. If none is available, compare the work of building a custom adapter with <<#database-copy,copying the data into a database>>. A custom adapter is small when it loads all the rows and lets Calcite do the rest. One that sends filters, sorting, and paging to the backend, as large data requires, takes much more work. A copy suits data that can be refreshed periodically and queried independently of the original backend.
+
+
+[[calcite]]
+== Run the Queries with Calcite
+
+Calcite presents data from an adapter as SQL tables and exposes a JDBC interface. Your [classname]`DatabaseProvider` uses that interface to run the LLM's queries.
+
+
+[[backend-adapters]]
+=== Choose and Configure an Adapter
+
+Start with Calcite's https://calcite.apache.org/docs/adapter.html#schema-adapters[built-in adapters]. These include adapters for MongoDB, Elasticsearch, and Cassandra, as well as a https://calcite.apache.org/docs/file_adapter.html[file adapter]. Follow the selected adapter's documentation for its dependencies, connection settings, schema configuration, and supported operations. Calcite's https://calcite.apache.org/docs/model.html[model reference] and https://calcite.apache.org/docs/adapter.html#jdbc-connect-string-parameters[JDBC connection reference] describe the shared configuration options.
+
+Calcite and Vaadin both depend on the Jackson annotations, in different versions. Spring Boot's dependency management aligns them. In a project without Spring Boot, check the resolved version with `mvn dependency:tree`. If it's the older one from Calcite, Vaadin's JSON handling fails with a [classname]`NoClassDefFoundError`. In that case, exclude `com.fasterxml.jackson.core:jackson-annotations` from every Calcite dependency you declare.
+
+Most built-in adapters use a client library of their backend, in a specific version. Spring Boot can manage a different one, so check that the adapter works with the version your application resolves.
+
+The adapter translates the SQL operations it supports into the backend's own queries, so the backend's rules apply to them. Not every SQL operation has an exact counterpart in the backend, for example a `LIKE` pattern or a date comparison. For such an operation, the adapter's translation decides the result, or the adapter rejects the query. A query that runs can therefore still return wrong rows. Check which operations the adapter's documentation lists as supported, and test the kinds of queries that users ask, as described in <<#check-queries,Check Paging and Query Performance>>. If the adapter gets them wrong, use a custom adapter or a copy of the data instead.
+
+For development, follow the https://calcite.apache.org/docs/tutorial.html[Calcite adapter tutorial]. For a REST API or a service, the smallest custom adapter is a table that implements [interfacename]`ScannableTable` and returns the objects from your backend client as rows. Calcite then filters, sorts, and groups all the rows in memory, so this suits data that is small enough to load in full. The same Vaadin integration applies to built-in and custom adapters.
+
+
+=== Connect the Adapter to a Database Provider
+
+Adapt the JDBC provider on the <<{articles}/flow/ai-support/controllers#database-provider,Controllers>> page to use the Calcite connection configured for your adapter. Return the adapter's SQL schema description from [methodname]`getSchema()` and run queries through [methodname]`executeQuery(String sql)`. The provider returns rows as maps whose keys are the SQL column labels.
+
+Configure the adapter and its backend credentials for read-only access to the data users may query. Follow the Controllers page's guidance on schema scope and error messages.
+
+Several details matter when the SQL comes from the LLM and the grid:
+
+* Use a quoting policy compatible with the double quotes that the grid uses for names. Calcite's `lex=MYSQL_ANSI` setting also makes unquoted names case-insensitive.
+* LLMs often use SQL keywords such as `value` or `year` as column aliases. If your parser configuration allows it, add `calcite-babel` and select Calcite's Babel parser to accept more such names.
+* LLMs also group by a column alias or position and write `!=`, which Calcite rejects by default. Calcite also pads the string literals of a `CASE` or `UNION` with spaces to the same length, so such a label no longer equals a column value. The `conformance=MYSQL_5` setting accepts that SQL and doesn't pad the literals.
+* Remove a trailing semicolon before running a query. Calcite rejects it, and the chart passes the LLM's SQL to [methodname]`executeQuery(String sql)` unchanged.
+* Relay useful SQL parse and validation errors in a [classname]`ToolException` so the LLM can correct its query. Calcite reports them as a [classname]`SqlParseException` or a [classname]`CalciteContextException` in the cause chain of the [classname]`SQLException`. Keep row values and backend details out of those messages, and use a generic message for other failures. The message of the [classname]`SQLException` itself can include the error text of your backend, so don't relay it as it is.
+* Calcite and its adapters report some failures as an [classname]`AssertionError`, for example an operation that an adapter can't translate. The error handling of the controllers covers only exceptions, so catch it in the provider and throw an exception with a generic message.
+
+For example, these connection properties accommodate the names and the SQL that the LLM and the grid may use. Apply them when creating the Calcite connection alongside the adapter's configuration:
+
+[source,java]
+----
+var properties = new Properties();
+properties.setProperty("lex", "MYSQL_ANSI");
+properties.setProperty("conformance", "MYSQL_5");
+properties.setProperty("parserFactory",
+        "org.apache.calcite.sql.parser.babel.SqlBabelParserImpl#FACTORY");
+var connection = DriverManager.getConnection("jdbc:calcite:", properties);
+----
+
+A connection that is created from a model creates the adapter's schema again, and an adapter can open its own connections to the backend for each schema. If the provider opens a connection for each query, as the JDBC provider on the Controllers page does, create the schema once for each set of access rights. Add that schema to the root schema of every connection, and make it the default schema with [methodname]`setSchema()` so that queries can name its tables without a prefix.
+
+
+=== Describe the Schema for the LLM
+
+The text that [methodname]`getSchema()` returns is all the LLM knows about your data. Follow the general advice on the <<{articles}/flow/ai-support/controllers#database-provider,Controllers>> page. Describe the tables and columns exposed by the adapter, their relationships, and any restrictions that affect queries.
+
+Name Apache Calcite as the SQL dialect and use its https://calcite.apache.org/docs/reference.html[SQL reference] for syntax and types. Tell the LLM how to write date and timestamp literals, for example:
+
+[source,java]
+----
+return """
+        Tables:
+        products(id INT, name VARCHAR, category VARCHAR, price DECIMAL)
+        orders(id INT, product_id INT, quantity INT, ordered_on DATE)
+        orders.product_id refers to products.id.
+        Dialect: Apache Calcite.
+        Compare dates with DATE literals, for example ordered_on >= DATE '2025-01-01'.
+        Compare timestamps with TIMESTAMP literals, for example TIMESTAMP '2025-01-01 00:00:00'.
+        Put aliases that are SQL keywords in double quotes, for example ordered_on AS "date".
+        """;
+----
+
+Even with the Babel parser, some names such as `date` and `order` require double quotes. This applies to column names and to aliases chosen by the LLM. Also avoid column names that are SQL functions written without parentheses, such as `user` or `current_date`. An unquoted `SELECT user FROM tickets` returns the function's value instead of the column. Rename these columns in the exposed schema or tell the LLM to quote them.
+
+
+[[use-the-provider]]
+=== Use the Provider
+
+Create the provider in the view and pass it to a [classname]`GridAIController` or a [classname]`ChartAIController`. For example, with the JDBC provider adapted as described above, which opens its Calcite connections with those properties:
+
+[source,java]
+----
+var provider = new CalciteDatabaseProvider(properties);
+var controller = new GridAIController(grid, provider);
+----
+
+Attach the controller to the orchestrator as described on <<{articles}/flow/ai-support/ai-powered-grid#,AI-Powered Grid>> and <<{articles}/flow/ai-support/ai-powered-chart#,AI-Powered Chart>>.
+
+A provider created in the view can keep backend credentials and cached data specific to one user. Share a provider between users only when every user may see the same data. If the provider keeps a JDBC connection, keep it `transient` and recreate it after session deserialization. Ensure the provider's other fields are serializable or can be restored as well.
+
+The controllers call the provider concurrently and from background threads, where the user's session and security context aren't available. See <<{articles}/flow/ai-support/controllers#database-provider,Database Provider>> for the details. Capture the user's credentials when the view creates the provider or its backend client, instead of looking them up during a query.
+
+
+[[check-queries]]
+=== Check Paging and Query Performance
+
+The grid uses [methodname]`executeQuery(String sql, QueryPage page)` and [methodname]`count(String sql)` to load rows lazily. Their defaults add sorting, paging, and counting to the SQL before calling [methodname]`executeQuery(String sql)`.
+
+Check that the adapter https://calcite.apache.org/docs/adapter.html#pushing-operations-down-to-your-table[pushes] the grid's sorting, paging, and counting to the backend. A table that only implements [interfacename]`ScannableTable` pushes nothing: Calcite scans it for each query. If a scan loads all the rows from the backend, cache them for a short time. Override the provider's paging and counting methods when the backend can perform them more efficiently.
+
+A grid render can query the backend several times: for a sample row, for the row count, and for each page. The chart calls [methodname]`executeQuery(String sql)` for each series query and receives its full result. Queries also run when the LLM proposes them for validation. Account for these repeated calls when choosing an adapter and any caching. Keep caches scoped to the user's access rights.
+
+Test the provider directly with SQL before involving an LLM. Include joins, aggregates with and without `GROUP BY`, grouping by a function, sorted and unsorted pages, and counts. In the conditions, cover date and decimal comparisons, date arithmetic, `<>`, and `LIKE`. Compare the returned rows with data read from the backend directly, because a mistranslated query can run without an error. Check the work the backend performs as well.
+
+
+[[database-copy]]
+== Copy the Data into a Database
+
+The application can keep a copy of the data in a database and let the database run the LLM's SQL. Queries then run independently of the original backend, and the application controls when to refresh the copy. The trade-off is that the grid and the chart show the data as of the last refresh of the copy.
+
+The copy doesn't carry over the access rights of the backend either. One account reads the backend to fill the copy. If the provider then reads the copy with one database account for all users, every user of the grid or the chart can query all its rows. In that case, copy only data that all these users may see.
+
+Any database with a JDBC driver can hold the copy, such as a schema of its own in the database the application already uses, or an embedded database.
+
+Fill the copy with a scheduled job that replaces its rows in one transaction, so that the grid and the chart never read a half-filled table.
+
+Query the copy with a JDBC provider like the one on the <<{articles}/flow/ai-support/controllers#database-provider,Controllers>> page, and describe the tables of the copy in its [methodname]`getSchema()`. Give the provider a database account that can only read the copy, as that page advises. The provider on that page relays the database's error messages to the LLM. Such a message can quote a row value, so check what your database reports before relaying it.
