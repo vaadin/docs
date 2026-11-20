@@ -166,11 +166,15 @@ VaadinServiceInitListener cspSources() {
 }
 ----
 
-The `data:` source in `connect-src` lets an [classname]`SvgIcon` load an icon from a `data:image/svg+xml` URL, because the browser fetches the source of the icon. It allows the page to read inline data, but not to run it as code. If a security scanner of the application reports it, and the application doesn't use `data:` URLs for icons, remove it by setting the directive again, before adding other sources to it:
+The `data:` source in `connect-src` lets an [classname]`SvgIcon` load an icon from a `data:image/svg+xml` URL, because the browser fetches the source of the icon. It allows the page to read inline data, but not to run it as code. If a security scanner of the application reports it, and the application doesn't use `data:` URLs for icons, remove it by setting the directive again in the listener. Set it before adding other sources, because [methodname]`setDirective()` replaces all the sources of the directive:
 
 [source,java]
 ----
-policy.setDirective("connect-src", "'self'");
+ContentSecurityPolicy policy = response.getContentSecurityPolicy();
+if (policy != null) {
+    policy.setDirective("connect-src", "'self'"); // removes data:
+    policy.addSources("connect-src", "https://api.example.com");
+}
 ----
 
 Leave `script-src` unchanged: it holds the nonce and `'strict-dynamic'`, so replacing it blocks every script on the page, and host sources added to it are ignored by the browser. To load a script from another origin instead, add a `<script>` element to the document, which gets the nonce automatically.
