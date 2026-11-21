@@ -1,21 +1,23 @@
 ---
 title: Tool Calling & Programmatic Prompts
 description: Register tool objects for LLM invocation and send prompts programmatically without a Message Input component.
-meta-description: Learn how to register tools with the Vaadin AIOrchestrator for LLM function calling and how to send programmatic prompts from code.
+meta-description: Learn how to register tools for LLM function calling in a Vaadin application, and how to send programmatic prompts from your code with the AIOrchestrator.
 order: 40
 ---
 
 
 = Tool Calling & Programmatic Prompts
 
-Tools let the LLM call methods in your application during a conversation -- query a database, look up an order, send an email, or any other action you want the assistant to be able to perform. Vaadin supports two ways to expose tools: registered tool objects (covered on this page) and framework-agnostic <<controllers#,Controllers>>.
+Tools let the LLM call methods in your application during a conversation -- query a database, look up an order, send an email, or any other action you want the assistant to be able to perform. Vaadin supports two ways to expose tools: tool objects registered with the AI framework (covered on this page) and framework-agnostic <<controllers#,Controllers>>.
 
-A third source of tools sits outside the orchestrator: an MCP server, whose tools the AI framework's own client contributes to each request. See <<llm-providers#framework-features,Framework Features>>.
+A third source of tools is an MCP server, whose tools the AI framework's own client contributes to each request. See <<llm-providers#framework-features,Framework Features>>.
 
 
 == Tool Calling
 
-Register objects with vendor-specific [annotationname]`@Tool` annotations that the LLM can invoke:
+A tool object has methods with the [annotationname]`@Tool` annotation of the AI framework. The framework offers these methods to the LLM as tools and runs them when the LLM calls them. Register the tool objects with the framework when you create the <<llm-providers#,LLM provider>>. The annotation and the place to register depend on the framework.
+
+For Spring AI, use [annotationname]`@org.springframework.ai.tool.annotation.Tool` with a `description` attribute. Add the tool objects to the [classname]`ChatClient` that you pass to the provider:
 
 [source,java]
 ----
@@ -27,24 +29,33 @@ public class WeatherTools {
     }
 }
 
-var orchestrator = AIOrchestrator
-        .builder(provider, systemPrompt)
-        .withMessageList(messageList)
-        .withInput(messageInput)
-        .withTools(new WeatherTools())
+ChatClient chatClient = ChatClient.builder(chatModel)
+        .defaultTools(new WeatherTools())
         .build();
+SpringAILLMProvider provider = new SpringAILLMProvider(chatClient);
 ----
 
-The annotation comes from the framework the provider wraps, and the two spell the description differently. For Spring AI, use [annotationname]`@org.springframework.ai.tool.annotation.Tool` with a `description` attribute, as above. For LangChain4j, use [annotationname]`@dev.langchain4j.agent.tool.Tool`, whose description is the annotation's value:
+For LangChain4j, use [annotationname]`@dev.langchain4j.agent.tool.Tool`, whose description is the annotation's value.
+
+Add the tool objects in [since:com.vaadin:vaadin@V25.4]#a customizer of the provider#. [classname]`LangChain4JLLMProvider` takes the customizer as an optional second constructor argument, and passes it the builder of the LangChain4j AI service that it runs each turn through:
 
 [source,java]
 ----
-// LangChain4j: dev.langchain4j.agent.tool.Tool
-@Tool("Get current weather for a city")
-public String getWeather(String city) {
-    return weatherService.getCurrentWeather(city);
+public class WeatherTools {
+    // LangChain4j: dev.langchain4j.agent.tool.Tool
+    @Tool("Get current weather for a city")
+    public String getWeather(String city) {
+        return weatherService.getCurrentWeather(city);
+    }
 }
+
+LangChain4JLLMProvider provider = new LangChain4JLLMProvider(chatModel,
+        service -> service.tools(new WeatherTools()));
 ----
+
+Every conversation that runs through the same [classname]`ChatClient` or provider calls the same tool objects. When a tool works with the state of one view, such as its components, create the client or the provider for that view.
+
+[methodname]`withTools()` on the orchestrator builder, and after [methodname]`reconnect()`, takes the same tool objects, but it's deprecated. Register the tool objects with the AI framework instead.
 
 .Tool Threading
 [NOTE]
@@ -52,18 +63,25 @@ With a streaming provider or <<llm-providers#background-execution,background exe
 
 .Framework-Agnostic Tools via Controllers
 [TIP]
-For a reusable set of tools that does not depend on a specific LLM framework's annotations, or when a lifecycle hook is needed after each LLM request cycle, implement <<controllers#,[classname]`AIController`>> instead. [classname]`GridAIController`, [classname]`ChartAIController`, and [classname]`FormAIController` are built-in examples. Controllers and tool objects can be combined on the same orchestrator.
+For a reusable set of tools that does not depend on a specific LLM framework's annotations, or when a lifecycle hook is needed after each LLM request cycle, implement <<controllers#,[classname]`AIController`>> instead. [classname]`GridAIController`, [classname]`ChartAIController`, and [classname]`FormAIController` are built-in examples. A controller can be combined with tool objects registered with the AI framework.
 
 .Tool Errors
 [NOTE]
-Tool objects registered via [methodname]`withTools()` are executed by the vendor framework, whose own error handling decides what the LLM sees when a tool throws -- by default, both LangChain4j and Spring AI relay the raw message of any exception. To control what the LLM learns about failures, define the tool through a controller instead and throw a [classname]`ToolException` for messages the LLM is meant to see; see <<controllers#tool-error-handling,Tool Error Handling>>.
+====
+Tool objects are executed by the AI framework, whose own error handling decides what the LLM sees when a tool throws -- by default, both LangChain4j and Spring AI relay the raw message of any exception. To control what the LLM learns about failures, replace that default in the framework:
+
+* **Spring AI:** A [interfacename]`ToolExecutionExceptionProcessor` decides what the LLM sees. In a Spring Boot application, a bean of that type applies to the auto-configured [classname]`ChatClient.Builder`. See https://docs.spring.io/spring-ai/reference/api/tools.html#exception-handling[Exception Handling] in the Spring AI documentation.
+* **LangChain4j:** Set a [interfacename]`ToolExecutionErrorHandler` with [methodname]`toolExecutionErrorHandler()` in the customizer. See https://docs.langchain4j.dev/tutorials/tools#handling-tool-execution-errors[Handling Tool Execution Errors] in the LangChain4j documentation.
+
+You can also define the tool through a controller instead, and throw a [classname]`ToolException` for messages the LLM is meant to see; see <<controllers#tool-error-handling,Tool Error Handling>>.
+====
 
 
 [[tool-call-limits]]
 [role="since:com.vaadin:vaadin@V25.3"]
 == Tool Call Limits
 
-A turn that uses tools is a loop: the model asks for tool calls, the provider runs them and calls the model again with the results, until the model answers. Both built-in providers bound that loop per turn. By default, the model may call any single tool at most 40 times and all tools together at most 150 times in one turn. Without a bound, a request the model can't satisfy keeps calling the model and the tools until the application is stopped. The limits count every tool the model can call, whether it comes from [methodname]`withTools()`, a <<controllers#,controller>>, or an <<llm-providers#framework-features,MCP server>>.
+A turn that uses tools is a loop: the model asks for tool calls, the provider runs them and calls the model again with the results, until the model answers. Both built-in providers bound that loop per turn. By default, the model may call any single tool at most 40 times and all tools together at most 150 times in one turn. Without a bound, a request the model can't satisfy keeps calling the model and the tools until the application is stopped. The limits count every tool the model can call, whether it comes from a tool object, a <<controllers#,controller>>, or an <<llm-providers#framework-features,MCP server>>.
 
 When a limit is exceeded, the turn fails with a [classname]`ToolCallLimitExceededException`, whichever provider runs it. The Message List shows its generic error message, and the exception reaches the <<listeners#,response listener>> and [methodname]`AIController.onResponse()` as the error of the turn. Its message names the limit that was exceeded and, for a per-tool limit, the tool:
 
