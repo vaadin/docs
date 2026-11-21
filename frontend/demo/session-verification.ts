@@ -7,8 +7,12 @@ function testHeartbeat() {
     console.debug('testHeartbeat', data);
     const reloadTimestamp = localStorage.getItem('reloadTimestamp');
     console.debug('testHeartbeat', reloadTimestamp);
-    // Make sure session is still opened, otherwise reload the page
-    if (!data.ok && (!reloadTimestamp || Date.now() - parseInt(reloadTimestamp) > 5 * 60 * 1000)) {
+    // Reload only when the session has expired (403). A 404 just means there is no UI with id 0 in the
+    // session, for example after a previous page was closed, and reloading would not change that.
+    if (
+      data.status === 403 &&
+      (!reloadTimestamp || Date.now() - parseInt(reloadTimestamp) > 5 * 60 * 1000)
+    ) {
       console.debug('testHeartbeat', 'reload');
       // Save the previous reload timestamp to avoid reloading in less than 5 minutes
       localStorage.setItem('reloadTimestamp', Date.now().toString());
