@@ -21,6 +21,7 @@ This documentation covers the main features of the `DownloadHandler` API, includ
 * <<#new-tab,Opening content in a new tab>>
 * <<#custom,Creating custom download handlers>>
 * <<#progress,Download progress tracking>>
+* <<#lifecycle,Transfer lifecycle>>
 * <<#low-level,Low-level API features>>
 
 [#common]
@@ -143,7 +144,6 @@ If the resource name starts with `/`, it will then look from `/src/main/resource
 Video video = new Video();
 video.addSource(DownloadHandler.forClassResource(MyView.class, "intro.mp4")
         .enableRangeRequests(), "video/mp4");
-video.setControlsVisible(true);
 ----
 
 See <<#byte-ranges,Byte Range Requests>> for when this is safe and what it costs.
@@ -251,14 +251,13 @@ Download.onClick(view, DownloadHandler.fromInputStream(event -> {
 
 As with <<#onclick,`Download.onClick` without a target>>, the new tab opens in the browser's own click handler, without waiting for a server round trip, so popup blockers let it through. Opening a tab from a server-side click listener, for example with `Page.open`, happens only after the round trip and may be blocked. The new tab opens without access to the opening page (`noopener`) and without a `Referer` header (`noreferrer`).
 
-The handler runs only when the new tab requests the content, once per click, and the browser shows it when it can, for example a PDF, an image, or plain text. Built-in handlers, such as [methodname]`DownloadHandler.forFile`, are switched to serve the content inline automatically; this changes the given handler instance for good, so it also serves inline wherever else it's used -- don't reuse it where the content should be downloaded instead, such as in an `Anchor`. A custom handler has to call [methodname]`DownloadEvent.inline` itself, since content served as an attachment is downloaded instead of shown.
+The handler runs only when the new tab requests the content, once per click, and the browser shows it when it can, for example a PDF, an image, or plain text. The content is served inline for this use, whatever the handler asks for; the handler itself is not changed, so the same instance can also be used where the content should be downloaded instead, such as in an `Anchor` or <<#onclick,`Download.onClick`>>.
 
-The handler follows the clicked component's lifecycle in the same way as with <<#onclick,`Download.onClick`>>, including [methodname]`allowDisabled()` for a button that disables itself on click. The handler that [methodname]`allowDisabled()` returns can no longer be switched to inline, so switch a built-in handler first:
+The handler follows the clicked component's lifecycle in the same way as with <<#onclick,`Download.onClick`>>, including [methodname]`allowDisabled()` for a button that disables itself on click:
 
 [source,java]
 ----
-Download.onClick(button,
-        DownloadHandler.forFile(file).inline().allowDisabled(),
+Download.onClick(button, DownloadHandler.forFile(file).allowDisabled(),
         DownloadTarget.NEW_TAB);
 ----
 
@@ -447,8 +446,8 @@ The `DownloadHandler` API provides two ways to track download progress:
 Asynchronous UI updates in progress listeners are automatically wrapped into `UI.access()` calls by Vaadin, thus you don't need to call it manually.
 Vaadin `@Push` should be enabled in your application to be able to see UI updates while download is in progress.
 
-Since detaching the owner component doesn't interrupt an ongoing download, listeners are also notified for a download that outlives its owner: the UI used for the `UI.access` call is the one that was active when the download started, and it's kept attached to its session until the download has completed, even if it's closed while the download is ongoing.
-A download does not, however, outlive its session: if the session is invalidated, either explicitly or by timing out, the ongoing download is terminated and the listener is notified through `onError` rather than `onComplete`.
+The UI used for the `UI.access` call is the one that was active when the download started.
+Listeners are also notified for a download that outlives its owner component or its browser tab, as described in <<#lifecycle,Transfer Lifecycle>>.
 
 === Fluent API for Progress Tracking
 
@@ -545,6 +544,31 @@ The `TransferProgressListener` interface provides the following methods:
 
 The [classname]`TransferContext` objects are the same as in the fluent API.
 
+[#lifecycle]
+== Transfer Lifecycle
+
+A download is served independently of the owner component's lifecycle.
+The owner's attached, visible, enabled, and inert state is checked when the download request is received, but not while the download is being served.
+Once handling has started, detaching the owner component, navigating to another view, or closing the browser tab doesn't stop the download on the server.
+It runs to completion as long as the browser keeps reading the response.
+
+[since:com.vaadin:vaadin@V25.4]#A UI that's closed while a download for it is ongoing stays attached to its session until the download has completed#.
+This applies, for example, when the user closes the browser tab, or when the UI is closed because its heartbeats have stopped.
+Progress listeners bound to that UI are therefore still notified, although their UI changes no longer reach any browser.
+Once the download has completed, the UI is removed from the session.
+
+[since:com.vaadin:vaadin@V25.4]#A download doesn't outlive its session#, though.
+When the session is invalidated, either explicitly or by timing out, the ongoing download is terminated:
+
+* The output stream and the writer of the response stop accepting content and throw an [classname]`IOException`.
+* The browser receives a truncated file.
+* A warning with the request path and the owner component is logged.
+
+This applies to the built-in handlers and to custom handlers that write through the response they receive.
+Progress listener notifications are skipped once the UI has been removed from the ended session.
+To let a long download finish regardless, keep the session alive while the download is ongoing.
+You can also serve the download from a servlet of your own that isn't tied to a UI or a session.
+
 [#low-level]
 == Low-Level DownloadHandler API
 
@@ -622,7 +646,6 @@ A byte range request asks for part of a response instead of the whole thing. Med
 Video video = new Video();
 video.addSource(DownloadHandler.forClassResource(MyView.class, "intro.mp4")
         .enableRangeRequests(), "video/mp4");
-video.setControlsVisible(true);
 ----
 
 Enabling it isn't free or safe for every kind of content these methods can serve:
