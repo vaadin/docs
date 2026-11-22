@@ -258,6 +258,48 @@ binder.forField(marriedField).withConverter(
 ----
 
 
+[role="since:com.vaadin:vaadin@V25.4"]
+=== Null-Safe Converters
+
+A converter built from mapper functions, such as `LocalDate::parse`, can't handle `null` or the field's empty value: an empty field turns into a conversion error, and a `null` model value makes the mapper throw. [methodname]`withNullSafeConverter()` binds with mapper functions that are never called with `null` or the given null representation:
+
+[source,java]
+----
+binder.forField(textField)
+    .withNullSafeConverter(LocalDate::parse, LocalDate::toString,
+        Exception::getMessage, "")
+    .bind(Person::getBirthDate, Person::setBirthDate);
+----
+
+The last argument is the presentation value that stands for a `null` model value: `""` for a text field, because a text field doesn't accept `null`, or `null` for a field whose empty value is already `null`, such as [classname]`DatePicker` or [classname]`ComboBox`. [methodname]`withNullSafeConverter()` maps that value, and `null`, to a `null` model value, and maps a `null` model value back to it, so the mapper functions never see either.
+
+To wrap an existing [interfacename]`Converter` instance the same way, use [methodname]`Converter.nullSafeConverter()`. For a field whose empty value is `null`:
+
+[source,java]
+----
+binder.forField(datePicker)
+    .withConverter(Converter.nullSafeConverter(Converter.from(
+        date -> date.atStartOfDay(ZoneOffset.UTC).toInstant(),
+        instant -> LocalDate.ofInstant(instant, ZoneOffset.UTC),
+        Exception::getMessage)))
+    .bind(Event::getStart, Event::setStart);
+----
+
+For a field whose empty value isn't `null`, such as a text field, pass that empty value as a second argument:
+
+[source,java]
+----
+binder.forField(textField)
+    .withConverter(Converter.nullSafeConverter(Converter.from(
+        LocalDate::parse, LocalDate::toString, Exception::getMessage),
+        ""))
+    .bind(Person::getBirthDate, Person::setBirthDate);
+----
+
+[NOTE]
+A converter added with [methodname]`withConverter()` replaces the binder's default null representation. A field that doesn't accept `null`, such as a text field, therefore needs either a null-safe converter with its empty value or, when the converter itself maps `null` to `null`, a [methodname]`withNullRepresentation()` call before the converter.
+
+
 === Multiple Converters
 
 You can add multiple converters and validators for each binding. Each validator or converter is used in the order defined in the class. The value is passed along until a final converted value is stored in the business object, or the first validation error or impossible conversion is encountered.

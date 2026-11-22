@@ -1,16 +1,15 @@
 import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import {
   AppLayout,
   DrawerToggle,
   Icon,
   Scroller,
   SideNav,
-  type SideNavElement,
   SideNavItem,
 } from '@vaadin/react-components';
-import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper';
+import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper'; // hidden-source-line
 
 const h1Style = {
   fontSize: '1.125rem',
@@ -18,15 +17,6 @@ const h1Style = {
 };
 
 function Example() {
-  const sideNavRef = useRef<SideNavElement>(null);
-
-  useEffect(() => {
-    if (sideNavRef.current) {
-      // Example-specific workaround
-      patchSideNavNavigation(sideNavRef.current);
-    }
-  }, [sideNavRef.current]);
-
   return (
     // tag::snippet[]
     <AppLayout primarySection="drawer">
@@ -37,7 +27,10 @@ function Example() {
       </h1>
 
       <Scroller slot="drawer">
-        <SideNav ref={sideNavRef} style={{ margin: 'var(--vaadin-gap-s)' }}>
+        <SideNav
+          style={{ margin: 'var(--vaadin-gap-s)' }}
+          ref={patchSideNavNavigation} // hidden-source-line
+        >
           <SideNavItem path="/dashboard">
             <Icon icon="vaadin:dashboard" slot="prefix" />
             Dashboard

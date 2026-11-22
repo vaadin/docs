@@ -22,10 +22,12 @@ The real security boundary is on the server, around the *browser-callable servic
 
 In practice you do both: protect views so users see only what's relevant to them, and protect services so the data is actually safe.
 
+For how Vaadin checks the access to views and services, see the <<{articles}/flow/security/react-views#,React Views & Browser-Callable Services>> reference.
+
 
 == Adding a Login View
 
-Vaadin includes a client-side security extension that integrates with Spring Security. Setting it up takes three steps: a user-information endpoint, a client-side authentication context, and wrapping the application in that context.
+Vaadin includes a client-side security extension that integrates with Spring Security. Setting it up takes three steps: a user-information endpoint, a client-side authentication context, and wrapping the application in that context. For the functions and their options, see <<{articles}/flow/security/react-views/authentication#,Authentication>>.
 
 === Create a User-Information Endpoint
 
@@ -43,7 +45,7 @@ public class UserInfoService {
     }
 
     @PermitAll // <2>
-    public @NonNull UserInfo getUserInfo() {
+    public UserInfo getUserInfo() {
         var auth = securityContextHolderStrategy.getContext().getAuthentication(); // <3>
         var authorities = auth.getAuthorities()
             .stream()
@@ -62,10 +64,18 @@ Vaadin has no built-in user-information type, so define your own. Add any extra 
 
 [source,java]
 ----
-public record UserInfo(
-    @NonNull String name,
-    @NonNull Collection<String> authorities
-) {}
+public record UserInfo(String name, List<String> roles) {}
+----
+
+Annotate the package of both classes with [annotationname]`@NullMarked`, so that the generated TypeScript types don't allow `undefined` values. See <<{articles}/flow/react-views/browser-callable-services/type-nullability#,Type Nullability>>.
+
+[source,java]
+.package-info.java
+----
+@NullMarked
+package com.example.application.security;
+
+import org.jspecify.annotations.NullMarked;
 ----
 
 === Set Up the Authentication Context
@@ -202,23 +212,13 @@ A React view is public unless it, or a layout around it, sets `loginRequired`. A
 
 == Restricting Access by Role
 
-To grant access based on roles, first expose the current user's roles to the authentication context, then declare the required roles on each view.
+To grant access based on roles, first expose the current user's roles to the authentication context, then declare the required roles on each view. For where Vaadin checks the roles, see <<{articles}/flow/security/react-views/view-access-control#,View Access Control>>.
 
 === Expose Roles to the Context
 
-Pass a `getRoles` function as a second argument to `configureAuth`:
+The authentication context reads the roles of the user from the `roles` property of the user information, so the [classname]`UserInfo` record already exposes them. The roles are the user's granted authorities with their `ROLE_` prefix, such as `ROLE_USER` and `ROLE_ADMIN`.
 
-[source,typescript]
-.frontend/security/auth.ts
-----
-const auth = configureAuth(UserInfoService.getUserInfo, {
-    getRoles: (user) => user.authorities
-        .filter(s => s.startsWith("ROLE_")) // <1>
-        .map(s => s.substring(5)) // <2>
-});
-----
-<1> Keep only role authorities. In Spring Security, roles use the `ROLE_` prefix by default.
-<2> Strip the prefix to get the role name.
+If your user information has the roles in another property, pass a `getRoles` function to `configureAuth()`, as described in <<{articles}/flow/security/react-views/authentication#configure-auth,Authentication Context>>.
 
 === Declare Required Roles
 
@@ -229,10 +229,10 @@ Add `rolesAllowed` to a view's or layout's `ViewConfig`:
 ----
 export const config: ViewConfig = {
     loginRequired: true,
-    rolesAllowed: [ "ADMIN" ] // <1>
+    rolesAllowed: [ "ROLE_ADMIN" ] // <1>
 };
 ----
-<1> An array of role names.
+<1> The roles that can open the view. Write them with the `ROLE_` prefix, as the granted authorities have it. Otherwise, the server denies access when the user reloads the page or opens its URL directly. See <<{articles}/flow/security/react-views/view-access-control#role-names,Role Names>>.
 
 === Check Access Programmatically
 
@@ -245,7 +245,7 @@ import { useAuth } from "Frontend/security/auth";
 
 export default function AccountView() {
     const auth = useAuth();
-    const isAdmin = auth.hasAccess({ rolesAllowed: [ "ADMIN" ] });
+    const isAdmin = auth.hasAccess({ rolesAllowed: [ "ROLE_ADMIN" ] });
 
     return (
         <main>
@@ -295,7 +295,7 @@ A relative logout URL must include the application's context path. If the applic
 
 == Protecting Browser-Callable Services
 
-This is the real security boundary. All browser-callable services are *inaccessible by default* and require an explicit annotation to grant access.
+This is the real security boundary. All browser-callable services are *inaccessible by default* and require an explicit annotation to grant access. For the precedence of the annotations and the responses to denied calls, see <<{articles}/flow/security/react-views/service-access-control#,Service Access Control>>.
 
 .Services Don't Use Spring Method Security
 [CAUTION]

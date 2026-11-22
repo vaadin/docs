@@ -1,0 +1,130 @@
+---
+title: Localization in React Views
+page-title: Localization of React views in Vaadin applications
+description: How React views load translations, translate strings, and change the language.
+meta-description: Reference for localizing Vaadin React views - loading translations, translating strings and view titles, plural forms, and switching the language at runtime.
+order: 30
+---
+
+
+= Localization in React Views
+
+React views translate strings in the browser with the `@vaadin/hilla-react-i18n` package. They use the same translation files as Flow views: the browser loads the translations from the server, which reads them with the [interfacename]`I18NProvider` of the application. For where to put the translation files, see <<index#,Localization>>.
+
+section_outline::[]
+
+
+[[loading]]
+== Loading Translations
+
+Call [methodname]`i18n.configure()` once, before the views translate anything. For example, call it at the top level of the main layout:
+
+[source,tsx]
+.[filename]`views/@layout.tsx`
+----
+include::{root}/frontend/demo/fusion/i18n/main-layout.tsx[tags=configure,indent=0]
+----
+
+The method chooses the initial language and loads its translations. It returns a `Promise` that resolves when the translations are loaded. Awaiting it at the top level of the layout, as above, delays the views until then. The initial language is the first of these that's set:
+
+. The `language` option, such as `i18n.configure({ language: 'de' })`.
+. The language that the browser last set with [methodname]`setLanguage()`. It's stored in a cookie.
+. The language of the browser.
+
+The `i18n.initialized` signal becomes `true` when the translations are loaded. A view that doesn't wait for [methodname]`configure()` can use it to show a placeholder until then.
+
+
+[[translating]]
+== Translating Strings
+
+The [methodname]`translate()` function returns the translation of a key in the current language. Mark the key with the `key` tag: [methodname]`translate()` accepts only keys marked with it.
+
+[source,tsx]
+----
+include::{root}/frontend/demo/fusion/i18n/orders-view.tsx[tags=translate,indent=0]
+----
+
+A component that calls [methodname]`translate()` renders again when the translations change, for example after a change of language. Effects and computed signals that call it also run again.
+
+When the translations have no value for the key, [methodname]`translate()` returns the key after an exclamation mark and the language, such as `!de: orders.count`. The default I18N provider of Flow views marks a missing translation the same way.
+
+
+[[parameters]]
+=== Parameters
+
+React views format the translations with the International Components for Unicode (ICU) message format. A translation can contain placeholders, plural and select forms, and number and date formats. Pass the values of the placeholders as an object, with a property for each placeholder name, such as `{ count }` in the example above:
+
+[source,properties]
+.[filename]`translations.properties`
+----
+orders.count=You have {count, plural, one {# order} other {# orders}}.
+----
+
+Flow views format translations with Java's [classname]`MessageFormat`, which numbers its placeholders, such as `{0}`. In a React view, pass the value of such a placeholder as `{ 0: value }`.
+
+
+[[view-titles]]
+== Translating View Titles and Menu Items
+
+The title of a view and the title of its menu item can be translation keys. Mark them with the `key` tag in the view configuration:
+
+[source,tsx]
+.[filename]`views/orders.tsx`
+----
+include::{root}/frontend/demo/fusion/i18n/orders-view.tsx[tags=config,indent=0]
+----
+
+[methodname]`useViewConfig()` and [methodname]`createMenuItems()` return these titles as they are. Translate them with [methodname]`i18n.translateDynamic()`, which takes any string and returns a signal with its translation. A signal in JSX renders as its value:
+
+[source,tsx]
+.[filename]`views/@layout.tsx`
+----
+include::{root}/frontend/demo/fusion/i18n/main-layout.tsx[tags=layout,indent=0]
+----
+
+When the translations don't have the key yet, the signal is an empty string, and the browser requests the key from the server. It then logs a warning in the browser console. The menu also includes the Flow views that have the [annotationname]`@Menu` annotation, so give them translation keys as titles as well. Otherwise, their titles don't appear as written.
+
+For more about the view configuration and the menu, see <<{articles}/flow/react-views/routing#view-configuration,View Configuration>>.
+
+
+[[changing-language]]
+== Changing the Language
+
+[methodname]`i18n.setLanguage()` changes the language. It loads the translations for the new language, and the views that use them render again. It also stores the language in a cookie, so that [methodname]`configure()` uses it the next time the application loads.
+
+[source,tsx]
+----
+<Button onClick={() => i18n.setLanguage('de')}>Deutsch</Button>
+----
+
+The `i18n.language` signal holds the current language. A language is a standard language tag, such as `de` or `de-DE`.
+
+The server chooses the translation of each key from the most specific file that has it. For `de-DE`, it looks in [filename]`translations_de_DE.properties`, then [filename]`translations_de.properties`, and then [filename]`translations.properties`.
+
+The language of React views is separate from the locale of Flow views. [methodname]`setLanguage()` doesn't change the locale of the [classname]`UI`, and [methodname]`UI.setLocale()` doesn't change the language of React views.
+
+
+[[modes]]
+== Development and Production Mode
+
+In development mode, the browser loads all the translations of the language. With <<{articles}/flow/configuration/live-reload#,live reload>>, a change to a translation file reaches the browser without a page reload.
+
+A production build records the keys that each JavaScript chunk of the application uses. The browser then loads only the translations of the chunks that it has loaded:
+
+- A key in a [methodname]`translate()` call is loaded with the chunk that contains the call.
+- A key elsewhere, such as in a view configuration, is loaded when the application starts.
+
+The build finds only keys written as a `key` tag with literal text. When [methodname]`i18n.translateDynamic()` gets a key that the build didn't find, such as a key computed at runtime, the browser requests it from the server and logs a warning.
+
+
+[[custom-provider]]
+== Custom I18N Providers
+
+React views get their translations through two methods of the [interfacename]`I18NProvider`:
+
+[methodname]`getAllTranslations(Locale)`::
+Returns all the translations of a locale. Used in development mode. The default implementation returns no translations, so a <<custom-i18n-provider#,custom provider>> must implement it for React views to get translations in development mode.
+
+[methodname]`getTranslations(Collection, Locale)`::
+Returns the translations of the given keys. Used in production mode, and for the keys that [methodname]`i18n.translateDynamic()` requests. The default implementation calls [methodname]`getTranslation()` for each key.
+

@@ -21,7 +21,7 @@ public class CountryService {
      */
     public List<City> getCities(Query query) {
         return query.getNumberOfCities() <= cities.size()
-                ? cities.subList(0, query.getNumberOfCities() - 1)
+                ? cities.subList(0, query.getNumberOfCities())
                 : cities;
     }
 

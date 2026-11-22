@@ -1,32 +1,29 @@
 package com.vaadin.demo.fusion.security.authentication;
 
-import com.vaadin.hilla.BrowserCallable;
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.security.PermitAll;
-import org.springframework.security.core.Authentication;
+import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.List;
+import com.vaadin.flow.server.auth.AnonymousAllowed;
+import com.vaadin.flow.spring.security.AuthenticationContext;
+import com.vaadin.hilla.BrowserCallable;
 
-/**
- * Provides information about the current user.
- */
 // tag::snippet[]
 @BrowserCallable
 public class UserInfoService {
 
-    @PermitAll
-    @Nonnull
-    public UserInfo getUserInfo() {
-        Authentication auth = SecurityContextHolder.getContext()
-                .getAuthentication();
+    private final AuthenticationContext authenticationContext;
 
-        final List<String> authorities = auth.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority).toList();
-
-        return new UserInfo(auth.getName(), authorities);
+    UserInfoService(AuthenticationContext authenticationContext) {
+        this.authenticationContext = authenticationContext;
     }
 
+    @AnonymousAllowed
+    public @Nullable UserInfo getUserInfo() {
+        return authenticationContext.getPrincipalName()
+                .map(name -> new UserInfo(name,
+                        authenticationContext.getGrantedAuthorities().stream()
+                                .map(GrantedAuthority::getAuthority).toList()))
+                .orElse(null); // Nobody is logged in
+    }
 }
 // end::snippet[]

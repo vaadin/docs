@@ -1,0 +1,150 @@
+---
+title: Authentication
+page-title: Authentication and the current user in React views | Vaadin
+description: The login view of React views, the user information that the browser gets, the authentication context, and expired sessions.
+meta-description: Reference for authentication in Vaadin React views - the login view, the user information service, the authentication context, logging in and out, and expiry.
+order: 20
+---
+
+
+= Authentication
+:toclevels: 2
+
+Spring Security authenticates the users of React views on the server, with the same configuration as for Flow views. The `@vaadin/hilla-react-auth` package tells the browser which user is logged in, and logs users in and out.
+
+section_outline::[]
+
+
+[[login-view]]
+== Login View
+
+The [methodname]`loginView()` method of [classname]`VaadinSecurityConfigurer` takes the path of a React login view:
+
+[source,java]
+----
+http.with(VaadinSecurityConfigurer.vaadin(),
+        configurer -> configurer.loginView("/login"));
+----
+
+Spring Security sends the users who aren't logged in to that path, and expects the login requests at the same path. After logout, the browser goes to `/`, or to the URL that the optional second argument gives. See <<{articles}/flow/security/spring/security-configuration#login-view-configuration,Login View Configuration>>.
+
+
+[[user-information]]
+== User Information
+
+The browser gets the logged-in user from a browser-callable service method of the application. The method returns information about the user, or `null` when nobody is logged in. Vaadin has no type for the information, so the application defines one with the properties that its views need:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/UserInfoService.java[tags=snippet,indent=0]
+----
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/security/authentication/UserInfo.java[tags=snippet,indent=0]
+----
+
+The `roles` property contains the granted authorities as they are, such as `ROLE_ADMIN`. See <<view-access-control#role-names,Role Names>> for why.
+
+A method that allows only logged-in users works, too: the browser counts its `401 Unauthorized` response as no user. That response also starts the <<expired-sessions,`InvalidSessionMiddleware`>>, though, for every user who isn't logged in.
+
+
+[[configure-auth]]
+== Authentication Context
+
+The [methodname]`configureAuth()` function of `@vaadin/hilla-react-auth` takes the generated function of the user information method:
+
+[source,typescript]
+.[filename]`auth.ts`
+----
+include::{root}/frontend/demo/auth/auth.ts[]
+----
+
+It returns two items:
+
+`AuthProvider`::
+A React component that provides the authentication context. It must be around every component that uses the context, so render it around the `RouterProvider` of the application, in an [filename]`index.tsx` file of your own. When it's first rendered, it calls the user information method.
+
+`useAuth`::
+The hook that returns the authentication context. Its type comes from the return type of the user information method.
+
+The optional second argument of [methodname]`configureAuth()` is an object with a `getRoles` function. The function gets the user information, and returns the roles of the user as an array of strings. The access checks in the browser compare these roles with the `rolesAllowed` option of the views. By default, the roles are the `roles` property of the user information, when it's an array.
+
+
+[[use-auth]]
+== Authentication State
+
+The object that [methodname]`useAuth()` returns has these properties:
+
+`state`::
+The authentication state. Its `user` property is the user information, or `undefined` when nobody is logged in. Until the user information has loaded, its `initializing` or `loading` property is `true`.
+
+`login(username, password, options)`::
+Logs the user in, as described in <<login,Logging In>>, and then loads the user information again.
+
+`logout()`::
+Logs the user out, as described in <<logout,Logging Out>>.
+
+`hasAccess(options)`::
+Returns whether the user meets the `loginRequired` and `rolesAllowed` options of the argument. See <<view-access-control#has-access,Checking Access in a View>>.
+
+
+[[login]]
+=== Logging In
+
+The [methodname]`login()` function sends the user name and the password to the login URL. When the login succeeds, it reloads the page at the URL that the user tried to open before Spring Security sent them to the login view. Without such a URL, it uses the default success URL of Spring Security, which is `/` by default.
+
+The function returns a promise of a [classname]`LoginResult`. When the login fails, the `error` property of the result is `true`, and the `errorTitle` and `errorMessage` properties describe the error for the user:
+
+[source,tsx]
+.[filename]`login.tsx`
+----
+include::{root}/frontend/demo/auth/LoginView.tsx[]
+----
+
+The third argument of [methodname]`login()` is an optional object with these properties:
+
+`loginProcessingUrl`::
+The URL of the login request. Defaults to `login`, relative to the base URL of the application.
+
+`onSuccess`::
+A function that's called after a successful login, before the navigation.
+
+`navigate`::
+A function that's called with the path to go to after a successful login. By default, the page reloads at that path.
+
+
+[[logout]]
+=== Logging Out
+
+The [methodname]`logout()` function submits a logout request to `logout`, relative to the base URL of the application. The browser then goes to the URL that the server responds with, which is the logout success URL.
+
+Data that the application keeps in the browser stays there after the logout. See <<index#cached-data,Data in the Browser>>.
+
+
+[[expired-sessions]]
+== Expired Sessions
+
+When the session of the user expires, the calls to services fail with `401 Unauthorized`. With the default configuration of Spring Security, this happens also to the calls to methods that allow anonymous access. The token that protects the page from cross-site request forgery belonged to the expired session, so it's no longer valid.
+
+The [classname]`InvalidSessionMiddleware` of `@vaadin/hilla-frontend` handles these calls. Add it to the `ConnectClient` of the application, as described in <<{articles}/flow/react-views/browser-callable-services/client#middleware,Middleware>>:
+
+[source,typescript]
+.[filename]`connect-client.ts`
+----
+include::{root}/frontend/demo/auth/session-expiration/connect-client.ts[tags=snippet,indent=0]
+----
+
+For each call that fails with `401 Unauthorized`, the middleware calls the function that its constructor got, and waits for the [classname]`LoginResult` that the function returns. When the result has a `token`, the middleware sends the call again with that token. Otherwise, the call fails with the original response. The [methodname]`login()` function doesn't return a token, so the failed calls aren't sent again after it.
+
+This example asks the user to log in again, and then reloads the page:
+
+[source,tsx]
+.[filename]`SessionExpiredLoginOverlay.tsx`
+----
+include::{root}/frontend/demo/auth/session-expiration/SessionExpiredLoginOverlay.tsx[tags=snippet,indent=0]
+----
+
+Render `SessionExpiredLoginOverlay` once in the main layout, so that it's present in every view. Nothing renders it automatically. If no component renders it, the overlay never opens, and the failed calls wait without any feedback.
+
+The `navigate` option reloads the page at its current URL. Without it, [methodname]`login()` goes to the default success URL, because Spring Security doesn't save the URL of a service call as a URL to return to.
