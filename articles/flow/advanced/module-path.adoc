@@ -1,0 +1,167 @@
+---
+title: Module Path
+page-title: Using Vaadin on the Java Module Path - Vaadin Docs
+description: The stable Java module names of the Vaadin jars and how to require them from a module descriptor.
+meta-description: Find the stable Java module names of the Vaadin jars, the rule they follow, and how to require them in the module descriptor of a Vaadin application or add-on.
+order: 830
+---
+
+
+= [since:com.vaadin:vaadin@V25.4]#Using Vaadin on the Module Path#
+
+The Vaadin jars declare a stable Java Platform Module System (JPMS) module name in the `Automatic-Module-Name` entry of their manifest. On the module path, each jar is an automatic module with that name, instead of a name derived from its file name. Applications and add-ons can require Vaadin modules by these names in their [filename]`module-info.java`, and a name stays the same in later versions.
+
+The Vaadin jars have no module descriptor of their own. As automatic modules, they export and open all their packages and read every other module. A module that reads one automatic module also reads all the other automatic modules on the module path. On the class path, the manifest entry has no effect.
+
+
+== Requiring Vaadin Modules
+
+Add a `requires` directive to [filename]`module-info.java` for each Vaadin module whose packages your code uses:
+
+[source,java]
+----
+module com.example.app {
+    requires com.vaadin.flow.server;
+    requires com.vaadin.flow.data;
+    requires com.vaadin.flow.component.grid;
+    requires com.vaadin.flow.component.textfield;
+}
+----
+
+The following limitations apply:
+
+- Development mode doesn't run from the module path. Run the application from the class path during development, as described in <<{articles}/flow/configuration/development-mode#,Development Mode>>.
+- The Spreadsheet jar contains a class in the `org.apache.poi.ss.formula` package, which the `org.apache.poi:poi` jar also contains. Two modules on the module path can't contain the same package, so Spreadsheet can't be used from the module path.
+- Build plugins, TestBench, and other jars that are used only at build or test time have no declared module name.
+
+
+== Naming Rule
+
+The module names follow these rules:
+
+- A jar with Java code is named after the root package of its code. For example, `flow-data` is `com.vaadin.flow.data`. When the root package is a namespace that other jars share, such as `com.vaadin.flow`, the jar is named after the package of its main API. For example, `flow-server` is `com.vaadin.flow.server`.
+- A jar without Java code is named `com.vaadin.` followed by its artifact ID without a leading `vaadin-`, and with dashes replaced by dots. For example, `vaadin-core` is `com.vaadin.core`.
+- When a name would clash with another name or with a namespace, it gets a qualifier. For example, the `vaadin` artifact is `com.vaadin.platform`.
+
+The jars of the UI components are named `com.vaadin.flow.component.` followed by the artifact ID without `vaadin-` and `-flow`, and without dashes. For example, `vaadin-combo-box-flow` is `com.vaadin.flow.component.combobox`, and `vaadin-grid-pro-flow` is `com.vaadin.flow.component.gridpro`. The following jars have a different name, because their root package differs:
+
+[cols="2,3"]
+|===
+|Artifact ID |Module Name
+
+|`vaadin-flow-components-base`
+|`com.vaadin.flow.component.shared`
+
+|`vaadin-icons-flow`
+|`com.vaadin.flow.component.icon`
+
+|`vaadin-renderer-flow`
+|`com.vaadin.flow.data.renderer`
+
+|`vaadin-lumo-theme-flow`
+|`com.vaadin.flow.theme.lumo`
+
+|`vaadin-aura-theme-flow`
+|`com.vaadin.flow.theme.aura`
+
+|`vaadin-ai-core-flow`
+|`com.vaadin.flow.component.ai`
+
+|`vaadin-ai-extensions-flow`
+|`com.vaadin.flow.component.ai.extensions`
+|===
+
+
+== Module Names
+
+The following tables list the module names that applications and add-ons most commonly require.
+
+
+=== Flow
+
+[cols="2,3"]
+|===
+|Artifact ID |Module Name
+
+|`flow-server`
+|`com.vaadin.flow.server`
+
+|`flow-data`
+|`com.vaadin.flow.data`
+
+|`flow-html-components`
+|`com.vaadin.flow.component.html`
+
+|`flow-lit-template`
+|`com.vaadin.flow.component.littemplate`
+
+|`flow-react`
+|`com.vaadin.flow.component.react`
+
+|`flow-dnd`
+|`com.vaadin.flow.component.dnd`
+
+|`flow-push`
+|`com.vaadin.flow.push`
+
+|`flow-webpush`
+|`com.vaadin.flow.server.webpush`
+
+|`vaadin-spring`
+|`com.vaadin.flow.spring`
+
+|`vaadin-cdi`
+|`com.vaadin.cdi`
+
+|`vaadin-quarkus`
+|`com.vaadin.quarkus`
+|===
+
+
+=== Browser-Callable Services and React Views
+
+[cols="2,3"]
+|===
+|Artifact ID |Module Name
+
+|`hilla`
+|`com.vaadin.hilla.platform`
+
+|`hilla-endpoint`
+|`com.vaadin.hilla.endpoint`
+
+|`hilla-engine-core`
+|`com.vaadin.hilla.engine`
+
+|`hilla-engine-runtime`
+|`com.vaadin.hilla.internal`
+
+|`hilla-typescript-generator`
+|`com.vaadin.hilla.parser`
+
+|`hilla-runtime-plugin-transfertypes`
+|`com.vaadin.hilla.runtime.transfertypes`
+|===
+
+
+=== Platform
+
+[cols="2,3"]
+|===
+|Artifact ID |Module Name
+
+|`vaadin`
+|`com.vaadin.platform`
+
+|`vaadin-core`
+|`com.vaadin.core`
+
+|`vaadin-spring-boot-starter`
+|`com.vaadin.spring.boot.starter`
+
+|`hilla-spring-boot-starter`
+|`com.vaadin.hilla.spring.boot.starter`
+
+|`vaadin-quarkus-extension`
+|`com.vaadin.quarkus.extension`
+|===
