@@ -13,7 +13,7 @@ This guide goes through the changes you'll need to make in your applications whe
 
 .Upgrading from Other Versions
 [TIP]
-See link:/docs/v24/upgrading[Vaadin 23 to 24 Upgrade Instructions] if you're upgrading from a version earlier than Vaadin 24. If your application already runs on Vaadin 25.2, see <<25-2-to-25-3#,Upgrading from Vaadin 25.2 to 25.3>> for the shorter list of changes that concern it.
+See link:/docs/v24/upgrading[Vaadin 23 to 24 Upgrade Instructions] if you're upgrading from a version earlier than Vaadin 24. If your application already runs on Vaadin 25.3, see <<25-3-to-25-4#,Upgrading from Vaadin 25.3 to 25.4>> for the shorter list of changes that concern it. When upgrading from Vaadin 24, follow this guide first, and then that page. It also lists the component changes and deprecations of Vaadin 25.4. From Vaadin 25.2, start with <<25-2-to-25-3#,Upgrading from Vaadin 25.2 to 25.3>>.
 
 Many of the breaking changes are needed because of fundamental changes in the Java platform and the major dependencies on which Vaadin relies. This includes the following:
 
@@ -38,7 +38,7 @@ Jackson 3::
 Elemental has been replaced with Jackson while Jackson version has been updated to 3. This only affects you if your application uses some of the affected low-level APIs. Details can be found in link:https://github.com/vaadin/flow/issues/21060[Finalize Jackson conversion] and its sub-issues.
 
 Node.js 26::
-Vaadin 25.4 requires Node.js 26 or later for building the frontend part of the application. Node.js 26 becomes the active Long Term Support (LTS) on 2026-10-28.
+Vaadin 25.4 requires Node.js 26 for building the frontend part of the application. Node.js 26 becomes the active Long Term Support (LTS) on 2026-10-28.
 +
 The official Node.js 26 binaries link against `libatomic.so.1`, which the Node.js 24 binaries didn't require. On minimal Linux images, such as slim Docker base images, the downloaded Node.js fails to start with an error like "error while loading shared libraries" unless the `libatomic1` package -- or the equivalent for your distribution -- is installed.
 +
@@ -174,6 +174,35 @@ You'll need to upgrade Spring to the latest versions, including the starter pare
 </parent>
 ----
 
+=== Spring Dependencies of the Vaadin Spring Integration
+
+Starting with Vaadin 25.4, the `vaadin-spring` artifact no longer brings Spring MVC, Spring WebSocket, and Hibernate Validator into the application. The Vaadin Spring Boot starter, `vaadin-spring-boot-starter`, adds them through `spring-boot-starter-webmvc`, `spring-boot-starter-websocket`, and `spring-boot-starter-validation`, so an application that uses the starter needs no changes.
+
+A Spring Boot application that depends on `vaadin-spring` without the starter has to add these starters itself:
+
+.pom.xml
+[source,xml]
+----
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-webmvc</artifactId>
+</dependency>
+<!-- For push over WebSocket in an embedded server -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-websocket</artifactId>
+</dependency>
+<!-- For Bean Validation, for example with BeanValidationBinder -->
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-validation</artifactId>
+</dependency>
+----
+
+Without Spring WebSocket, push can't use WebSocket in an embedded server and falls back to long polling. Vaadin logs a warning about this at startup. A Spring application without Spring Boot declares `spring-webmvc` itself, as described in <<{articles}/flow/integrations/spring/spring-mvc#declaring-dependencies, Declaring Dependencies>>. It also declares `spring-websocket` for push over WebSocket, and a Bean Validation implementation, such as `org.hibernate.validator:hibernate-validator`, for Bean Validation.
+
+The `vaadin-bom` doesn't manage the versions of Spring Framework, Micrometer, and Tomcat either. Spring Boot manages them in a Spring Boot application. A Spring application without Spring Boot can import the `spring-framework-bom` for them.
+
 == Application Servers
 
 Before migrating, find the corresponding version of the Jakarta EE 11-compatible application server used in your project. See link:https://jakarta.ee/compatibility/[Jakarta Compatible Products] for more information.
@@ -297,6 +326,25 @@ Since Vaadin 24.7, Hilla no longer launches a Maven or Gradle process to regener
 === React Router Imports
 
 React Router 7, which Hilla has used since Vaadin 24.7, doesn't have a separate `react-router-dom` package. If you're upgrading from Vaadin 24.6 or earlier, replace all imports from `react-router-dom` with `react-router` in your React views.
+
+=== TypeScript Generator
+
+Starting with Vaadin 25.4, the TypeScript code for browser-callable services is generated in Java, without Node.js. The `@vaadin/hilla-generator-*` packages are removed, except for `@vaadin/hilla-generator-utils`. Vaadin removes the packages that it added to [filename]`package.json` itself. Remove any that you added yourself. Custom generator plugins aren't supported.
+
+The `nodeCommand` parameter of the `hilla-maven-plugin` goals is removed, so delete it from the [filename]`pom.xml`. The build no longer writes the [filename]`hilla-openapi.json` file, and the [classname]`com.vaadin.hilla.OpenAPIUtil` class is removed. To get the classes that browser-callable services use, call [methodname]`EndpointCodeGenerator.getInstance().getClassesUsedInEndpoints()`.
+
+=== Form Models Are Constants
+
+Starting with Vaadin 25.4, a generated form model, such as `PersonModel`, is a constant built with the `@vaadin/hilla-models` package, instead of a class. Code that passes a model to [methodname]`useForm()`, [methodname]`useFormPart()`, or the Auto CRUD components keeps working. The class-based models and their helpers are removed from `@vaadin/hilla-lit-form`, so update code that relies on models being classes:
+
+* Instead of extending a generated model class, create a model with `m.extend()`, using the default export of `@vaadin/hilla-models`.
+* Don't create models with `new`. Use the generated constant.
+* Import model types, such as [classname]`StringModel`, [classname]`ObjectModel`, and [classname]`ArrayModel`, and symbols, such as `$key`, `$meta`, and `$enum`, from `@vaadin/hilla-models` instead of `@vaadin/hilla-lit-form`. Replace the removed `_key`, `_meta`, and `_enum` aliases with these.
+* Iterate over the item models of an array model with `m.items()` from `@vaadin/hilla-models`.
+* [methodname]`useFormArrayPart()` takes a generated array model.
+* The Java type in the model metadata is `jvmType` instead of `javaType`, and an annotation in the metadata names its type in `jvmType` instead of `name`.
+
+See <<{articles}/flow/react-views/forms/api#models, Form Models>>.
 
 == Quarkus
 
@@ -1229,6 +1277,45 @@ test(upload).ensureUploaded();
 * [methodname]`test(uploadButton)` returns an [classname]`UploadButtonTester` rather than a [classname]`ButtonTester`. Code that assigns the result to a variable explicitly typed as [classname]`ButtonTester<Button>` no longer compiles and needs the new type, or `var`. [methodname]`click()` still works, since [classname]`UploadButtonTester` extends [classname]`ButtonTester`.
 
 See <<{articles}/flow/testing/browserless/component-testers#uploads-without-auto-upload,Component Testers>> for details.
+
+=== Browserless Testing: Kotlin Extensions Removed
+
+Starting with Vaadin 25.4, browserless testing no longer declares Kotlin extension functions and properties on Flow and component types, such as [classname]`Component`, [classname]`Element`, [classname]`Grid`, and [classname]`UI`. The testers and their API aren't affected. Kotlin tests call the remaining helpers as plain functions that take the component as a parameter:
+
+[source,kotlin]
+----
+// Before
+val name = form._get(TextField::class.java)
+// After
+val name = _get(form, TextField::class.java)
+----
+
+The helpers that duplicated Flow API are removed. Use Flow instead:
+
+[cols="1,1",options=header]
+|===
+| Removed helper | Replacement
+
+| `findAncestorOrSelf` and `isNestedIn`
+| [methodname]`Component.findAncestor()`
+
+| `fireEvent` and `_fireEvent`
+| [methodname]`ComponentUtil.fireEvent()`
+
+| `id_`
+| [methodname]`getId()` and [methodname]`setId()`
+
+| `currentViewLocation`
+| [methodname]`UI.getActiveViewLocation()`
+
+| `insertBefore`
+| [methodname]`addComponentAtIndex()` or [methodname]`Element.insertChild()`
+
+| `setOrRemoveAttribute`
+| [methodname]`Element.setAttribute()`, which removes the attribute when the value is `null`
+|===
+
+Most Grid helpers, such as `_dump`, `expectRow`, `expectRows`, `_getFormatted`, `_getFormattedRow`, `_getCellComponent`, `sort`, `_editItem`, and `_expandAll`, are removed as well. Use [classname]`GridTester` and [classname]`TreeGridTester` instead. Java code that calls the [classname]`GridKt` functions [methodname]`_clickItem()` and [methodname]`_doubleClickItem()` has to pass all arguments, since they no longer have overloads with default values. Use [methodname]`GridTester.clickRow()` and [methodname]`doubleClickRow()` instead.
 
 == Binder
 [methodname]`Binder.validate()` implementation has been changed to behave as its Javadoc states. In other words, [methodname]`Binder.validate()` no longer fails when bean level validators have been configured but no bean is currently set (i.e. [classname]`Binder` is used in buffered mode).

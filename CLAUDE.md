@@ -41,8 +41,8 @@ npm run dspublisher:build
 # Run ESLint on frontend code
 npm run lint
 
-# Compile the Java examples
-mvn compile
+# Compile the Java examples and run their tests
+mvn test
 
 # Format the Java examples, must be run before committing a Java change
 mvn spotless:apply

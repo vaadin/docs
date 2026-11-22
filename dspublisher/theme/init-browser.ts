@@ -8,6 +8,9 @@ import './preview-diff';
 // Security alert signup form on the docs home page
 import './security-alerts';
 
+// Step-by-step walkthroughs: a [.walkthrough] list, one step at a time
+import './walkthrough';
+
 // Import banner image
 import tocBanner from './images/toc-banner.webp';
 
