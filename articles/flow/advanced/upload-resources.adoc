@@ -17,10 +17,6 @@ The existing [classname]`UploadHandler` implementations are accessible through t
 [NOTE]
 When receiving a multipart upload the [methodname]`handleUploadRequest` will be called separately for each file in the upload.
 
-An upload is received independently of the owner component's lifecycle: once handling has started, detaching the owner, navigating to another view, or closing the browser tab doesn't abort it on the server.
-The UI that owns the upload is kept attached to its session for as long as the upload is being received, even if that UI is closed in the meantime, so progress listeners and the upload callback still run.
-The upload doesn't, however, outlive its session: if the session is invalidated, either explicitly or by timing out, the ongoing upload is terminated, its callback isn't run, and the partially received file is discarded.
-
 Then the handler can be registered through the [classname]`Element` API by setting it as an attribute.
 
 [source,java]
@@ -119,6 +115,29 @@ add(dummy);
 getElement().appendChild(formElement);
 ----
 
+
+[#lifecycle]
+[role="since:com.vaadin:vaadin@V25.4"]
+== Transfer Lifecycle
+
+An upload is received independently of the owner component's lifecycle.
+The owner's attached, visible, enabled, and inert state is checked when the upload request is received, but not while the upload is being received.
+Once handling has started, detaching the owner component, navigating to another view, or closing the browser tab doesn't stop the upload on the server.
+
+A UI that's closed while an upload for it is ongoing stays attached to its session until the upload has been handled.
+This applies, for example, when the user closes the browser tab, or when the UI is closed because its heartbeats have stopped.
+Progress listeners and the callbacks of the built-in handlers therefore still run, although their UI changes no longer reach any browser.
+Once the upload has been handled, the UI is removed from the session.
+
+An upload doesn't outlive its session, though.
+When the session is invalidated, either explicitly or by timing out, the ongoing upload is terminated:
+
+* The input stream of the upload stops providing content and throws an [classname]`IOException`.
+* The upload callback isn't run, and a partially received file is discarded.
+* A warning with the request path and the owner component is logged.
+
+To let a long upload finish regardless, keep the session alive while the upload is ongoing.
+You can also receive the upload through a servlet of your own that isn't tied to a UI or a session.
 
 
 [discussion-id]`4482D0BF-E742-4FEA-A888-854B758FE576`
