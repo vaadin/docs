@@ -1,0 +1,182 @@
+---
+title: Upgrading from Vaadin 25.3
+page-title: How to Upgrade from Vaadin 25.3 to Vaadin 25.4 | Vaadin
+description: Changes needed to upgrade an application from Vaadin 25.3 to Vaadin 25.4.
+meta-description: Upgrade a Vaadin application from 25.3 to 25.4. Covers the version bump, Node.js 26, changed dependencies and APIs, and deprecations to fix before Vaadin 26.
+order: 100
+---
+
+
+= Upgrading from Vaadin 25.3 to 25.4
+
+Vaadin 25.4 is a minor release, and for most applications the upgrade is a version bump. It requires Node.js 26 instead of Node.js 24 for building the frontend. The other system requirements are the same as for Vaadin 25.3. This page lists the changes that can still need attention, followed by the deprecations to act on before Vaadin 26.
+
+For what's new in Vaadin 25.4, see the link:https://github.com/vaadin/platform/releases/tag/25.4.0[release notes]. If you're upgrading from Vaadin 24, follow <<index#,Upgrading from Vaadin 24>> first, and then this page.
+
+
+== Update the Version
+
+Set the Vaadin version in the [filename]`pom.xml` or [filename]`gradle.properties` file:
+
+[.example]
+--
+[source,xml]
+----
+<source-info group="pom.xml"></source-info>
+<vaadin.version>25.4.0</vaadin.version>
+----
+[source,properties]
+----
+<source-info group="gradle.properties"></source-info>
+vaadinVersion=25.4.0
+----
+--
+
+Use the latest 25.4 maintenance release, if one is available. See the link:https://github.com/vaadin/platform/releases[list of releases on GitHub].
+
+
+== Build and Dependencies
+
+Node.js 26::
+The build needs Node.js 26. If the installed Node.js is older, Vaadin downloads Node.js 26 into the [filename]`~/.vaadin` directory. On minimal Linux images, such as slim Docker base images, install the `libatomic1` package, which the Node.js 26 binaries need, or the package with the same library for your distribution. Update CI configurations and scripts that reference a Node.js 24 installation.
+
+Spring dependencies::
+The `vaadin-spring` artifact no longer brings in Spring MVC, Spring WebSocket, and Hibernate Validator. The Vaadin Spring Boot starter includes them, so applications that use it need no changes. If your Spring Boot application depends on `vaadin-spring` without the starter, add `spring-boot-starter-webmvc`, `spring-boot-starter-websocket`, and `spring-boot-starter-validation`. A Spring application without Spring Boot declares `spring-webmvc` itself, `spring-websocket` for push over WebSocket, and a Bean Validation implementation, such as `org.hibernate.validator:hibernate-validator`, for Bean Validation. Without Spring WebSocket, push can't use WebSocket in an embedded server and falls back to long polling. See <<index#spring-dependencies-of-the-vaadin-spring-integration, Spring Dependencies of the Vaadin Spring Integration>>.
+
+Spring Framework versions::
+The `vaadin-bom` no longer manages the versions of Spring Framework, Micrometer, and Tomcat. Spring Boot applications get them from Spring Boot. A Spring application without Spring Boot has to manage them itself, for example by importing the `spring-framework-bom`.
+
+Jandex indexes::
+Every Vaadin artifact contains its own Jandex index. The `flow-jandex` artifact is removed, so remove any dependency on it. The `vaadin-jandex` and `vaadin-core-jandex` artifacts are deprecated. See <<{articles}/flow/integrations/quarkus#, Quarkus>>.
+
+`gentyref`::
+The `flow-server` artifact no longer depends on `com.vaadin.external:gentyref`. If your code uses the `com.googlecode.gentyref` classes, declare the dependency yourself.
+
+[annotationname]`@JsModule` with a runtime URL::
+On a component or the application shell, a [annotationname]`@JsModule` value with a runtime URL, such as one with a leading `/`, `context://`, or `https://`, is no longer bundled. It's loaded at runtime instead. To keep bundling a file in the [filename]`frontend` directory, use a relative value, such as `./foo.js`. See <<{articles}/flow/advanced/loading-resources#using-annotations, Using Annotations>>.
+
+
+== Java API Changes
+
+Two-way signal bindings::
+[methodname]`AppLayout.bindDrawerOpened()`, [methodname]`Checkbox.bindIndeterminate()`, and the [methodname]`bindValue()` methods of [methodname]`Grid.asSingleSelect()` and [methodname]`Grid.asMultiSelect()` throw a [classname]`NullPointerException` when the write callback is `null`. Pass a callback that writes the user's change to the signal.
+
+Custom handlers for web components and translations::
+[classname]`WebComponentProvider` and [classname]`TranslationFileRequestHandler` implement [interfacename]`SessionlessRequestHandler` instead of extending [classname]`SynchronizedRequestHandler`, so they run without a session. A subclass that overrides [methodname]`synchronizedHandleRequest()` or [methodname]`canHandleRequest()` has to override [methodname]`handleRequest(VaadinRequest, VaadinResponse)` instead, which has no session parameter. See <<{articles}/flow/advanced/service-init-listener#, Service Init Listener>>.
+
+
+== React Views and Browser-Callable Services
+
+TypeScript generator::
+The TypeScript code for browser-callable services is generated in Java, without Node.js. The `@vaadin/hilla-generator-*` packages are removed, except for `@vaadin/hilla-generator-utils`. Vaadin removes the ones it added to [filename]`package.json` itself. Remove any that you added yourself. Custom generator plugins aren't supported.
+
+`hilla-maven-plugin`::
+The `nodeCommand` parameter of the plugin goals is removed. Delete it from the [filename]`pom.xml`.
+
+OpenAPI file::
+The build no longer writes the [filename]`hilla-openapi.json` file. Tools that read it have to use another source. The [classname]`com.vaadin.hilla.OpenAPIUtil` class is removed. To get the classes that browser-callable services use, call [methodname]`EndpointCodeGenerator.getInstance().getClassesUsedInEndpoints()`.
+
+Form models::
+Generated form models, such as `PersonModel`, are constants built with `@vaadin/hilla-models`, instead of classes. The class-based models are removed from `@vaadin/hilla-lit-form`. Code that extends a generated model, creates one with `new`, or imports model classes or symbols from `@vaadin/hilla-lit-form` has to be updated, and the `javaType` of the model metadata is now `jvmType`. See <<index#form-models-are-constants, Form Models Are Constants>>.
+
+`@index` views::
+A view in an [filename]`@index.tsx` file can't set the `route` property of its view configuration. The build fails if it does. Rename the file, or move it to a directory that matches the route. See <<{articles}/flow/react-views/routing#view-configuration, View Configuration>>.
+
+
+== Components
+
+Form Layout: labels aside::
+In auto-responsive mode with labels aside, fields placed directly in a Form Layout show their label beside the field when the labels fit. A Form Item isn't needed for this. A field without a label still reserves the label column. Other components, such as buttons, start at the label column. Wrap such components in a Form Item, or style them with the `data-form-layout-has-labels-aside` attribute. See <<{articles}/components/form-layout#label-position, Label Position>>.
+
+Form Layout: label width in Lumo::
+In auto-responsive mode with labels aside, the default label width of a Form Item, `8em`, is relative to the font size of the layout instead of the label. In Lumo, with the default font sizes, this makes the label column 128 pixels wide instead of 112 pixels.
+
+Custom Field and Date Time Picker in Lumo::
+The helper text and error message are spaced like those of a Text Field. The `whitespace` theme variant of Custom Field has no effect, and the fields inside a Custom Field have no outer padding of their own. Remove CSS that compensates for the old spacing.
+
+Card title::
+In the web component and the React component, a title element in the `title` slot takes precedence over the `cardTitle` property. Setting `cardTitle` no longer removes the slotted title, so remove the element to replace it.
+
+Date Picker calendar::
+The focus, `tabindex`, `aria-label`, and `aria-disabled` of a date are on an element with the `date-button` class and `role="button"` inside the date cell, and the month calendar has `role="application"`. CSS that styles the focused date with `[part~='date']:focus` has to use the `focused` part instead. Update end-to-end tests that read these attributes from the cell. This also concerns Date Time Picker.
+
+Client-side `i18n` property::
+The `i18n` property of web components, such as Date Picker and Upload, is `undefined` until the application sets it, instead of returning the default texts. Client-side code that reads texts from it, such as `el.i18n.cancel`, has to handle `undefined`. Setting a partial object still merges it with the defaults.
+
+Grid cells::
+Grid renders its body cells with Lit. Body cells no longer have generated `id` attributes. With lazy column rendering, the content of columns scrolled out of view is removed from the DOM, and overlays opened from it close and reopen. Subclasses of the `vaadin-grid` web component can't use the removed protected members `_detailsCells`, `_configureDetailsCell()`, `_updateFirstAndLastColumnForRow()`, and `_generateCellPartNames()`.
+
+
+== Observability Kit
+
+[classname]`ComponentResolver` removed::
+The [classname]`com.vaadin.observability.micrometer.ComponentResolver` class is removed. Call [methodname]`getComponent()` on the RPC invocation event of Flow instead. For a field wrapped in a [classname]`Composite`, it returns the composite, so use [methodname]`ComponentUtil.getInnermostComponent()` to get the field that the resolver returned.
+
+Spring dependencies::
+Applications that use the Observability Kit Spring Boot starter need no changes. Only an application that uses the `observability-kit-spring` artifact without the starter is affected, because the artifact no longer brings in Spring Framework. Such an application has to declare `spring-context`, and `spring-web` for observing HTTP requests, for example with the versions from the `spring-framework-bom`.
+
+
+== Browserless Testing and TestBench
+
+* The Kotlin extension functions and properties that browserless testing declared on Flow and component types are removed. Kotlin tests call the remaining helpers as plain functions, such as `_get(button, TextField::class.java)` instead of `button._get(TextField::class.java)`. Use Flow API, such as [methodname]`Component.findAncestor()` and [methodname]`ComponentUtil.fireEvent()`, instead of the removed helpers, and [classname]`GridTester` or [classname]`TreeGridTester` instead of the removed Grid helpers. See <<index#browserless-testing-kotlin-extensions-removed, Kotlin Extensions Removed>>.
+* With auto upload turned off, [methodname]`UploadTester.upload()` and [methodname]`uploadAll()` leave the files pending until [methodname]`startUpload()` is called.
+* [methodname]`UploadTester.removeFile(String)` removes the last added file with the name. Use [methodname]`removeFile(int)` to remove a specific entry.
+* [methodname]`test(uploadButton)` returns an [classname]`UploadButtonTester`, which extends [classname]`ButtonTester`. Code that assigns the result to a [classname]`ButtonTester<Button>` variable needs the new type, or `var`.
+* In TestBench, [methodname]`SelectElement.getItems()`, [methodname]`getItemsStream()`, and [methodname]`getSelectedOptionItem()` no longer open the popup. Call [methodname]`openPopup()` before clicking a returned item.
+
+See <<index#browserless-testing-upload-testers, Upload Testers>> for examples and details.
+
+
+== Deprecations to Address Before Vaadin 26
+
+Deprecated APIs still work in Vaadin 25.4, but most of them are removed in Vaadin 26. Replacing them now makes the next upgrade easier.
+
+[cols="1,1",options=header]
+|===
+| Deprecated | Replacement
+
+| [annotationname]`@JsModule` with a runtime URL
+| [annotationname]`@JavaScript` with `type = JavaScript.Type.MODULE`. See <<{articles}/flow/advanced/loading-resources#using-annotations, Using Annotations>>.
+
+| [methodname]`Page.addJsModule()`
+| [methodname]`Page.addJavaScript(url, LoadMode, JavaScript.Type.MODULE)`
+
+| [methodname]`DomListenerRegistration.addEventData(String)` and [methodname]`addEventDataElement(String)`
+| [methodname]`addEventDataPath()` and [methodname]`addEventDataElementPath()` for property paths, or the overloads that take a [classname]`DomEventData` for other expressions.
+
+| [methodname]`Shortcuts.setShortcutListenOnElement(String, Component)`
+| [methodname]`Shortcuts.setShortcutListenOnElementLocator(JsFunction, Component)`
+
+| The [classname]`NavigationContext` constructor that takes a `navigating` flag
+| The constructor that takes a [classname]`NavigationContext.Phase`.
+
+| [methodname]`VaadinService.reinitializeSession()`
+| [methodname]`HttpServletRequest.changeSessionId()`
+
+| [methodname]`getRerouteTarget()` and [methodname]`rerouteTo()` of [classname]`LocationChangeEvent`
+| [methodname]`BeforeEvent.rerouteTo()` in a [interfacename]`BeforeEnterObserver` or [interfacename]`BeforeLeaveObserver`.
+
+| [methodname]`registerComponentClass()`, [methodname]`unregisterAllComponentClasses()`, [methodname]`getComponentsByTag()`, and [methodname]`getAllTagMappings()` of [classname]`ComponentUtil`
+| None.
+
+| [methodname]`GridContextMenu.setDynamicContentHandler()`
+| [methodname]`GridContextMenu.setDynamicContentProvider()`, which also gets the clicked column.
+
+| [methodname]`Card.setTitleHeadingLevel()`, and the `titleHeadingLevel` property of the web component and the React component
+| [methodname]`Card.setHeadingLevel()` and the `headingLevel` property.
+
+| `CustomFieldVariant.LUMO_WHITESPACE`
+| None. The variant has no effect, so remove it.
+
+| [methodname]`Icon.Options.setImgSize()` and [classname]`Icon.ImageSize` of Map
+| None. The option has no effect, so remove it. Use [methodname]`Icon.Options.setWidth()` and [methodname]`setHeight()` to set the size of an icon.
+
+| The `renderer`, `headerRenderer`, and `footerRenderer` properties of the React Dialog, and the [classname]`DialogReactRendererProps` type
+| The `children`, `header`, and `footer` properties.
+
+| The `renderer` property of the React Select, and the [classname]`SelectReactRendererProps` type
+| The `items` property, or a [classname]`SelectListBox` child.
+
+| The `vaadin-jandex` and `vaadin-core-jandex` artifacts
+| None. Remove the dependency.
+|===
