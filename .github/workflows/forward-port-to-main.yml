@@ -1,0 +1,60 @@
+name: Forward-Port to Main
+
+# Labels a pull request to a release branch (v25.3, …) with target/main, so that
+# the cherry-pick bot applies the merged change to main as well. A change made
+# only on a release branch is lost when the next release branch is cut from
+# main. The "Edit this page" link on the published documentation opens pull
+# requests against the branch that the page was built from, so most of these
+# pull requests come from there.
+#
+# The workflow skips cherry-picks, which come from main already, and version
+# updates and chore pull requests, which apply only to the release. It leaves a
+# comment that tells the author and the reviewer to remove the label when the
+# change applies only to the release.
+#
+# A pull_request_target event runs the workflow of the pull request's base
+# branch, so this file takes effect only on the release branches that have it.
+# A release branch cut from main has it. v24 doesn't, because its content is
+# maintained apart from main.
+#
+# The workflow never checks out the pull request, which keeps
+# pull_request_target safe for pull requests from forks.
+
+on:
+  pull_request_target:
+    types: [opened, edited]
+    branches: ['v*']
+
+jobs:
+  label:
+    # Runs when a pull request is opened against a release branch, or moved to
+    # one. Other edits are skipped, so a label that a reviewer removed stays
+    # removed.
+    if: |
+      (github.event.action == 'opened' || github.event.changes.base.ref.from != null) &&
+      !contains(github.event.pull_request.labels.*.name, 'target/main') &&
+      !contains(github.event.pull_request.title, '(CP: ') &&
+      !startsWith(github.event.pull_request.title, 'Update vaadin version') &&
+      !startsWith(github.event.pull_request.title, 'Update hardcoded vaadin version') &&
+      !startsWith(github.event.pull_request.title, 'chore:') &&
+      !startsWith(github.event.pull_request.title, 'chore(') &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Add the target/main label and explain it
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          gh api "repos/$REPO/issues/$PR_NUMBER/labels" -f 'labels[]=target/main' > /dev/null
+          gh api "repos/$REPO/issues/$PR_NUMBER/comments" -F body=@- > /dev/null <<EOF
+          This pull request targets \`$BASE_REF\`, a release branch. A change made only there is lost when the next release branch is cut from \`main\`. This pull request is therefore labeled \`target/main\`: after it's merged, a bot cherry-picks it to \`main\`.
+
+          If the change applies only to this release, remove the label.
+          EOF

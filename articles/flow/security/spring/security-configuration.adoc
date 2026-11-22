@@ -78,7 +78,7 @@ Configures the login view for use in a Flow application and the logout success U
 public VaadinSecurityConfigurer loginView(String loginView)
 ----
 
-Configures a React login view, available at the given path. Use this when the login view of your application is a React view. See <<{articles}/building-apps/react/security#,Secure React Views>>.
+Configures a React login view, available at the given path. Use this when the login view of your application is a React view. See <<{articles}/flow/security/react-views/authentication#login-view,Login View of React Views>>.
 
 [source,java]
 ----
@@ -113,6 +113,50 @@ public VaadinSecurityConfigurer keycloakRoleMapping()
 
 [since:com.vaadin:vaadin@V25.4]#Enables mapping of Keycloak realm and client roles to Spring Security granted authorities (disabled by default).# Keycloak puts the roles of a user into the access token, so they aren't part of the authenticated user by default. Enabling the mapping decodes the access token and maps its roles, which makes `@RolesAllowed("admin")` and `hasRole("admin")` match a Keycloak role named `admin`. Works only together with `oauth2LoginPage(String)` and its overloads. See <<{articles}/flow/security/spring/oauth2#keycloak-role-mapping,Keycloak Role Mapping>> for details.
 
+=== Login Success and Failure Handling
+
+[source,java]
+----
+public VaadinSecurityConfigurer successUrlResolver(VaadinSavedRequestAwareAuthenticationSuccessHandler.SuccessUrlResolver successUrlResolver)
+----
+
+[since:com.vaadin:vaadin@V25.4]#Sets the resolver for the URL to redirect to after authentication.# Use it, for example, to send users to a landing page that depends on their roles. The resolver gets the request, the [classname]`Authentication`, and the URL the user tried to open before logging in, or `null` if there is none. That URL is absolute and can carry Spring Security's `continue` query parameter, so parse it, for example with [methodname]`URI.getPath()`, rather than comparing it to a path directly. When the resolver returns a URL, it takes precedence over both that URL and the default success URL, even when `alwaysUse` is enabled on [methodname]`defaultSuccessUrl()`. When it returns `null`, the user is redirected as if no resolver was set. Works only together with `loginView(Class)` or `oauth2LoginPage(String)` and their overloads.
+
+[source,java]
+----
+http.with(VaadinSecurityConfigurer.vaadin(), configurer -> configurer
+        .loginView(LoginView.class)
+        .successUrlResolver((request, authentication, savedUrl) -> authentication
+                .getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()))
+                        ? "/admin"
+                        : null));
+----
+
+[source,java]
+----
+public VaadinSecurityConfigurer failureHandler(AuthenticationFailureHandler failureHandler)
+----
+
+[since:com.vaadin:vaadin@V25.4]#Configures the handler for a failed authentication.# Use it, for example, to audit failed login attempts or to redirect to a custom error page. This overrides the default behavior of redirecting back to the login view with an `error` parameter. Works only together with `loginView(Class)` or `oauth2LoginPage(String)` and their overloads.
+
+If the handler redirects to a URL other than the login view, permit that URL explicitly in the authorization rules. The default rules deny it, so the user would end up back on the login view without seeing the error.
+
+[source,java]
+----
+http.authorizeHttpRequests(auth -> auth
+        .requestMatchers("/login-failed.html").permitAll());
+
+http.with(VaadinSecurityConfigurer.vaadin(), configurer -> configurer
+        .loginView(LoginView.class)
+        .failureHandler((request, response, exception) -> {
+            auditLog.failedLogin(request.getParameter("username"));
+            response.sendRedirect("/login-failed.html");
+        }));
+----
+
+To only audit failed logins and keep the default behavior, listen to Spring Security's [classname]`AbstractAuthenticationFailureEvent` instead.
+
 === Logout Configuration
 
 [source,java]
@@ -143,7 +187,7 @@ Enables or disables automatic CSRF configuration (enabled by default). This conf
 public VaadinSecurityConfigurer enableLogoutConfiguration(boolean enableLogoutConfiguration)
 ----
 
-Enables or disables automatic logout configuration (enabled by default). This configurer will automatically configure logout behavior to work properly with Flow and Hilla.
+Enables or disables automatic logout configuration (enabled by default). This configurer automatically configures logout behavior to work properly with Vaadin views.
 
 [source,java]
 ----
@@ -157,14 +201,14 @@ Enables or disables automatic configuration of the request cache (enabled by def
 public VaadinSecurityConfigurer enableExceptionHandlingConfiguration(boolean enableExceptionHandlingConfiguration)
 ----
 
-Enables or disables automatic configuration of exception handling (enabled by default). This configurer will automatically configure exception handling to work properly with Flow and Hilla.
+Enables or disables automatic configuration of exception handling (enabled by default). This configurer automatically configures exception handling to work properly with Vaadin views and browser-callable services.
 
 [source,java]
 ----
 public VaadinSecurityConfigurer enableAuthorizedRequestsConfiguration(boolean enableAuthorizedRequestsConfiguration)
 ----
 
-Enables or disables automatic configuration of authorized requests (enabled by default). This configurer will automatically configure authorized requests to permit requests to anonymous Flow and Hilla views, and static assets.
+Enables or disables automatic configuration of authorized requests (enabled by default). This configurer automatically configures authorized requests to permit requests to anonymous Vaadin views and static assets.
 
 [source,java]
 ----
@@ -209,7 +253,35 @@ Because the default rule denies access, any request that doesn't match a Vaadin 
 public RequestMatcher defaultPermitMatcher()
 ----
 
-Creates and returns a composite `RequestMatcher` for identifying requests that should be permitted without authentication within a Vaadin application. This matcher combines multiple specific matchers, including those for framework internal requests, anonymous browser-callable services, allowed Hilla views, anonymous routes, custom web icons, and default security configurations.
+Creates and returns a composite `RequestMatcher` for identifying requests that should be permitted without authentication within a Vaadin application. This matcher combines multiple specific [classname]`RequestMatcher` instances, including those for framework internal requests, anonymous browser-callable services, anonymous React views, anonymous routes, custom web icons, and default security configurations.
+
+[source,java]
+----
+public static RequestMatcher getDefaultHttpSecurityPermitMatcher()
+public static RequestMatcher getDefaultHttpSecurityPermitMatcher(String urlMapping)
+----
+
+Returns the matcher for the internal requests of the framework that need the security context. The configurer permits them in [methodname]`defaultPermitMatcher()`. Without an argument, the matcher assumes that the Vaadin servlet is mapped to the root path. Pass the URL mapping of the servlet otherwise.
+
+[source,java]
+----
+public static RequestMatcher getDefaultWebSecurityIgnoreMatcher()
+public static RequestMatcher getDefaultWebSecurityIgnoreMatcher(String urlMapping)
+----
+
+Returns the matcher for the static resources of Vaadin, such as the PWA manifest, the service worker, the default icon, and the themes. The configurer also permits them in [methodname]`defaultPermitMatcher()`. Without an argument, the matcher assumes that the Vaadin servlet is mapped to the root path.
+
+Use these static methods in a security configuration that doesn't apply the configurer, for example to allow the same requests in a filter chain of your own:
+
+[source,java]
+----
+http.authorizeHttpRequests(auth -> auth
+        .requestMatchers(
+                VaadinSecurityConfigurer.getDefaultHttpSecurityPermitMatcher(),
+                VaadinSecurityConfigurer.getDefaultWebSecurityIgnoreMatcher())
+        .permitAll()
+        .anyRequest().authenticated());
+----
 
 == Examples
 

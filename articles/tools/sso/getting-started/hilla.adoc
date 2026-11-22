@@ -18,14 +18,14 @@ include::../index.adoc[tag=deprecation-notice]
 
 .Instructions for Hilla
 [NOTE]
-This page guides you in getting started with SSO Kit and Hilla. See the guide for <<index#,getting stated with SSO Kit and Vaadin Flow>>.
+This page guides you in getting started with SSO Kit and Hilla. See the guide for <<index#,getting started with SSO Kit and Vaadin Flow>>.
 
 SSO Kit builds upon https://spring.io/projects/spring-boot[Spring Boot] and https://spring.io/projects/spring-security[Spring Security]. It comes with a starter and client side modules for configuring the security settings needed to authenticate with an identity provider.
 
 
 == Create a Project
 
-Create a Vaadin project as described in <<{articles}/getting-started#, Getting Started>>, and add the Hilla Spring Boot starter to it as described in <<{articles}/hilla/guides/browser-callable-services#enabling, Enabling Browser-Callable Services in a Vaadin Project>>. Without that dependency, no TypeScript clients are generated for browser-callable services, and the React views under [filename]`src/main/frontend/views` are ignored.
+Create a Vaadin project as described in <<{articles}/getting-started#, Getting Started>>, and add the Hilla Spring Boot starter to it as described in <<{articles}/flow/react-views#enabling, Enabling React Views>>. Without that dependency, no TypeScript clients are generated for browser-callable services, and the React views under [filename]`src/main/frontend/views` are ignored.
 
 .Examples Refer to Starter Files
 [NOTE]
@@ -155,15 +155,6 @@ Once the backend is secure, you can begin extending authentication features to t
 
 === Install SSO Kit Client Dependency
 
-ifdef::hilla-lit[]
-[source,bash]
-----
-npm install --save @hilla/sso-kit-client-lit
-----
-
-This dependency contains the `SingleSignOnContext` class which is needed in the later steps.
-endif::hilla-lit[]
-
 ifdef::hilla-react[]
 [source,bash]
 ----
@@ -193,25 +184,6 @@ endif::hilla-react[]
 
 === Add Log-In & Log-Out Buttons
 
-ifdef::hilla-lit[]
-As an example, add two buttons to the drawer footer -- one to sign in, and another to sign out. Use the imported `ssoContext` to add the `login` and the `logout` functions to the buttons.
-
-.frontend/views/main-layout.ts
-[source,typescript]
-----
-import '@vaadin/button';
-import ssoContext from '@vaadin/sso-kit-client-lit';
-
-// Replace the `footer` in the rendered `html`.
-<footer slot="drawer">
-  ${ssoContext.authenticated
-      ? html`<vaadin-button @click="${ssoContext.logout}">Sign out</vaadin-button>`
-      : html`<vaadin-button @click="${ssoContext.login}">Sign in</vaadin-button>`
-  }
-</footer>
-----
-endif::hilla-lit[]
-
 ifdef::hilla-react[]
 As an example, add two buttons to the drawer footer -- one to sign in, and another to sign out. Use the imported `useSsoContext` hook to get the `authenticated` state and to add the `login` and `logout` functions to the buttons.
 
@@ -239,54 +211,9 @@ endif::hilla-react[]
 
 You can protect your views by verifying that each authentication has happened before loading the view.
 
-ifdef::hilla-lit[]
-In the [filename]`frontend/routes.ts` file, enrich the ViewRoute type with `ProtectedRoute` type to be able to protect a view, add the `requireAuthentication` parameter to a view, and use the `protectRoutes` function to add a protection to the views which requires authentication.
-endif::hilla-lit[]
-
 .Custom Redirect Path
 [TIP]
 You can define a custom redirect path in the `protectRoutes` function on which to redirect users that are not authenticated. The default value is the predefined `/ssologin` path, which redirects the user to the provider's login page.
-
-ifdef::hilla-lit[]
-.frontend/routes.ts
-[source,typescript]
-----
-import type { ProtectedRoute } from '@vaadin/sso-kit-client-lit';
-import ssoContext from '@vaadin/sso-kit-client-lit';
-
-// Enrich the ViewRoute type with ProtectedRoute.
-export type ViewRoute = Route & ProtectedRoute & {
-  // ...
-}
-
-// Add the requireAuthentication parameter to the About view.
-{
-  path: 'about',
-  // ...
-  requireAuthentication: true,
-},
-
-// Protect the views which require authentication.
-export const routes: ViewRoute[] = ssoContext.protectRoutes([
-  {
-    path: '',
-    component: 'main-layout',
-    children: views,
-  },
-]) as ViewRoute[];
-----
-
-Filter the menu excluding unauthorized views by amending the view filter in [filename]`main-layout.ts`:
-
-.frontend/views/main-layout.ts
-[source,typescript]
-----
-// Gather the hasAccess function and add filter to the views that checks for authentication.
-return views
-  .filter((route) => route.title)
-  .filter(ssoContext.hasAccess) as RouteInfo[];
-----
-endif::hilla-lit[]
 
 ifdef::hilla-react[]
 In the [filename]`frontend/routes.tsx` file, enrich the `ViewRouteObject` type with `AccessProps` type to be able to protect a view and add the `requireAuthentication` parameter to a view:
@@ -331,41 +258,11 @@ Now the `About` item in the menu appears only when authenticated.
 
 === Show User Information
 
-ifdef::hilla-lit[]
-The SSO Kit Client provides the `User` class which contains information about the authenticated user. You can get the user information by calling the asynchronous `SingleSignOnContext.getUser()` function.
-endif::hilla-lit[]
-
 ifdef::hilla-react[]
 The SSO Kit Client provides the `User` class which contains information about the authenticated user. You can get the user information by using the `useSsoContext` hook.
 endif::hilla-react[]
 
 Since the About page is now protected, it's a perfect place to show some information about the current user:
-
-ifdef::hilla-lit[]
-.frontend/views/helloworld/about-view.ts
-[source,typescript]
-----
-import { property } from 'lit/decorators.js';
-import { User } from '@vaadin/sso-kit-client-lit';
-import ssoContext from '@vaadin/sso-kit-client-lit';
-
-// Add a property for the user.
-@property()
-user: User | undefined;
-
-// Add some output in the AboutView class.
-<p>Username: ${this.user?.preferredUsername}</p>
-<p>Full name: ${this.user?.fullName}</p>
-<p>Email: ${this.user?.email}</p>
-
-// Make the connectedCallback function to be async
-// and await the user in the function.
-async connectedCallback() {
-  // ...
-  this.user = await ssoContext.getUser();
-}
-----
-endif::hilla-lit[]
 
 ifdef::hilla-react[]
 .frontend/views/about/AboutView.tsx
@@ -414,46 +311,6 @@ The kit's built-in Back-Channel Logout implementation, activated with `hilla.sso
 ==== Modify the Frontend
 
 As an example, show a dialog when the user is logged out from outside the application.
-
-ifdef::hilla-lit[]
-The `SingleSignOnContext` provided by the SSO Kit Client handles the back-channel logout and receives an event if the logout happens. To get notified about the logout event, register a callback using the `onBackChannelLogout` function and store the logged out state:
-
-.frontend/store/app-store.ts
-[source,typescript]
-----
-import ssoContext from '@vaadin/sso-kit-client-lit';
-
-// Store the logged out state in the AppStore class.
-isLoggedOut = false;
-
-// Subscribe to the back-channel logout event and set logged out state to true on the event.
-constructor() {
-// ...
-  ssoContext.onBackChannelLogout(() => {
-    this.isLoggedOut = true;
-  });
-}
-----
-
-A dialog can be added now to the application layout to notify the user:
-
-.frontend/views/main-layout.ts
-[source,typescript]
-----
-import '@vaadin/confirm-dialog';
-
-// Add the dialog to the rendered html.
-<vaadin-confirm-dialog
-      header="Logged out"
-      cancel-button-visible
-      @confirm="${ssoContext.login}"
-      @cancel="${ssoContext.logout}"
-      .opened="${appStore.isLoggedOut}"
->
-  <p>You have been logged out. Do you want to log in again?</p>
-</vaadin-confirm-dialog>
-----
-endif::hilla-lit[]
 
 ifdef::hilla-react[]
 The `useSsoContext` hook provided by the SSO Kit Client handles the back-channel logout and receives an event if logout happens. To get notified about a logout event, register a callback using the `onBackChannelLogout` function and store the logged out state:

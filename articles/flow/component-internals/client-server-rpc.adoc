@@ -179,6 +179,44 @@ getServerGreeting() {
 If a component is hidden or disabled, client-side method calls to the server are automatically blocked. See the <<enabled-state#,Component Enabled State>> and <<visibility#,Component Visibility>> reference guides for more information.
 
 
+=== Calling Server-Side Methods from TypeScript
+
+A TypeScript class doesn't declare the `$server` property, so a call such as `this.$server.getGreeting()` doesn't compile. To call the methods from TypeScript, describe the [annotationname]`@ClientCallable` methods of the component in an interface. Then declare `$server` with that type in the class of the root element. Each method in the interface returns a `Promise` that resolves with the server-side return value.
+
+.Declaring the type of `$server` in a Lit element
+[example]
+====
+[source,typescript]
+----
+interface GreetingServer {
+  getGreeting(name: string): Promise<string>;
+}
+
+@customElement('greeting-element')
+export class GreetingElement extends LitElement {
+  declare $server: GreetingServer;
+
+  async logGreeting() {
+    const greeting = await this.$server.getGreeting('TypeScript');
+    console.log(greeting);
+  }
+}
+----
+====
+
+The `declare` keyword gives the property a type without defining it in the class, because Flow sets its value at runtime. Vaadin generates a [filename]`tsconfig.json` file that enables the `strict` compiler option. Under that option, a property without `declare` needs an initializer.
+
+When the code gets the root element from outside the class, for example as a function parameter, add `$server` to the type of the parameter:
+
+[source,typescript]
+----
+async function logGreeting(element: HTMLElement & { $server: GreetingServer }) {
+  const greeting = await element.$server.getGreeting('TypeScript');
+  console.log(greeting);
+}
+----
+
+
 === Server-Side Modality and `@ClientCallable`
 
 If a component with a [annotationname]`@ClientCallable` method is underneath a modal dialog or component, it's considered _inert_. That means it's not available for interaction, including RPC calls.

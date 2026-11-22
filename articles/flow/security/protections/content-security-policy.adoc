@@ -74,13 +74,6 @@ window.Function = function(...args) {
     return functions.get(key);
   }
 
-  // Calls that load the frontend chunk of a view
-  const chunkCall = key.match(/^return window\.Vaadin\.Flow\.loadOnDemand\('([^']*)'\);$/);
-  if (chunkCall) {
-    const chunk = chunkCall[1];
-    return function() { return window.Vaadin.Flow.loadOnDemand(chunk); };
-  }
-
   // Log the code to add to the functions map
   const code = args[args.length - 1];
   console.warn(`functions.set(${JSON.stringify(key)},\n  function(${args.slice(0, -1).join(',')}) {${code}\n});`);
@@ -115,6 +108,8 @@ window.eval = function(script) {
 };
 ----
 
+Loading a route whose JavaScript is in a lazily loaded chunk doesn't need an entry: the chunk loader is a function declared in the bundle, so nothing is compiled from a string when the chunk loads.
+
 The `functions` and `evalCalls` maps map the code that the server sends to pre-defined functions. Which entries an application needs depends on the components and features that it uses, and on the Vaadin version. To collect them, run the application in production mode without the `Content-Security-Policy` header, and use every view and feature. For every function that's missing from the maps, the overrides log a line to the browser console that you can copy into the file. Collect the entries again after upgrading Vaadin.
 
 The following snippet shows a few entries. A real application has many more:
@@ -135,7 +130,7 @@ evalCalls.set("'The value for <b>' + this.x + '</b> is <b>' + this.y + '</b>'",
 
 == Checking Compatibility
 
-[since:com.vaadin:vaadin@V25.4]#The `csp` configuration parameter is a separate mechanism, which prepares applications for a strict, nonce-based policy that Vaadin sends itself, without `'unsafe-inline'` and `'unsafe-eval'` in `script-src`.# Set it to `warn` to log every call in the application that wouldn't work under such a policy. Its `strict` mode can't be used for applications yet, because Vaadin itself still uses APIs that need `eval`, for example for the event data of click listeners. See <<{articles}/flow/configuration/properties#,Configuration Properties>> for the parameter. Until then, use the overrides described in <<#function-execution-eval-calls,Function Execution & Eval Calls>> to run under a strict policy.
+[since:com.vaadin:vaadin@V25.4]#The `csp` configuration parameter is a separate mechanism, which prepares applications for a strict, nonce-based policy that Vaadin sends itself, without `'unsafe-inline'` and `'unsafe-eval'` in `script-src`.# Set it to `warn` to log every call in the application that wouldn't work under such a policy. Its `strict` mode can't be used for applications yet, because Vaadin itself still uses APIs that need `eval`. See <<{articles}/flow/configuration/properties#,Configuration Properties>> for the parameter. Until then, use the overrides described in <<#function-execution-eval-calls,Function Execution & Eval Calls>> to run under a strict policy.
 
 
 [discussion-id]`B5E8EEC6-0F7E-49C5-8121-0906827BE4A5`

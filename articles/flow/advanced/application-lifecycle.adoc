@@ -59,6 +59,12 @@ It manages sessions, gives access to the deployment configuration information, h
 Any further servlet-specific tasks are handled in the corresponding [classname]`VaadinServletService`.
 The service acts as the primary low-level customization layer for processing requests.
 
+You can get the [classname]`VaadinService` globally with [methodname]`VaadinService.getCurrent()`.
+It works while the server handles a request, and inside [methodname]`UI.access()` and [methodname]`VaadinSession.access()`.
+In other cases, such as in a background thread, it returns `null`.
+When the code only runs while a request is handled or inside [methodname]`access()`, use [since:com.vaadin:vaadin@V25.4]#[methodname]`VaadinService.getCurrentOrThrow()`# instead.
+It throws an [classname]`IllegalStateException` rather than returning `null`.
+
 To add custom functionality related to Vaadin Service, you should use a <<service-init-listener#,`VaadinServiceInitListener`>>.
 This listener allows you, among other things, to add a [interfacename]`RequestHandler`, an [interfacename]`IndexHtmlRequestListener` and a [interfacename]`DependencyFilter`.
 
@@ -72,7 +78,12 @@ When a new client connects, it creates a new user session, represented by an ins
 User sessions are stored in the HTTP session and tracked using cookies that are stored in the browser.
 
 You can get the [classname]`VaadinSession` of a [classname]`UI` with [methodname]`getSession()`, or globally with [methodname]`VaadinSession.getCurrent()`.
-It also provides access to the lower-level session object [interfacename]`HttpSession`, through a [classname]`WrappedSession`.
+[methodname]`getSession()` returns `null` if the UI isn't attached to a session.
+[methodname]`VaadinSession.getCurrent()` works while the server handles a request, for example in an event listener, and inside [methodname]`UI.access()` and [methodname]`VaadinSession.access()`.
+In other cases, such as in a background thread, it returns `null`.
+When the code only runs while a session is available, use [since:com.vaadin:vaadin@V25.4]#[methodname]`UI.getSessionOrThrow()` or [methodname]`VaadinSession.getCurrentOrThrow()`# instead.
+They throw an [classname]`IllegalStateException` rather than returning `null`.
+[classname]`VaadinSession` also provides access to the lower-level session object [interfacename]`HttpSession`, through a [classname]`WrappedSession`.
 You can also access the deployment configuration through [classname]`VaadinSession`.
 
 A user session ends after the last [classname]`UI` instance expires or is closed, as described later.
@@ -141,8 +152,8 @@ If you close UIs other than the one associated with the current request, they ar
 This happens after the next request from the particular UI.
 You can make it happen quicker by increasing the UI heartbeat frequency, or immediately by using server push.
 
-If a UI is serving an upload or download when it's closed, it stays attached to its session until that transfer has been handled, so the transfer progress listeners and completion callbacks bound to it keep running even though there's no client left to receive UI changes.
-The request that serves the transfer detaches the UI once it's done.
+If a UI is serving an upload or download when it's closed, it [since:com.vaadin:vaadin@V25.4]#stays attached to its session until that transfer has been handled#.
+See the transfer lifecycle of <<downloads#lifecycle,downloads>> and <<upload-resources#lifecycle,uploads>>.
 
 
 [[application.lifecycle.session-expiration]]
@@ -180,9 +191,8 @@ User session expiration does not imply the underlying HTTP session being invalid
 HTTP session invalidation can be performed by invoking [methodname]`invalidate` on the [classname]`WrappedSession` accessible through [classname]`VaadinSession`.
 ====
 
-An upload or download doesn't outlive the session of the UI it's serving.
-If the session is invalidated, whether explicitly or by timing out, while a transfer is still ongoing, that transfer is terminated: the stream carrying it stops transferring bytes and throws an [classname]`IOException` instead, so an ongoing upload is discarded before its callback runs and an ongoing download is left truncated.
-An application with a transfer that should survive the session can keep the session alive while the transfer is ongoing, or serve it through a servlet of its own that isn't tied to a UI and a session.
+[since:com.vaadin:vaadin@V25.4]#An upload or download doesn't outlive the session of the UI it's serving#.
+When the session is invalidated, an ongoing transfer is terminated, as described for <<downloads#lifecycle,downloads>> and <<upload-resources#lifecycle,uploads>>.
 
 
 [[application.lifecycle.session-closing]]

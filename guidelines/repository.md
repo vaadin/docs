@@ -46,6 +46,16 @@ is merged — see `CONVENTIONS.md`. Do not add labels for older
 releases. A cherry-pick that does not apply cleanly is labeled
 `need to pick manually …` and has to be backported by hand.
 
+A change made only on a release branch is lost when the next release branch is
+cut from `main`. The Forward-Port to Main workflow therefore labels a pull
+request to a release branch with `target/main`, and the bot cherry-picks it to
+`main` after it is merged. Cherry-picks, version updates and `chore` pull
+requests don't get the label. Remove it when the change applies only to that
+release. Most of these pull requests come from the "Edit this page" link of the
+published documentation, which opens them against the branch that the page was
+built from. The workflow runs only on release branches that have its file, which
+excludes `v24`.
+
 ## Checks on a Pull Request
 
 Every pull request runs these workflows, except Format Check, which only runs for pull requests to `main`. Run the local equivalent before opening
@@ -54,7 +64,7 @@ one.
 | Workflow            | What it checks                                                                 | Run locally                                   |
 | ------------------- | ------------------------------------------------------------------------------ | --------------------------------------------- |
 | lint (Vale)         | Writing style of `articles/`, reported as review annotations.                 | `vale articles/path/to/page.adoc`             |
-| Maven Compile       | The Java examples compile.                                                    | `mvn compile`                                 |
+| Maven Compile       | The Java examples compile and their tests under `src/test` pass.             | `mvn test`                                    |
 | Format Check        | The Java examples are formatted with the Vaadin Java conventions.             | `mvn spotless:apply`                          |
 | Check Redirects     | A moved or removed page leaves a redirect behind, and every redirect resolves. | `npm run check-redirects`                     |
 | Check Versions      | `articles/_vaadin-version.adoc` matches `pom.xml`; fixed automatically on the PR branch. | `npm run sync-versions -- --fix`    |
