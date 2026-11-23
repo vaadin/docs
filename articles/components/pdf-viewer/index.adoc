@@ -57,7 +57,7 @@ endif::[]
 
 == Document Source
 
-The viewer loads the document from a URL that the browser fetches. In Flow, the document can also be served from the application with a download handler, as in the example above.
+The viewer loads the document from a URL that the browser requests from the web server. The source isn't a path in the server's file system: a file such as `/data/report.pdf` on the server's disk, or `src/main/resources/report.pdf` in the project, fails to load unless the web server serves it at that URL. In Flow, serve such a file from the application with a download handler instead.
 
 [.example]
 --
@@ -66,9 +66,20 @@ ifdef::flow[]
 ----
 PdfViewer viewer = new PdfViewer("/files/report.pdf");
 
-// Or serve the document from the application
+// Or serve the document from the application:
+// a resource on the classpath
 viewer.setSrc(DownloadHandler.forClassResource(getClass(),
         "/documents/report.pdf", "report.pdf"));
+
+// a file on the server's file system
+viewer.setSrc(DownloadHandler.forFile(new File("/data/report.pdf")));
+
+// a document generated in memory
+viewer.setSrc(DownloadHandler.fromInputStream(event -> {
+    byte[] pdf = createReport();
+    return new DownloadResponse(new ByteArrayInputStream(pdf),
+            "report.pdf", "application/pdf", pdf.length);
+}));
 ----
 endif::[]
 
@@ -87,40 +98,18 @@ ifdef::react[]
 endif::[]
 --
 
-The viewer fetches the whole document with a single GET request, without range requests. A new source replaces the current document, and the viewer shows its first page.
-
-[NOTE]
-A URL on another origin works only if its server allows the request with https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS[Cross-Origin Resource Sharing (CORS)] headers.
-
-=== Showing a File from the Server
-
-The source is a URL that the browser requests from the web server, not a path in the server's file system. A file such as `/data/report.pdf` on the server's disk, or `src/main/resources/report.pdf` in the project, fails to load unless the web server serves it at that URL. In Flow, serve such a file with a download handler instead:
-
-[.example]
---
 ifdef::flow[]
-[source,java]
-----
-// A file on the server's file system
-viewer.setSrc(DownloadHandler.forFile(new File("/data/report.pdf")));
-
-// A document generated in memory
-viewer.setSrc(DownloadHandler.fromInputStream(event -> {
-    byte[] pdf = createReport();
-    return new DownloadResponse(new ByteArrayInputStream(pdf),
-            "report.pdf", "application/pdf", pdf.length);
-}));
-----
+See <<{articles}/flow/advanced/downloads#,Downloads>> for more about download handlers.
 endif::[]
---
 
 ifdef::lit,react[]
 In Lit and React, make the document available at a URL, for example as a static file of the application or from a server route, such as a Spring `@GetMapping` controller method, that writes the PDF to the response.
 endif::[]
 
-ifdef::flow[]
-See <<{articles}/flow/advanced/downloads#,Downloads>> for more about download handlers.
-endif::[]
+The viewer fetches the whole document with a single GET request, without range requests. A new source replaces the current document, and the viewer shows its first page.
+
+[NOTE]
+A URL on another origin works only if its server allows the request with https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS[Cross-Origin Resource Sharing (CORS)] headers.
 
 === File Name
 
