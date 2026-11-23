@@ -32,15 +32,13 @@ Nothing here is agent-only. Every command below is one you can run yourself, and
 
 == What You Need
 
-* *Java 21 or newer.* The daemon doesn't use anything older, whatever release your project targets.
-* *A JetBrains Runtime, strongly recommended.* Enhanced class redefinition is a JVM feature that only a JetBrains Runtime provides. Without it, more of your edits restart the application instead of hot-swapping. Nothing breaks -- you get fewer of the fast outcomes this tutorial demonstrates.
-+
-To install one, download a JBRSDK build for your operating system and architecture from the https://github.com/JetBrains/JetBrainsRuntime/releases[JetBrains Runtime releases] page. Pick the same Java version as your project, or a newer one. Extract the archive into [filename]`~/.jdks/`, and Dev Loop picks it up with no further configuration. See <<{articles}/flow/configuration/live-reload/dev-loop-cli#prerequisites,Prerequisites>> for the other places it looks.
-* *Maven*, as `mvn` on the path or as the wrapper in the project.
-* *Network access the first time you install*, to download HotswapAgent once per machine.
-* *https://www.claude.com/product/claude-code[Claude Code] or https://developers.openai.com/codex/cli[Codex CLI]*, installed and signed in.
+* *Java 21 or newer*
+* *A JetBrains Runtime, strongly recommended.* Without one, more of your edits restart the application instead of hot-swapping, and the agent's turnaround suffers. Download a JBRSDK build from the https://github.com/JetBrains/JetBrainsRuntime/releases[JetBrains Runtime releases] page, at your project's Java version or newer, and extract it into [filename]`~/.jdks/`.
+* *Maven*, as `mvn` on the path or as the wrapper in the project
+* *Network access the first time you install*
+* *https://www.claude.com/product/claude-code[Claude Code] or https://developers.openai.com/codex/cli[Codex CLI]*, installed and signed in
 
-See <<{articles}/flow/configuration/live-reload/dev-loop-cli#prerequisites,Prerequisites>> for the full list.
+See <<{articles}/flow/configuration/live-reload/dev-loop-cli#prerequisites,Prerequisites>> for the details of each.
 
 
 [[step-1]]
@@ -99,29 +97,11 @@ One goal installs both:
 mvn vaadin:install-dev-cli
 ----
 
-Run it in the directory that holds your application's [filename]`pom.xml`. The goal isn't bound to a phase, so it never runs as a side effect of an ordinary build. Run it once per project, and again after a Vaadin upgrade.
+Run it in the directory that holds your application's [filename]`pom.xml`. It writes the CLI into [filename]`.vaadin/`, and the skills into [filename]`.agents/skills/` and [filename]`.claude/skills/`.
 
-It writes these files:
+There's no separate step for installing the skills, and nothing to configure per agent. Claude Code discovers skills in [filename]`.claude/skills/`, and Codex discovers them in [filename]`.agents/skills/`, so the single goal above covers both -- and any other agent that follows either convention.
 
-[cols="2,3"]
-|===
-| Path | What It Is
-
-| [filename]`.vaadin/vaadin-dev`, plus `.ps1` and `.cmd`
-| The CLI, with launchers for Windows.
-
-| [filename]`.agents/skills/vaadin-devloop/SKILL.md` and [filename]`reference.md`
-| The instructions, written for any coding agent.
-
-| [filename]`.claude/skills/vaadin-devloop/SKILL.md`
-| A thin adapter that points Claude Code at the same instructions.
-|===
-
-There's no separate step for installing the skills, and nothing to configure per agent. Claude Code discovers skills in [filename]`.claude/skills/`, and Codex discovers them in [filename]`.agents/skills/`, so the single goal above covers both -- and any other agent that follows either convention. The [filename]`.claude` copy is composed from the shared file at install time rather than maintained separately, so the two can't drift apart.
-
-*Commit all of it*, the way you commit [filename]`mvnw`. It's project tooling, and the point is that every developer and every agent working on the repository gets the same instructions. The goal rewrites these files when they differ from the shipped version, so add your own skills beside them rather than editing them.
-
-The goal also downloads HotswapAgent into [filename]`~/.vaadin/devloop/`, outside the project, once per machine. If the machine has no network access, see <<{articles}/flow/configuration/live-reload/dev-loop-cli#install,Installing the CLI>> for the offline variant.
+*Commit all of it*, the way you commit [filename]`mvnw`, so that every developer and every agent working on the repository gets the same instructions. See <<{articles}/flow/configuration/live-reload/dev-loop-cli#install,Installing the CLI>> for what else the goal does, and for installing without network access.
 
 
 == 3. Give the Agent Vaadin's Documentation
@@ -162,35 +142,11 @@ Ask what's running, and then start it:
 
 The `status` command costs milliseconds, as it starts no JVM. The `start` command takes roughly 30 seconds cold, and blocks until the application is serving or has failed.
 
-On Windows, a checkout carries no executable bit, so the Bash script may refuse to run:
-
-[.example]
---
-[source,bash]
-----
-<source-info group="macOS/Linux"></source-info>
-.vaadin/vaadin-dev status
-----
-
-[source,bash]
-----
-<source-info group="Windows"></source-info>
-.\.vaadin\vaadin-dev.cmd status
-----
-
-[source,bash]
-----
-<source-info group="Git Bash"></source-info>
-bash .vaadin/vaadin-dev status
-----
---
-
-Every command, option, and exit code is identical whichever launcher you use.
+On Windows, use [filename]`.vaadin\vaadin-dev.cmd` instead. See <<{articles}/flow/configuration/live-reload/dev-loop-cli#cycle,The Cycle>> for the launchers.
 
 Now *open http://localhost:8080 and leave the page open*. This matters more than it looks: a stylesheet push has somewhere to land only if a page is already connected. Run `apply` with no page open, and it reports the file copied to the classpath and says nothing about a push -- honest, but not the answer you came for. Open the page before the first change, not after.
 
-[IMPORTANT]
-The daemon owns the application's process. Don't also start the application with `spring-boot:run` or an IDE run configuration: the second launcher fights the daemon for port 8080. Use `.vaadin/vaadin-dev start` and `restart` instead.
+From now on, the daemon owns the application's process. Don't also start the application with `spring-boot:run` or an IDE run configuration, since a second launcher fights the daemon for port 8080.
 
 
 [[step-5]]
@@ -324,9 +280,6 @@ A few things to be fair about when you read your own numbers:
 
 == Troubleshooting
 
-`this project does not depend on the dev-loop daemon`::
-The `com.vaadin:vaadin-dev` dependency is missing from [filename]`pom.xml`. See <<#step-1,Step 1>>.
-
 `its network source differs from the one declared for it in settings`::
 Claude Code already has a marketplace named `vaadin-marketplace` with a different source, such as the deprecated `vaadin/claude-plugin`. Remove it, add the marketplace again, and reinstall the plugin, which the removal disabled:
 +
@@ -337,13 +290,7 @@ Claude Code already has a marketplace named `vaadin-marketplace` with a differen
 /plugin install vaadin-skills@vaadin-marketplace
 ----
 
-More changes restart than you expect::
-Check which JVM was chosen, in [filename]`target/devloop/daemon.log`. On a stock JDK, structural changes can't be hot-swapped at all.
-
-The application won't start, or the daemon seems stuck::
-The `start` command names the reason, and prints the tail of [filename]`target/devloop/app.log`. If the daemon itself is wedged, run `.vaadin/vaadin-dev shutdown`, and the next command starts a fresh one.
-
-For everything else, see <<{articles}/flow/configuration/live-reload/dev-loop-cli#troubleshooting,Troubleshooting>> in the reference, or the [filename]`reference.md` installed next to the skill, which documents every outcome Dev Loop can report.
+For problems with Dev Loop itself, see <<{articles}/flow/configuration/live-reload/dev-loop-cli#troubleshooting,Troubleshooting>> in the reference, or the [filename]`reference.md` installed next to the skill, which documents every outcome Dev Loop can report.
 
 
 == Related Topics
