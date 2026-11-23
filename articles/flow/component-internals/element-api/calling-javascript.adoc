@@ -12,9 +12,9 @@ order: 3
 
 The Element API contains methods for executing JavaScript in the browser from the server side.
 
-Declare the JavaScript in a Java interface and call it through [methodname]`Element.executeJs(Class)`. The build collects the declared JavaScript into the frontend bundle, and the client runs it from there. Nothing is compiled from a string in the browser, so the call works under a content security policy that doesn't allow `unsafe-eval`. [methodname]`callJsFunction()` [since:com.vaadin:vaadin@V25.4]#works under such a policy as well#, since it calls a function that already exists on the element -- unless an argument is a [classname]`JsFunction`.
+Declare the JavaScript in a Java interface and call it through [methodname]`Element.executeJs(Class)`. The build collects the declared JavaScript into the frontend bundle, and the client runs it from there. Nothing is compiled from a string in the browser, so the call works under a <<{articles}/flow/security/protections/content-security-policy#vaadin-strict-csp,strict content security policy>>. [methodname]`callJsFunction()` [since:com.vaadin:vaadin@V25.4]#works under such a policy as well#, since it calls a function that already exists on the element -- unless an argument is a [classname]`JsFunction` built with [methodname]`JsFunction.of()`.
 
-The other methods described on this page -- [methodname]`executeJs(String, Object...)`, [classname]`JsFunction`, and [methodname]`addJsInitializer()` -- send the JavaScript to the browser as a string that's compiled there. Avoid them for anything a declaration can express.
+The other methods described on this page -- [methodname]`executeJs(String, Object...)`, [methodname]`JsFunction.of()`, and [methodname]`addJsInitializer(String, Object...)` -- send the JavaScript to the browser as a string that's compiled there. Avoid them for anything a declaration can express. [methodname]`addJsInitializer(JsFunction)` [since:com.vaadin:vaadin@V25.4]#works under such a policy as well#, when the function it's given is <<#declaring-snippets,declared as a snippet>> rather than built with [methodname]`JsFunction.of()`.
 
 
 [[declaring-javascript]]
@@ -27,7 +27,7 @@ Each method of the interface is annotated with [annotationname]`@JsExpression`, 
 
 The arguments must be a type supported by the communication mechanism. The supported types are `String`, `Boolean`, `Integer`, `Double`, `JsonNode`, `Element`, `Component`, and `JsFunction`.
 
-Passing a [classname]`JsFunction` is allowed, but it brings the browser-side compilation back, since the client builds such a function from its body string. Declare a method for the JavaScript instead of passing a function into it.
+Passing a [classname]`JsFunction` built with [methodname]`JsFunction.of()` is allowed, but it brings the browser-side compilation back, since the client builds such a function from its body string. Declare a method for the JavaScript instead, or pass a function <<#declaring-snippets,declared as a snippet>>.
 
 The last parameter of a method can be declared variadic, such as `String...`, to accept a variable number of trailing arguments instead of a fixed one. The build turns it into a JavaScript rest parameter, so reference it the same way as any other parameter and spread it where the expression needs the individual values.
 
@@ -74,7 +74,7 @@ public void greet(String message) {
 ----
 ====
 
-A method returns either `void` or [classname]`PendingJavaScriptResult`, to retrieve a return value the same way an expression does (see <<#return-values,Return Values>>).
+A method returns `void`, [classname]`PendingJavaScriptResult`, or [classname]`JavaScriptResult` with a type argument, to retrieve a return value the same way an expression does (see <<#return-values,Return Values>>). Declaring [classname]`JavaScriptResult` with a type argument hands the value to its handlers already converted to that type, with no type token needed at the call site.
 
 .Declaring JavaScript that returns a value
 [example]
@@ -102,15 +102,26 @@ public void updateTooltip() {
 Nothing about the JavaScript is decided at the call site: the build generates one function per declared expression into the bundle, and the client runs that function after looking it up by an identifier of the JavaScript. The expression itself is never sent to the browser, and a production bundle carries the generated functions only -- the Java names stay on the server.
 
 [NOTE]
-The interface is checked when [methodname]`executeJs(Class)` hands out the implementation. It must be annotated with [annotationname]`@JsDefinition`, and every method must be annotated with [annotationname]`@JsExpression` and return `void` or [classname]`PendingJavaScriptResult`. A `default` or `static` method is refused, since it's implemented in Java rather than declaring JavaScript to run in the browser.
+The interface is checked when [methodname]`executeJs(Class)` hands out the implementation. It must be annotated with [annotationname]`@JsDefinition`. Every method must be annotated with [annotationname]`@JsExpression` and return `void`, [classname]`PendingJavaScriptResult`, or [classname]`JavaScriptResult` with a type argument that's known from the interface (see <<#typed-results,Typed Results>>). An interface that declares snippets is refused; get its implementation from [methodname]`JsSnippets.of()` instead (see <<#declaring-snippets,Declaring Snippets>>). A `default` or `static` method is refused, since it's implemented in Java rather than declaring JavaScript to run in the browser.
 
 When the JavaScript isn't about a particular element, declare it the same way and run it through [methodname]`Page.executeJs(Class)`, which works with global browser APIs instead of with an element (see <</flow/advanced/browser-access#declaring-javascript-in-java,Accessing the Browser Page>>).
+
+[[declaring-snippets]]
+=== Declaring Snippets
+
+A method that returns a snippet type, such as [classname]`JsFunction`, instead of `void` or [classname]`PendingJavaScriptResult` declares a _snippet_: JavaScript that isn't run when the method is called. Calling the method answers with a function, which is passed on to something that calls it later in the browser, such as <<#passing-a-declared-function,[methodname]`addJsInitializer(JsFunction)`>>. Like any other declaration, the build collects the snippet into the bundle, so nothing is compiled from a string in the browser. The other snippet types are [classname]`JsSnippet`, [classname]`DomEventFilter`, [classname]`DomEventData`, and interfaces that extend [classname]`JsSnippet`.
+
+A snippet isn't bound to an element, so get the implementation of its interface from [methodname]`JsSnippets.of(Class)` rather than from [methodname]`executeJs(Class)`. The implementation holds no state, so it can be kept in a constant and shared.
+
+An interface declares either methods that run JavaScript or snippets, never both. [methodname]`executeJs(Class)` throws an [classname]`IllegalArgumentException` for an interface that declares snippets, and [methodname]`JsSnippets.of()` throws one for an interface that doesn't.
+
+The arguments of the Java call are captured and available in the expression as `$0`, `$1`, and so on. The expression is the body of the function, so it has to `return` a value if the caller expects one. The function takes no parameters of its own, unless the method is annotated with [annotationname]`@JsFunctionParameterNames`, which names the parameters that the caller passes to the function when it calls it.
 
 
 [[return-values]]
 == Return Values
 
-Add a listener to the [classname]`PendingJavaScriptResult` instance that a call answers with to access the value from a `return` statement in the JavaScript. This works the same way for a declared expression, an <<#execute-js,[methodname]`executeJs()` expression>>, and a function called through <<#call-js-function,[methodname]`callJsFunction()`>>. A declared method has to declare [classname]`PendingJavaScriptResult` as its return type to give access to the result.
+Add a listener to the [classname]`PendingJavaScriptResult` instance that a call answers with to access the value from a `return` statement in the JavaScript. This works the same way for a declared expression, an <<#execute-js,[methodname]`executeJs()` expression>>, and a function called through <<#call-js-function,[methodname]`callJsFunction()`>>. A declared method has to declare [classname]`PendingJavaScriptResult`, or [classname]`JavaScriptResult` with a type argument (see <<#typed-results,Typed Results>>), as its return type to give access to the result.
 
 .Checking for support of Constructable Stylesheets in the browser
 [example]
@@ -147,6 +158,43 @@ If the return value is a JavaScript `Promise`, the client only sends the return 
 // TODO What happens if the Promise is rejected?
 
 
+[[typed-results]]
+[role="since:com.vaadin:vaadin@V25.4"]
+=== Typed Results
+
+Declare [classname]`JavaScriptResult` with a type argument instead of [classname]`PendingJavaScriptResult` to get the value already converted to that type, with no type token needed at the call site:
+
+.Declaring a method that returns a typed result
+[example]
+====
+[source,java]
+----
+@JsDefinition
+public interface DeepThoughtJs extends Serializable {
+
+    @JsExpression("return 42")
+    JavaScriptResult<Integer> getAnswer();
+}
+----
+
+[source,java]
+----
+public void revealAnswer() {
+    getElement().executeJs(DeepThoughtJs.class).getAnswer()
+            .then(answer -> Notification.show(
+                    "The answer is " + answer));
+}
+----
+====
+
+The value is converted with Jackson, so any type Jackson can deserialize works, including beans and generic types such as `List<Person>`. A value that can't be converted to the declared type goes to the error handler passed to [methodname]`then()`, and fails a future obtained from [methodname]`toCompletableFuture()`; without an error handler, it's logged as a warning.
+
+The type argument has to be known from the interface. It can be a concrete type, such as `JavaScriptResult<Integer>`. It can also be a type variable that an interface the definition extends binds to a concrete type. A raw or wildcard [classname]`JavaScriptResult` is refused, and so is a type variable that no interface binds to a concrete type, since nothing says what to convert the value to.
+
+With [classname]`JavaScriptResult<JsonNode>`, the handlers get the JSON as the browser sent it. To choose the Java type at the call site instead, by calling [methodname]`then()` with a [classname]`Class` or [classname]`TypeReference`, declare the method as returning [classname]`PendingJavaScriptResult` (see <<#deserializing-generic-types-with-typereference,Deserializing Generic Types with TypeReference>>).
+
+
+[[deserializing-generic-types-with-typereference]]
 === Deserializing Generic Types with TypeReference
 
 The [methodname]`then()` method accepts a [classname]`Class` parameter for simple types, but this doesn't work for generic types like `List<Person>` due to Java type erasure. For these cases, use the Jackson [classname]`TypeReference` overloads.
@@ -179,7 +227,7 @@ getElement().executeJs(ItemsJs.class).getItems()
 ----
 ====
 
-An error handler can be provided as a second callback. The handler receives the error message from the failed JavaScript execution as a `String`:
+An error handler can be provided as a second callback. It receives an error message as a `String` when the JavaScript execution fails [since:com.vaadin:vaadin@V25.4]#or the returned value can't be converted to the target type#:
 
 [source,java]
 ----
@@ -188,6 +236,8 @@ getElement().executeJs(ItemsJs.class).getItems()
                 items -> processItems(items),
                 errorMessage -> handleError(errorMessage));
 ----
+
+[since:com.vaadin:vaadin@V25.4]#Without an error handler, a value that can't be converted is logged as a warning and the result handler isn't run.#
 
 You can also use [methodname]`toCompletableFuture(TypeReference)` to get the result as a [classname]`CompletableFuture`:
 
@@ -199,11 +249,13 @@ CompletableFuture<Map<String, Person>> future = getElement()
                 new TypeReference<Map<String, Person>>() {});
 ----
 
+If the execution fails [since:com.vaadin:vaadin@V25.4]#or the returned value can't be converted to the target type#, the future completes exceptionally with a [classname]`JavaScriptException`. [since:com.vaadin:vaadin@V25.4]#When the value can't be converted, its cause is the conversion error.#
+
 
 [[execute-js]]
 == `executeJs` Method
 
-The [methodname]`Element.executeJs()` method runs a JavaScript expression given as a string. The browser compiles the expression, which a content security policy that doesn't allow `unsafe-eval` blocks. Declare the JavaScript in Java instead (see <<#declaring-javascript,Declaring JavaScript in Java>>). Use this method only for JavaScript that can't be declared -- an expression that isn't known until runtime, for example.
+The [methodname]`Element.executeJs()` method runs a JavaScript expression given as a string. The browser compiles the expression, so a strict content security policy blocks the call. Declare the JavaScript in Java instead (see <<#declaring-javascript,Declaring JavaScript in Java>>). Use this method only for JavaScript that can't be declared -- an expression that isn't known until runtime, for example.
 
 The [methodname]`executeJs()` method accepts two parameters: the JavaScript expression to invoke; and the parameters to pass to the expression. The given parameters are available as variables named `$0`, `$1`, and so on.
 
@@ -243,9 +295,9 @@ If you need to run JavaScript without having access to an element, use the [meth
 
 The [methodname]`Element.callJsFunction()` method allows you to run a client-side component function from the server side. The method accepts two parameters: the name of the function to call; and the arguments to pass to the function.
 
-The name of the function and the arguments [since:com.vaadin:vaadin@V25.4]#are sent to the browser, which looks the function up on the element and calls it. Nothing is compiled from a string there, so the call works under a content security policy that doesn't allow `unsafe-eval`.# A dotted name, such as `$connector.method`, is resolved on the element property by property, and the function is called with the property it's read from as `this`.
+The name of the function and the arguments [since:com.vaadin:vaadin@V25.4]#are sent to the browser, which looks the function up on the element and calls it. No JavaScript is compiled from a string for this call, so it works under a strict content security policy.# A dotted name, such as `$connector.method`, is resolved on the element property by property, and the function is called with the property it's read from as `this`.
 
-The arguments passed to the function must be a type supported by the communication mechanism. The supported types are `String`, `Boolean`, `Integer`, `Double`, `JsonNode`, `Element`, `Component`, and `JsFunction` (see <<#js-function,Passing JavaScript Functions>>). Passing a [classname]`JsFunction` brings the browser-side compilation back, since the client builds such a function from its body string.
+The arguments passed to the function must be a type supported by the communication mechanism. The supported types are `String`, `Boolean`, `Integer`, `Double`, `JsonNode`, `Element`, `Component`, and `JsFunction` (see <<#js-function,Passing JavaScript Functions>>). Passing a [classname]`JsFunction` built with [methodname]`JsFunction.of()` brings the browser-side compilation back, since the client builds such a function from its body string. A function <<#declaring-snippets,declared as a snippet>> doesn't.
 
 .Calling the `clearSelection()` JavaScript function on the root element from the server side
 [example]
@@ -325,7 +377,7 @@ To find the code that schedules the invocations, enable debug logging for `com.v
 
 A [classname]`JsFunction` lets you build a reusable JavaScript function on the server and pass it as a parameter to [methodname]`executeJs()` or [methodname]`callJsFunction()`. The function arrives on the client as a real callable function with its captured values pre-bound, so you don't need to concatenate JavaScript fragments to embed server-side values.
 
-The function body is compiled on the client, so it needs a content security policy that allows `unsafe-eval` -- also when the function is passed to a method of a JavaScript definition. Where the body is known in advance, declare the JavaScript in Java instead (see <<#declaring-javascript,Declaring JavaScript in Java>>).
+The function body is compiled on the client, so a strict content security policy blocks it -- also when the function is passed to a method of a JavaScript definition. Where the body is known in advance, declare the JavaScript in Java instead (see <<#declaring-javascript,Declaring JavaScript in Java>>).
 
 The first argument to [methodname]`JsFunction.of()` is a JavaScript function body. The remaining arguments are captured values, referenced inside the body as `$0`, `$1`, &hellip; using the same naming convention as [methodname]`executeJs()` parameters.
 
@@ -403,11 +455,15 @@ If the body always needs to reference the same element regardless of how the fun
 [role="since:com.vaadin:vaadin@V25.2"]
 == Client-Side Lifecycle With `addJsInitializer`
 
-The [methodname]`Element.addJsInitializer()` method registers a JavaScript expression that runs each time a client-side DOM node is created for the element, and whose returned cleanup callback runs when that DOM node is discarded or the returned [classname]`Registration` is removed.
+The [methodname]`Element.addJsInitializer()` method registers a JavaScript initializer that runs each time a client-side DOM node is created for the element, and whose returned cleanup callback runs when that DOM node is discarded or the returned [classname]`Registration` is removed.
 
 Use this when you need to install something on the client-side DOM &ndash; an event listener, a third-party widget, an observer &ndash; and reliably tear it down. A one-shot [methodname]`executeJs()` call doesn't cover two cases: a real re-attach gives the element a brand-new DOM node that no longer has your listener, and cleanup from a server-side detach listener cannot be delivered because the element is leaving the tree.
 
-The expression is compiled in the browser, so [methodname]`addJsInitializer()` needs a content security policy that allows `unsafe-eval`. No declaration-based counterpart exists; under a stricter policy, install and tear down from a client-side module of your own instead.
+Pass the initializer as a `String` expression, or [since:com.vaadin:vaadin@V25.4]#as a [classname]`JsFunction` declared as a snippet#.
+
+=== Passing an Expression
+
+The [methodname]`addJsInitializer(String, Object...)` overload takes the initializer as a JavaScript expression. The expression is compiled in the browser, so a strict content security policy blocks it.
 
 The expression syntax is the same as [methodname]`executeJs()`: `this` is the host element on the client, and parameters are referenced as `$0`, `$1`, &hellip;. If the expression returns a function, that function is invoked at teardown.
 
@@ -426,7 +482,40 @@ Registration registration = getElement().addJsInitializer("""
 
 Here `$0` is `"click"` and `$1` is `"clicked"`, so the event type and the log label come from the server rather than being hard-coded in the expression.
 
-Remove the registration on the server when the listener is no longer needed; the cleanup callback then runs on the client.
+[[passing-a-declared-function]]
+[role="since:com.vaadin:vaadin@V25.4"]
+=== Passing a Declared Function
+
+The [methodname]`addJsInitializer(JsFunction)` overload takes the initializer as a function instead of as an expression. Declare it as a snippet of a [annotationname]`@JsDefinition` interface (see <<#declaring-snippets,Declaring Snippets>>) and obtain it through [methodname]`JsSnippets.of()`, so nothing is compiled from a string in the browser and the initializer works under a strict content security policy:
+
+.Declaring an initializer and passing it to `addJsInitializer`
+[example]
+====
+[source,java]
+----
+@JsDefinition
+public interface ListenJs extends Serializable {
+
+    @JsExpression("""
+            const listener = () => this.classList.toggle($0);
+            this.addEventListener('click', listener);
+            return () => this.removeEventListener('click', listener);""")
+    JsFunction toggleOnClick(String className);
+}
+----
+
+[source,java]
+----
+getElement().addJsInitializer(
+        JsSnippets.of(ListenJs.class).toggleOnClick("active"));
+----
+====
+
+The function runs with the element as `this`, at the same moments as a `String` initializer. The arguments of the call that created the snippet are available as `$0`, `$1`, &hellip; in its expression.
+
+The initializer is called with no arguments. A function that declares parameters of its own -- with [annotationname]`@JsFunctionParameterNames` or [methodname]`JsFunction.withArguments()` -- is rejected with an [classname]`IllegalArgumentException`. Pass the values the function needs as arguments of the snippet method instead.
+
+Remove the registration on the server when the listener is no longer needed; the cleanup callback then runs on the client, for either overload.
 
 
 === Re-Attach Semantics
@@ -436,7 +525,7 @@ The initializer is re-run after a real re-attach &ndash; when the element is rem
 
 === Cleanup Constraints
 
-The return value of the expression is read synchronously. A function is treated as the cleanup callback; returning `null`, `undefined`, or nothing at all (no `return`) means there's no cleanup. Returning any other value &ndash; including a `Promise` resolving to a function &ndash; is logged as an error on the client.
+The return value of the initializer is read synchronously. A function is treated as the cleanup callback; returning `null`, `undefined`, or nothing at all (no `return`) means there's no cleanup. Returning any other value &ndash; including a `Promise` resolving to a function &ndash; is logged as an error on the client.
 
 If setup is asynchronous, don't return the `Promise`. Keep a reference to the pending work and return a cleanup function that awaits it before tearing down. Awaiting the same promise in the cleanup callback ensures the resource is torn down even if cleanup runs before the asynchronous setup has finished &ndash; otherwise a slow import could create the widget after cleanup has already run, leaking it:
 

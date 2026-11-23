@@ -74,13 +74,6 @@ window.Function = function(...args) {
     return functions.get(key);
   }
 
-  // Calls that load the frontend chunk of a view
-  const chunkCall = key.match(/^return window\.Vaadin\.Flow\.loadOnDemand\('([^']*)'\);$/);
-  if (chunkCall) {
-    const chunk = chunkCall[1];
-    return function() { return window.Vaadin.Flow.loadOnDemand(chunk); };
-  }
-
   // Log the code to add to the functions map
   const code = args[args.length - 1];
   console.warn(`functions.set(${JSON.stringify(key)},\n  function(${args.slice(0, -1).join(',')}) {${code}\n});`);
@@ -115,6 +108,8 @@ window.eval = function(script) {
 };
 ----
 
+Loading a route whose JavaScript is in a lazily loaded chunk doesn't need an entry: the chunk loader is a function declared in the bundle, so nothing is compiled from a string when the chunk loads.
+
 The `functions` and `evalCalls` maps map the code that the server sends to pre-defined functions. Which entries an application needs depends on the components and features that it uses, and on the Vaadin version. To collect them, run the application in production mode without the `Content-Security-Policy` header, and use every view and feature. For every function that's missing from the maps, the overrides log a line to the browser console that you can copy into the file. Collect the entries again after upgrading Vaadin.
 
 The following snippet shows a few entries. A real application has many more:
@@ -138,20 +133,18 @@ evalCalls.set("'The value for <b>' + this.x + '</b> is <b>' + this.y + '</b>'",
 
 [since:com.vaadin:vaadin@V25.4]#The `csp` configuration parameter is a separate mechanism, with which Vaadin sends a strict, nonce-based policy itself, without `'unsafe-inline'` and `'unsafe-eval'` in `script-src`.# See <<{articles}/flow/configuration/properties#,Configuration Properties>> for how to set the parameter.
 
-The `strict` mode is a preview. A view runs under the policy when everything it uses works without `eval`, but not every Vaadin UI component does yet. See <<#preview-limitations,Preview Limitations>>. For an application that such a limitation affects, use the approach described in <<#creating-random-nonce,Creating Random Nonce>> and <<#function-execution-eval-calls,Function Execution & Eval Calls>> to run under a strict policy.
+The `strict` mode is a preview. An application runs under the policy when everything it uses works without `eval`. See <<#preview-limitations,Preview Limitations>> for the APIs that don't. For an application that such a limitation affects, use the approach described in <<#creating-random-nonce,Creating Random Nonce>> and <<#function-execution-eval-calls,Function Execution & Eval Calls>> to run under a strict policy.
 
 Set the parameter to `warn` to log every call in the application that wouldn't work under such a policy. Each log entry is a [classname]`CspViolationException`, whose stack trace leads to the code that made the call.
 
-Set the parameter to `strict` to have Vaadin send the policy. An API that sends JavaScript to the browser as a string, such as [methodname]`executeJs()` with a string expression, then throws a [classname]`CspViolationException`.
+Set the parameter to `strict` to have Vaadin send the policy. Vaadin sends it only in production mode. In development mode, no `Content-Security-Policy` header is sent and no nonce is added to the page, because the development server and the development tools need `eval`. An API that sends JavaScript to the browser as a string, such as [methodname]`executeJs()` with a string expression, throws a [classname]`CspViolationException` in both production and development mode. However, the browser doesn't block anything the policy wouldn't allow, such as a request to an external API or an image from another origin, until the application runs as a production build. Test a production build of the application under the policy before you rely on it.
 
 In production mode, Vaadin generates a new nonce for every index HTML response. It puts the nonce on every `<script>` element and script preload link of the page. This includes the ones added by an [interfacename]`IndexHtmlRequestListener` or an `@Inline` annotation. Vaadin then sends a header such as:
 
 [source]
 ----
-Content-Security-Policy: default-src 'self'; script-src 'nonce-...' 'strict-dynamic'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'
+Content-Security-Policy: default-src 'self'; script-src 'nonce-...' 'strict-dynamic'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' data:; worker-src 'self'; object-src 'none'; base-uri 'self'
 ----
-
-In development mode, no `Content-Security-Policy` header is sent and no nonce is added to the page, because the development server and the development tools need `eval`. Calls that need `eval` still throw in development mode, so violations show up before a production build.
 
 To allow a resource that the default policy doesn't, such as an external API the application calls, add an [interfacename]`IndexHtmlRequestListener` and add sources to the [classname]`ContentSecurityPolicy` of the response:
 
@@ -168,6 +161,16 @@ VaadinServiceInitListener cspSources() {
 }
 ----
 
+The `data:` source in `connect-src` lets an [classname]`SvgIcon` load an icon from a `data:image/svg+xml` URL, because the browser fetches the source of the icon. It allows the page to read inline data, but not to run it as code. If a security scanner of the application reports it, and the application doesn't use `data:` URLs for icons, remove it by setting the directive again in the listener. Call it before any [methodname]`addSources()` call for `connect-src`, such as the one in the listener above, because [methodname]`setDirective()` replaces all the sources of the directive:
+
+[source,java]
+----
+ContentSecurityPolicy policy = response.getContentSecurityPolicy();
+if (policy != null) {
+    policy.setDirective("connect-src", "'self'"); // removes data:
+}
+----
+
 Leave `script-src` unchanged: it holds the nonce and `'strict-dynamic'`, so replacing it blocks every script on the page, and host sources added to it are ignored by the browser. To load a script from another origin instead, add a `<script>` element to the document, which gets the nonce automatically.
 
 Setting the `Content-Security-Policy` header another way, such as from a servlet filter that runs before Vaadin or the listener in <<#creating-random-nonce,Creating Random Nonce>>, isn't compatible with this: in production mode, the request fails if the header is already set when the page is written, so that the page is never sent without Vaadin's own policy. A policy configured in Spring Security doesn't fail the request. See <<#spring-security,Spring Security>> for how the two policies work together.
@@ -178,10 +181,9 @@ Setting the `Content-Security-Policy` header another way, such as from a servlet
 
 The `strict` mode has the following limitations:
 
-- Some Vaadin UI components, such as Spreadsheet, still send JavaScript to the browser as strings. Using such a UI component throws a [classname]`CspViolationException`. Run the application with `warn` first to see which of its UI components are affected.
-- A renderer created with [methodname]`LitRenderer.of(String)` throws the same exception, because the browser compiles its template from a string. The built-in renderers, such as [classname]`ComponentRenderer` and [classname]`TextRenderer`, work.
+- A renderer created with [methodname]`LitRenderer.of(String)` throws a [classname]`CspViolationException`, because the browser compiles its template from a string. The built-in renderers, such as [classname]`ComponentRenderer` and [classname]`TextRenderer`, work.
 - A chart option that takes a JavaScript function as a string, such as [methodname]`Tooltip.setFormatter()`, throws the same exception.
-- An add-on that calls a string-based JavaScript API throws the same exception.
+- An add-on that calls a string-based JavaScript API throws the same exception. Run the application with `warn` first to see which of its add-ons are affected.
 - The policy keeps `'unsafe-inline'` in `style-src`, because UI components add styles to the page while the application runs.
 
 
