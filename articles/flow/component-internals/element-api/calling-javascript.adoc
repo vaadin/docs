@@ -21,7 +21,9 @@ The other methods described on this page -- [methodname]`executeJs(String, Objec
 [role="since:com.vaadin:vaadin@V25.4"]
 == Declaring JavaScript in Java
 
-An interface annotated with [annotationname]`@JsDefinition` declares the JavaScript that its methods run, and the build collects that JavaScript into the bundle. Call the declared JavaScript through [methodname]`Element.executeJs(Class)`, which hands out an implementation of the interface; calling a method of it schedules the JavaScript that the method declares.
+An interface annotated with [annotationname]`@JsDefinition` declares JavaScript that the build collects into the bundle. It also extends one of two marker interfaces, which decides what its methods declare: [interfacename]`JsInvokers`, covered in this section, for JavaScript that runs when a method is called; or [interfacename]`JsSnippets` for JavaScript that's only passed on as a function (see <<#declaring-snippets,Declaring Snippets>>). An interface can't extend both.
+
+Call the declared JavaScript of a [interfacename]`JsInvokers` interface through [methodname]`Element.executeJs(Class)`, which hands out an implementation of the interface; calling a method of it schedules the JavaScript that the method declares.
 
 Each method of the interface is annotated with [annotationname]`@JsExpression`, whose value is the JavaScript expression to run. The arguments of the call are available inside the expression as `$0`, `$1`, and so on, and the element the implementation was obtained from is `this`.
 
@@ -37,7 +39,7 @@ The last parameter of a method can be declared variadic, such as `String...`, to
 [source,java]
 ----
 @JsDefinition
-public interface ClassNamesJs extends Serializable {
+public interface ClassNamesJs extends JsInvokers {
 
     @JsExpression("this.classList.add(...$0)")
     void add(String... classNames);
@@ -59,7 +61,7 @@ public void highlight() {
 [source,java]
 ----
 @JsDefinition
-public interface GreeterJs extends Serializable {
+public interface GreeterJs extends JsInvokers {
 
     @JsExpression("window.alert($0)")
     void showGreeting(String greeting);
@@ -82,7 +84,7 @@ A method returns `void`, [classname]`PendingJavaScriptResult`, or [classname]`Ja
 [source,java]
 ----
 @JsDefinition
-public interface OverflowJs extends Serializable {
+public interface OverflowJs extends JsInvokers {
 
     @JsExpression("return this.scrollWidth > this.clientWidth")
     PendingJavaScriptResult isContentClipped();
@@ -102,18 +104,18 @@ public void updateTooltip() {
 Nothing about the JavaScript is decided at the call site: the build generates one function per declared expression into the bundle, and the client runs that function after looking it up by an identifier of the JavaScript. The expression itself is never sent to the browser, and a production bundle carries the generated functions only -- the Java names stay on the server.
 
 [NOTE]
-The interface is checked when [methodname]`executeJs(Class)` hands out the implementation. It must be annotated with [annotationname]`@JsDefinition`. Every method must be annotated with [annotationname]`@JsExpression` and return `void`, [classname]`PendingJavaScriptResult`, or [classname]`JavaScriptResult` with a type argument that's known from the interface (see <<#typed-results,Typed Results>>). An interface that declares snippets is refused; get its implementation from [methodname]`JsSnippets.of()` instead (see <<#declaring-snippets,Declaring Snippets>>). A `default` or `static` method is refused, since it's implemented in Java rather than declaring JavaScript to run in the browser.
+The interface is checked when [methodname]`executeJs(Class)` hands out the implementation. It must extend [interfacename]`JsInvokers` and be annotated with [annotationname]`@JsDefinition`. Every method must be annotated with [annotationname]`@JsExpression` and return `void`, [classname]`PendingJavaScriptResult`, or [classname]`JavaScriptResult` with a type argument that's known from the interface (see <<#typed-results,Typed Results>>); a method that returns a snippet type is refused with the method named. A `default` or `static` method is refused, since it's implemented in Java rather than declaring JavaScript to run in the browser.
 
 When the JavaScript isn't about a particular element, declare it the same way and run it through [methodname]`Page.executeJs(Class)`, which works with global browser APIs instead of with an element (see <</flow/advanced/browser-access#declaring-javascript-in-java,Accessing the Browser Page>>).
 
 [[declaring-snippets]]
 === Declaring Snippets
 
-A method that returns a snippet type, such as [classname]`JsFunction`, instead of `void` or [classname]`PendingJavaScriptResult` declares a _snippet_: JavaScript that isn't run when the method is called. Calling the method answers with a function, which is passed on to something that calls it later in the browser, such as <<#passing-a-declared-function,[methodname]`addJsInitializer(JsFunction)`>>. Like any other declaration, the build collects the snippet into the bundle, so nothing is compiled from a string in the browser. The other snippet types are [classname]`JsSnippet`, [classname]`DomEventFilter`, [classname]`DomEventData`, and interfaces that extend [classname]`JsSnippet`.
+An interface annotated with [annotationname]`@JsDefinition` that extends [interfacename]`JsSnippets` instead of [interfacename]`JsInvokers` declares _snippets_: JavaScript that isn't run when a method is called. Its methods return a snippet type -- [classname]`JsFunction`, [classname]`JsSnippet`, [classname]`DomEventFilter`, [classname]`DomEventData`, or an interface that extends [classname]`JsSnippet` -- instead of `void` or [classname]`PendingJavaScriptResult`. Calling such a method answers with that value, which is passed on to something that calls it later in the browser, such as <<#passing-a-declared-function,[methodname]`addJsInitializer(JsFunction)`>>. Like any other declaration, the build collects the snippet into the bundle, so nothing is compiled from a string in the browser.
 
 A snippet isn't bound to an element, so get the implementation of its interface from [methodname]`JsSnippets.of(Class)` rather than from [methodname]`executeJs(Class)`. The implementation holds no state, so it can be kept in a constant and shared.
 
-An interface declares either methods that run JavaScript or snippets, never both. [methodname]`executeJs(Class)` throws an [classname]`IllegalArgumentException` for an interface that declares snippets, and [methodname]`JsSnippets.of()` throws one for an interface that doesn't.
+An interface extends exactly one of [interfacename]`JsInvokers` and [interfacename]`JsSnippets`. Passing a [interfacename]`JsSnippets` interface to [methodname]`executeJs(Class)`, or a [interfacename]`JsInvokers` interface to [methodname]`JsSnippets.of()`, is a compile error, since each method accepts only the matching marker type. A method whose return type doesn't match the kind the interface declares is refused with the method named.
 
 The arguments of the Java call are captured and available in the expression as `$0`, `$1`, and so on. The expression is the body of the function, so it has to `return` a value if the caller expects one. The function takes no parameters of its own, unless the method is annotated with [annotationname]`@JsFunctionParameterNames`, which names the parameters that the caller passes to the function when it calls it.
 
@@ -129,7 +131,7 @@ Add a listener to the [classname]`PendingJavaScriptResult` instance that a call 
 [source,java]
 ----
 @JsDefinition
-public interface FeatureDetectionJs extends Serializable {
+public interface FeatureDetectionJs extends JsInvokers {
 
     @JsExpression("return 'adoptedStyleSheets' in document")
     PendingJavaScriptResult supportsConstructableStylesheets();
@@ -170,7 +172,7 @@ Declare [classname]`JavaScriptResult` with a type argument instead of [classname
 [source,java]
 ----
 @JsDefinition
-public interface DeepThoughtJs extends Serializable {
+public interface DeepThoughtJs extends JsInvokers {
 
     @JsExpression("return 42")
     JavaScriptResult<Integer> getAnswer();
@@ -205,7 +207,7 @@ The [methodname]`then()` method accepts a [classname]`Class` parameter for simpl
 [source,java]
 ----
 @JsDefinition
-public interface ItemsJs extends Serializable {
+public interface ItemsJs extends JsInvokers {
 
     @JsExpression("return this.getItems()")
     PendingJavaScriptResult getItems();
@@ -486,7 +488,7 @@ Here `$0` is `"click"` and `$1` is `"clicked"`, so the event type and the log la
 [role="since:com.vaadin:vaadin@V25.4"]
 === Passing a Declared Function
 
-The [methodname]`addJsInitializer(JsFunction)` overload takes the initializer as a function instead of as an expression. Declare it as a snippet of a [annotationname]`@JsDefinition` interface (see <<#declaring-snippets,Declaring Snippets>>) and obtain it through [methodname]`JsSnippets.of()`, so nothing is compiled from a string in the browser and the initializer works under a strict content security policy:
+The [methodname]`addJsInitializer(JsFunction)` overload takes the initializer as a function instead of as an expression. Declare it as a snippet of a [annotationname]`@JsDefinition` interface that extends [interfacename]`JsSnippets` (see <<#declaring-snippets,Declaring Snippets>>) and obtain it through [methodname]`JsSnippets.of()`, so nothing is compiled from a string in the browser and the initializer works under a strict content security policy:
 
 .Declaring an initializer and passing it to `addJsInitializer`
 [example]
@@ -494,7 +496,7 @@ The [methodname]`addJsInitializer(JsFunction)` overload takes the initializer as
 [source,java]
 ----
 @JsDefinition
-public interface ListenJs extends Serializable {
+public interface ListenJs extends JsSnippets {
 
     @JsExpression("""
             const listener = () => this.classList.toggle($0);
