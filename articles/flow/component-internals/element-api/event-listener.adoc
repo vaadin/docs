@@ -34,54 +34,86 @@ getElement().appendChild(helloButton);
 
 == Accessing Data from Events
 
-You can get more information about the element or user interaction by declaring the required event data and adding it to the [classname]`DomListenerRegistration` returned by the [methodname]`addEventListener()` method.
+You can get more information about the element or user interaction by defining the required event data on the [classname]`DomListenerRegistration` returned by the [methodname]`addEventListener()` method.
 
-Declare each value as a method that returns [classname]`DomEventData` in a [annotationname]`@JsDefinition` interface that extends [interfacename]`JsSnippets`. The [annotationname]`@JsExpression` of the method is the body of a function that gets the DOM `event` and the `element` the listener is added to, and returns the value to send.
+For a value that's a property of the event or of the element, use [methodname]`addEventDataPath()`. The path starts with `event`, for the fired event, or `element`, for the element the listener is added to, followed by property names that each start with `.` or `?.`.
 
-.Declaring event data and reading it in the listener
+.Using the [methodname]`addEventDataPath()` method to define the required event data
+[example]
+====
+[source,java]
+----
+helloButton.addEventListener("click", this::handleClick)
+    .addEventDataPath("event.shiftKey") // <1>
+    .addEventDataPath("element.offsetWidth");
+
+private void handleClick(DomEvent event) {
+    JsonNode eventData = event.getEventData(); // <2>
+    boolean shiftKey = eventData
+            .get("event.shiftKey").asBoolean(); // <3>
+    double width = eventData
+            .get("element.offsetWidth").asDouble();
+
+    String text = "Shift " + (shiftKey ? "down" : "up");
+    text += " on button whose width is " + width + "px";
+
+    Element response = ElementFactory.createDiv(text);
+    getElement().appendChild(response);
+}
+----
+<1> The requested event data values are sent as a JSON object from the client.
+<2> You can retrieve the event data using the [methodname]`DomEvent.getEventData()` method in the listener. It returns a Jackson [classname]`JsonNode` (from `tools.jackson.databind`).
+<3> Look up each value by the same path you passed to [methodname]`addEventDataPath()`, then read it with the accessor that matches its type -- for example [methodname]`asBoolean()`, [methodname]`asInt()`, [methodname]`asDouble()`, or [methodname]`asText()`.
+====
+
+.Return Type Changed from Elemental JSON
+[NOTE]
+[methodname]`DomEvent.getEventData()` now returns a Jackson [classname]`JsonNode` (`tools.jackson.databind.JsonNode`) instead of the previous Elemental `JsonObject`. Code written for earlier versions no longer compiles: replace `JsonObject` with [classname]`JsonNode`, and the Elemental getters such as `getString(key)`, `getBoolean(key)`, and `getNumber(key)` with `get(key).asText()`, `get(key).asBoolean()`, and `get(key).asDouble()`. See <<{articles}/upgrading#,the upgrade guide>> for the full list of Elemental-to-Jackson changes.
+
+To map a DOM node to its server-side [classname]`Element`, use [methodname]`addEventDataElementPath()` with a path such as `event.relatedTarget`, and read the element with [methodname]`DomEvent.getEventDataElement()`.
+
+[role="since:com.vaadin:vaadin@V25.4"]
+=== Declaring Event Data
+
+For any other value, declare a method that returns [classname]`DomEventData` in a [annotationname]`@JsDefinition` interface that extends [interfacename]`JsSnippets`, and pass what the method returns to [methodname]`addEventData()`. The [annotationname]`@JsExpression` of the method is the body of a function that returns the value to send. Unlike other snippets, which take no parameters unless the method declares them, this function always gets the DOM `event` and the `element` the listener is added to.
+
+.Declaring event data and reading it with [methodname]`getEventData(DomEventData)`
 [example]
 ====
 [source,java]
 ----
 @JsDefinition
-public interface ButtonEventsJs extends JsSnippets {
+public interface ClipboardJs extends JsSnippets {
 
-    @JsExpression("return event.shiftKey;")
-    DomEventData<Boolean> shiftKey();
-
-    @JsExpression("return element.offsetWidth;")
-    DomEventData<Double> width();
+    @JsExpression("return event.clipboardData?.getData($0) || null;") // <1>
+    DomEventData<String> clipboardData(String mimeType);
 }
 
-private static final ButtonEventsJs JS = JsSnippets.of(ButtonEventsJs.class);
+private static final ClipboardJs CLIPBOARD = JsSnippets.of(ClipboardJs.class);
 
-private void addHelloButtonListener(Element helloButton) {
-    DomEventData<Boolean> shiftKey = JS.shiftKey();
-    DomEventData<Double> width = JS.width();
-
-    helloButton.addEventListener("click", event -> {
-        boolean shiftPressed = event.getEventData(shiftKey); // <1>
-        double buttonWidth = event.getEventData(width);
-
-        String text = "Shift " + (shiftPressed ? "down" : "up");
-        text += " on button whose width is " + buttonWidth + "px";
-        getElement().appendChild(ElementFactory.createDiv(text));
-    }).addEventData(shiftKey) // <2>
-            .addEventData(width);
+private void addPasteListener(Element field) {
+    DomEventData<String> pasted = CLIPBOARD.clipboardData("text/plain");
+    field.addEventListener("paste", event -> {
+        String text = event.getEventData(pasted); // <2>
+        // ...
+    }).addEventData(pasted);
 }
 ----
-<1> [methodname]`DomEvent.getEventData()` returns the value with the type the method declares.
-<2> The browser sends the value of each added event data together with the event.
+<1> The arguments of the method call are available to the expression as `$0`, `$1`, and so on.
+<2> The value has the type the method declares. Pass the same event data, or one created with the same method and equal arguments, that was added to the listener.
 ====
 
-The build adds the declared expressions to the frontend bundle, so the browser doesn't compile anything from a string, and the event data also works under a Content Security Policy that doesn't allow `unsafe-eval`. See <<calling-javascript#declaring-snippets,Declaring Snippets>> for more about [interfacename]`JsSnippets` interfaces.
+The build adds the declared expression to the frontend bundle, so the browser doesn't compile anything from a string. See <<calling-javascript#declaring-snippets,Declaring Snippets>> for more about [interfacename]`JsSnippets` interfaces.
 
 
 == Filtering and Debouncing
 
 Filtering and debouncing are covered in detail in <<../events#limiting-event-frequency,Declaring and Firing Component Events>>, in the context of the `@DomEvent` annotation. However, you can configure the exact same settings through the [classname]`DomListenerRegistration` object.
 
-To filter events, declare the filter as a method that returns [classname]`DomEventFilter` in a [interfacename]`JsSnippets` interface, and pass what the method returns to [methodname]`setFilterExpression()`. The expression gets the same `event` and `element` parameters as event data, and returns `true` for the events to send to the server.
+[role="since:com.vaadin:vaadin@V25.4"]
+=== Declaring a Filter
+
+To filter events, declare the filter as a method that returns [classname]`DomEventFilter` in a [interfacename]`JsSnippets` interface, and pass what the method returns to [methodname]`setFilterExpression()`. Like declared event data, the expression gets the DOM `event` and the `element` the listener is added to, and returns `true` for the events to send to the server.
 
 .Declaring a filter and using it with [methodname]`setFilterExpression()`
 [example]
@@ -102,7 +134,7 @@ private void addSubmitOnEnter(Element field) {
             .setFilterExpression(FILTERS.isKey("Enter"));
 }
 ----
-<1> The arguments of the method call are available to the expression as `$0`, `$1`, and so on.
+<1> As with event data, the arguments of the method call are available as `$0`, `$1`, and so on.
 ====
 
 
