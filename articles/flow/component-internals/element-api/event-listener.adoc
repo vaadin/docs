@@ -34,74 +34,54 @@ getElement().appendChild(helloButton);
 
 == Accessing Data from Events
 
-You can get more information about the element or user interaction by defining the required event data on the [classname]`DomListenerRegistration` returned by the [methodname]`addEventListener()` method.
+You can get more information about the element or user interaction by declaring the required event data and adding it to the [classname]`DomListenerRegistration` returned by the [methodname]`addEventListener()` method.
 
-.Using the [methodname]`addEventData()` method to define the required event data
-[example]
-====
-[source,java]
-----
-helloButton.addEventListener("click", this::handleClick)
-    .addEventData("event.shiftKey") // <1>
-    .addEventData("element.offsetWidth");
+Declare each value as a method that returns [classname]`DomEventData` in a [annotationname]`@JsDefinition` interface that extends [interfacename]`JsSnippets`. The [annotationname]`@JsExpression` of the method is the body of a function that gets the DOM `event` and the `element` the listener is added to, and returns the value to send.
 
-private void handleClick(DomEvent event) {
-    JsonNode eventData = event.getEventData(); // <2>
-    boolean shiftKey = eventData
-            .get("event.shiftKey").asBoolean(); // <3>
-    double width = eventData
-            .get("element.offsetWidth").asDouble();
-
-    String text = "Shift " + (shiftKey ? "down" : "up");
-    text += " on button whose width is " + width + "px";
-
-    Element response = ElementFactory.createDiv(text);
-    getElement().appendChild(response);
-}
-----
-<1> The requested event data values are sent as a JSON object from the client.
-<2> You can retrieve the event data using the [methodname]`DomEvent.getEventData()` method in the listener. It returns a Jackson [classname]`JsonNode` (from `tools.jackson.databind`).
-<3> Look up each value by the same key you passed to [methodname]`addEventData()`, then read it with the accessor that matches its type -- for example [methodname]`asBoolean()`, [methodname]`asInt()`, [methodname]`asDouble()`, or [methodname]`asText()`.
-====
-
-.Return Type Changed from Elemental JSON
-[NOTE]
-[methodname]`DomEvent.getEventData()` now returns a Jackson [classname]`JsonNode` (`tools.jackson.databind.JsonNode`) instead of the previous Elemental `JsonObject`. Code written for earlier versions no longer compiles: replace `JsonObject` with [classname]`JsonNode`, and the Elemental getters such as `getString(key)`, `getBoolean(key)`, and `getNumber(key)` with `get(key).asText()`, `get(key).asBoolean()`, and `get(key).asDouble()`. See <<{articles}/upgrading#,the upgrade guide>> for the full list of Elemental-to-Jackson changes.
-
-The browser compiles each [methodname]`addEventData()` expression from a string, so it doesn't work with a Content Security Policy that doesn't allow `unsafe-eval`. To get event data under such a policy, declare it in a [annotationname]`@JsDefinition` interface as a method returning [classname]`DomEventData`, and pass what the method returns to [methodname]`addEventData()`.
-
-.Declaring event data and reading it with [methodname]`getEventData(DomEventData)`
+.Declaring event data and reading it in the listener
 [example]
 ====
 [source,java]
 ----
 @JsDefinition
-public interface ButtonEventsJs extends Serializable {
+public interface ButtonEventsJs extends JsSnippets {
 
     @JsExpression("return event.shiftKey;")
     DomEventData<Boolean> shiftKey();
+
+    @JsExpression("return element.offsetWidth;")
+    DomEventData<Double> width();
 }
 
 private static final ButtonEventsJs JS = JsSnippets.of(ButtonEventsJs.class);
 
 private void addHelloButtonListener(Element helloButton) {
     DomEventData<Boolean> shiftKey = JS.shiftKey();
+    DomEventData<Double> width = JS.width();
+
     helloButton.addEventListener("click", event -> {
-        boolean shiftPressed = event.getEventData(shiftKey);
-        // ...
-    }).addEventData(shiftKey);
+        boolean shiftPressed = event.getEventData(shiftKey); // <1>
+        double buttonWidth = event.getEventData(width);
+
+        String text = "Shift " + (shiftPressed ? "down" : "up");
+        text += " on button whose width is " + buttonWidth + "px";
+        getElement().appendChild(ElementFactory.createDiv(text));
+    }).addEventData(shiftKey) // <2>
+            .addEventData(width);
 }
 ----
+<1> [methodname]`DomEvent.getEventData()` returns the value with the type the method declares.
+<2> The browser sends the value of each added event data together with the event.
 ====
 
-The build adds the declared expression to the frontend bundle, so the browser runs it without compiling anything from a string. See <<calling-javascript#declaring-javascript,Declaring JavaScript in Java>> for more about [annotationname]`@JsDefinition` interfaces.
+The build adds the declared expressions to the frontend bundle, so the browser doesn't compile anything from a string, and the event data also works under a Content Security Policy that doesn't allow `unsafe-eval`. See <<calling-javascript#declaring-snippets,Declaring Snippets>> for more about [interfacename]`JsSnippets` interfaces.
 
 
 == Filtering and Debouncing
 
 Filtering and debouncing are covered in detail in <<../events#limiting-event-frequency,Declaring and Firing Component Events>>, in the context of the `@DomEvent` annotation. However, you can configure the exact same settings through the [classname]`DomListenerRegistration` object.
 
-[methodname]`DomListenerRegistration.setFilter()` takes the filter as a JavaScript expression string, which the browser compiles, so it doesn't work with a Content Security Policy that doesn't allow `unsafe-eval`. To filter events under such a policy, declare the filter in a [annotationname]`@JsDefinition` interface as a method returning [classname]`DomEventFilter`, and pass what the method returns to [methodname]`setFilterExpression()`.
+To filter events, declare the filter as a method that returns [classname]`DomEventFilter` in a [interfacename]`JsSnippets` interface, and pass what the method returns to [methodname]`setFilterExpression()`. The expression gets the same `event` and `element` parameters as event data, and returns `true` for the events to send to the server.
 
 .Declaring a filter and using it with [methodname]`setFilterExpression()`
 [example]
@@ -109,9 +89,9 @@ Filtering and debouncing are covered in detail in <<../events#limiting-event-fre
 [source,java]
 ----
 @JsDefinition
-public interface KeyFiltersJs extends Serializable {
+public interface KeyFiltersJs extends JsSnippets {
 
-    @JsExpression("return event.key === $0;")
+    @JsExpression("return event.key === $0;") // <1>
     DomEventFilter isKey(String key);
 }
 
@@ -122,6 +102,7 @@ private void addSubmitOnEnter(Element field) {
             .setFilterExpression(FILTERS.isKey("Enter"));
 }
 ----
+<1> The arguments of the method call are available to the expression as `$0`, `$1`, and so on.
 ====
 
 
