@@ -18,4 +18,9 @@ declare module '*.avif?url' {
   export = value;
 }
 
+declare module '*.pdf?url' {
+  const value: string;
+  export = value;
+}
+
 declare module 'Frontend/generated/jar-resources/dev-tools-database.js';

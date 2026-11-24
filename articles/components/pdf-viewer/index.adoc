@@ -1,0 +1,526 @@
+---
+title: PDF Viewer
+page-title: PDF Viewer component | Vaadin components
+description: PDF Viewer shows PDF documents in the application, with page navigation, zoom and download.
+meta-description: Use the Vaadin PDF Viewer component to show PDF documents in your application, with page navigation, zoom, text selection, download and custom toolbar actions.
+page-links:
+  - 'API: https://cdn.vaadin.com/vaadin-web-components/{moduleNpmVersion:@vaadin/pdf-viewer}/elements/vaadin-pdf-viewer[TypeScript] / https://vaadin.com/api/platform/{moduleMavenVersion:com.vaadin:vaadin}/com/vaadin/flow/component/pdfviewer/PdfViewer.html[Java]'
+  - 'Source: https://github.com/vaadin/web-components/tree/v{moduleNpmVersion:@vaadin/pdf-viewer}/packages/pdf-viewer[TypeScript] / https://github.com/vaadin/flow-components/tree/{moduleMavenVersion:com.vaadin:vaadin}/vaadin-pdf-viewer-flow-parent[Java]'
+section-nav: commercial badge-preview
+---
+
+:tag-name: vaadin-pdf-viewer
+
+
+= [since:com.vaadin:vaadin@V25.4]#PDF Viewer#
+
+:commercial-feature: PDF Viewer
+include::{articles}/_commercial-banner.adoc[opts=optional]
+
+// tag::description[]
+PDF Viewer shows PDF documents in the application. Users can scroll through the pages, go to a page, zoom, select text, follow links, and download the document.
+// end::description[]
+
+:preview-feature: PDF Viewer
+:feature-flag: com.vaadin.experimental.pdfViewerComponent
+:ticket-url: https://github.com/vaadin/web-components/issues/new/choose
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+[NOTE]
+On Safari and iOS Safari, PDF Viewer requires version 18 or newer, one version above the Vaadin minimum. Chrome, Edge and Firefox are supported as for all Vaadin components.
+
+[.example,themes="lumo,aura"]
+--
+
+ifdef::lit[]
+[source,html]
+----
+include::{root}/frontend/demo/component/pdfviewer/pdf-viewer-basic.ts[render,tags=snippet,indent=0,group=Lit]
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/pdfviewer/PdfViewerBasic.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+include::{root}/frontend/demo/component/pdfviewer/react/pdf-viewer-basic.tsx[render,tags=snippet,indent=0,group=React]
+----
+endif::[]
+--
+
+
+== Document Source
+
+The viewer loads the document from a URL that the browser fetches, so the URL needs to be reachable from the client.
+
+In Flow, the document can also be served from the application with a download handler, for example from a classpath resource. Flow then generates the URL, and the viewer loads the document from it. See <<{articles}/flow/advanced/downloads#,Downloads>> for more about download handlers.
+
+[.example]
+--
+ifdef::flow[]
+[source,java]
+----
+PdfViewer viewer = new PdfViewer();
+
+// a URL on the same server, fetched by the browser
+viewer.setSrc("/files/report.pdf");
+
+// a resource on the classpath, served with a download handler
+viewer.setSrc(DownloadHandler.forClassResource(getClass(),
+        "/documents/report.pdf", "report.pdf"));
+----
+endif::[]
+
+ifdef::lit[]
+[source,html]
+----
+<vaadin-pdf-viewer src="/files/report.pdf"></vaadin-pdf-viewer>
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+<PdfViewer src="/files/report.pdf" />
+----
+endif::[]
+--
+
+The viewer fetches the whole document with a single GET request, without range requests. A new source replaces the current document, and the viewer shows its first page.
+
+[NOTE]
+A URL on another origin works only if its server allows the request with https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS[Cross-Origin Resource Sharing (CORS)] headers.
+
+=== File Name
+
+The viewer shows the file name in the header and uses it for the downloaded file. By default, the file name comes from the `Content-Disposition` header of the response set by a Flow download handler, or else from the end of the URL path. The file name can also be set explicitly:
+
+[.example]
+--
+ifdef::flow[]
+[source,java]
+----
+viewer.setFileName("annual-report.pdf");
+----
+endif::[]
+
+ifdef::lit[]
+[source,html]
+----
+<vaadin-pdf-viewer src="/files/report.pdf" file-name="annual-report.pdf"></vaadin-pdf-viewer>
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+<PdfViewer src="/files/report.pdf" fileName="annual-report.pdf" />
+----
+endif::[]
+--
+
+
+== Header & Toolbar
+
+The header shows a title for the document, which defaults to the file name and can be customized.
+Clicking the header toggles the toolbar. The toolbar can be also collapsed programmatically.
+
+[.example,themes="lumo,aura"]
+--
+
+ifdef::lit[]
+[source,html]
+----
+include::{root}/frontend/demo/component/pdfviewer/pdf-viewer-header.ts[render,tags=snippet,indent=0,group=Lit]
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/pdfviewer/PdfViewerHeader.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+include::{root}/frontend/demo/component/pdfviewer/react/pdf-viewer-header.tsx[render,tags=snippet,indent=0,group=React]
+----
+endif::[]
+--
+
+The header can also be hidden. The toolbar is then always shown, even when it is collapsed.
+
+[.example]
+--
+ifdef::flow[]
+[source,java]
+----
+viewer.setHeaderVisible(false);
+----
+endif::[]
+
+ifdef::lit[]
+[source,html]
+----
+<vaadin-pdf-viewer src="/files/report.pdf" header-hidden></vaadin-pdf-viewer>
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+<PdfViewer src="/files/report.pdf" headerHidden />
+----
+endif::[]
+--
+
+
+== Page Navigation
+
+Users can navigate through the document by scrolling, using the previous and next page buttons, or the page field toolbar. It is also possible to scroll to a page programmatically.
+
+The viewer keeps track of the current page and the page count. The current page is the page with the largest part of it in view.
+
+[.example,themes="lumo,aura"]
+--
+
+ifdef::lit[]
+[source,typescript]
+----
+include::{root}/frontend/demo/component/pdfviewer/pdf-viewer-navigation.ts[render,tags=snippet,indent=0,group=Lit]
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/pdfviewer/PdfViewerNavigation.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+include::{root}/frontend/demo/component/pdfviewer/react/pdf-viewer-navigation.tsx[render,tags=snippet,indent=0,group=React]
+----
+endif::[]
+--
+
+
+== Zoom
+
+By default, the width of the current page fits the viewer. It can be customized to fit the whole page.
+
+[.example,themes="lumo,aura"]
+--
+
+ifdef::lit[]
+[source,html]
+----
+include::{root}/frontend/demo/component/pdfviewer/pdf-viewer-zoom.ts[render,tags=snippet,indent=0,group=Lit]
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/pdfviewer/PdfViewerZoom.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+include::{root}/frontend/demo/component/pdfviewer/react/pdf-viewer-zoom.tsx[render,tags=snippet,indent=0,group=React]
+----
+endif::[]
+--
+
+The pages can also be shown at a fixed scale relative to their actual size, for example 150%:
+
+[.example]
+--
+ifdef::flow[]
+[source,java]
+----
+viewer.setZoom(Zoom.of(1.5));
+----
+endif::[]
+
+ifdef::lit[]
+[source,html]
+----
+<vaadin-pdf-viewer src="/files/report.pdf" zoom="1.5"></vaadin-pdf-viewer>
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+<PdfViewer src="/files/report.pdf" zoom={1.5} />
+----
+endif::[]
+--
+
+The fit levels follow the size of the viewer when it resizes. The zoom level stays when the document changes. Users change the zoom with the toolbar controls or <<#keyboard-usage,keyboard shortcuts>>.
+
+
+== Download
+
+The download button of the toolbar saves the document with its original bytes, so digital signatures stay intact. The viewer does not request the document again for the download.
+
+The download button can be hidden, and the download can be started from the application instead. If the document is still loading, the download starts once it has loaded.
+
+[.example]
+--
+ifdef::flow[]
+[source,java]
+----
+viewer.setDownloadButtonVisible(false);
+
+// Start the download, for example from a button
+viewer.download();
+----
+endif::[]
+
+ifdef::lit[]
+[source,typescript]
+----
+viewer.downloadButtonHidden = true;
+
+// Start the download, for example from a button
+viewer.download();
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+<PdfViewer ref={viewer} src="/files/report.pdf" downloadButtonHidden />
+
+// Start the download, for example from a button
+viewer.current?.download();
+----
+endif::[]
+--
+
+
+== Toolbar Actions
+
+Custom controls, such as buttons, can be added to the toolbar and placed after the zoom controls.
+
+[.example,themes="lumo,aura"]
+--
+
+ifdef::lit[]
+[source,html]
+----
+include::{root}/frontend/demo/component/pdfviewer/pdf-viewer-toolbar-actions.ts[render,tags=snippet,indent=0,group=Lit]
+----
+endif::[]
+
+ifdef::flow[]
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/component/pdfviewer/PdfViewerToolbarActions.java[render,tags=snippet,indent=0,group=Flow]
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+include::{root}/frontend/demo/component/pdfviewer/react/pdf-viewer-toolbar-actions.tsx[render,tags=snippet,indent=0,group=React]
+----
+endif::[]
+--
+
+
+== Loading & Errors
+
+The viewer notifies the application when a document has loaded, with the page count and the title of the document. It also notifies the application when a document cannot be loaded, with the reason:
+
+- `network`: the document could not be fetched.
+- `invalid`: the file is not a valid PDF document.
+- `password`: the document is protected with a password.
+
+[.example]
+--
+ifdef::flow[]
+[source,java]
+----
+viewer.addDocumentLoadListener(event ->
+        Notification.show("Loaded " + event.getPageCount() + " pages"));
+
+viewer.addDocumentErrorListener(event -> {
+    if (event.getReason() == DocumentErrorReason.PASSWORD) {
+        Notification.show("The document is protected with a password");
+    }
+});
+----
+endif::[]
+
+ifdef::lit[]
+[source,html]
+----
+<vaadin-pdf-viewer
+  src="/files/report.pdf"
+  @document-load="${(event: PdfViewerDocumentLoadEvent) => {
+    Notification.show(`Loaded ${event.detail.pageCount} pages`);
+  }}"
+  @document-error="${(event: PdfViewerDocumentErrorEvent) => {
+    if (event.detail.reason === 'password') {
+      Notification.show('The document is protected with a password');
+    }
+  }}"
+></vaadin-pdf-viewer>
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+<PdfViewer
+  src="/files/report.pdf"
+  onDocumentLoad={(event) => {
+    Notification.show(`Loaded ${event.detail.pageCount} pages`);
+  }}
+  onDocumentError={(event) => {
+    if (event.detail.reason === 'password') {
+      Notification.show('The document is protected with a password');
+    }
+  }}
+/>
+----
+endif::[]
+--
+
+The viewer renders the pages with the pdf.js library, which runs in a web worker. If the application has a Content Security Policy, its `worker-src` directive has to allow the worker script.
+
+
+== Accessibility
+
+Each page has a text layer over its image. Users can select the text, and screen readers read it. The viewer keeps the text layer only for the pages near the view. Therefore, screen readers reach only the text of these pages.
+
+Links in the document are focusable. A link to another page of the document scrolls to that page. Links with the `http:`, `https:`, and `mailto:` schemes open in a new tab.
+
+A tagged PDF describes the structure of its content, such as headings, lists, tables, and figures. The viewer passes this structure to screen readers.
+
+=== Keyboard Usage
+
+The page area is focusable once a document has loaded. The following shortcuts work while the focus is in the viewer:
+
+[cols="1,2"]
+|===
+| Keys | Action
+
+|kbd:[Ctrl+Plus] or kbd:[Cmd+Plus]
+|Zooms in.
+
+|kbd:[Ctrl+Minus] or kbd:[Cmd+Minus]
+|Zooms out.
+
+|kbd:[Ctrl+0] or kbd:[Cmd+0]
+|Fits the page width to the viewer.
+
+|kbd:[Ctrl+Home] or kbd:[Cmd+Home]
+|Goes to the first page, while the page area has focus.
+
+|kbd:[Ctrl+End] or kbd:[Cmd+End]
+|Goes to the last page, while the page area has focus.
+|===
+
+
+[[i18n]]
+== Internationalization (i18n)
+
+The texts of the viewer can be localized, such as the tooltips of the toolbar buttons and the zoom options.
+Set only the texts that you want to change. The defaults apply to the others.
+
+[.example]
+--
+ifdef::flow[]
+[source,java]
+----
+viewer.setI18n(new PdfViewerI18n()
+        .setPreviousPage("Edellinen sivu")
+        .setNextPage("Seuraava sivu")
+        .setDownload("Lataa"));
+----
+endif::[]
+
+ifdef::lit[]
+[source,typescript]
+----
+viewer.i18n = {
+  previousPage: 'Edellinen sivu',
+  nextPage: 'Seuraava sivu',
+  download: 'Lataa',
+};
+----
+endif::[]
+
+ifdef::react[]
+[source,tsx]
+----
+<PdfViewer
+  src="/files/report.pdf"
+  i18n={{
+    previousPage: 'Edellinen sivu',
+    nextPage: 'Seuraava sivu',
+    download: 'Lataa',
+  }}
+/>
+----
+endif::[]
+--
+
+Some texts have a placeholder, such as `\{page}`, that the viewer replaces with a value. The Flow [classname]`PdfViewerI18n` class has the following texts. Lit and React have the `page`, `zoom`, `pageLabel` and `loading` texts in addition.
+
+[cols="1,2"]
+|===
+| Text | Default value
+
+|`previousPage`
+|Previous page
+
+|`nextPage`
+|Next page
+
+|`pageError`
+|Enter 1–\{pageCount}
+
+|`zoomIn`
+|Zoom in
+
+|`zoomOut`
+|Zoom out
+
+|`pageWidth`
+|Page width
+
+|`pageFit`
+|Page fit
+
+|`document`
+|PDF document
+
+|`link`
+|Link
+
+|`goToPage`
+|Go to page \{page}
+
+|`externalLink`
+|\{text} (opens in a new tab)
+
+|`download`
+|Download
+|===

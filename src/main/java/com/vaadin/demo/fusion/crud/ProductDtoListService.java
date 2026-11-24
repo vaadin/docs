@@ -2,6 +2,7 @@ package com.vaadin.demo.fusion.crud;
 
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.hilla.BrowserCallable;
+import com.vaadin.hilla.crud.CountService;
 import com.vaadin.hilla.crud.JpaFilterConverter;
 import com.vaadin.hilla.crud.ListService;
 import com.vaadin.hilla.crud.filter.Filter;
@@ -16,7 +17,8 @@ import java.util.List;
 // tag::snippet[]
 @BrowserCallable
 @AnonymousAllowed
-public class ProductDtoListService implements ListService<ProductDto> {
+public class ProductDtoListService
+        implements ListService<ProductDto>, CountService {
     private final ProductRepository productRepository;
 
     public ProductDtoListService(ProductRepository productRepository) {
@@ -27,15 +29,24 @@ public class ProductDtoListService implements ListService<ProductDto> {
     @NonNull
     public List<@NonNull ProductDto> list(Pageable pageable,
             @Nullable Filter filter) {
-        // Use the Hilla JpaFilterConverter to create a JPA specification from
-        // the filter
-        Specification<Product> spec = filter != null
-                ? JpaFilterConverter.toSpec(filter, Product.class)
-                : Specification.anyOf();
+        Specification<Product> spec = toSpec(filter);
         // Query the JPA repository
         Page<Product> products = productRepository.findAll(spec, pageable);
         // Map entities to DTOs and return result
         return products.stream().map(ProductDto::fromEntity).toList();
+    }
+
+    @Override
+    public long count(@Nullable Filter filter) {
+        // Count with the same specification that the list method uses
+        return productRepository.count(toSpec(filter));
+    }
+
+    private Specification<Product> toSpec(@Nullable Filter filter) {
+        // Use the Hilla JpaFilterConverter to create a JPA specification from
+        // the filter
+        return filter != null ? JpaFilterConverter.toSpec(filter, Product.class)
+                : Specification.anyOf();
     }
 }
 // end::snippet[]

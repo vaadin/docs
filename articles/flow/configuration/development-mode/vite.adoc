@@ -1,0 +1,103 @@
+---
+title: Vite
+page-title: How Vaadin uses and configures the Vite frontend build tool
+description: How Vaadin uses Vite, and how to customize the Vite configuration.
+meta-description: Learn when Vaadin runs the Vite frontend build tool in development and production, and how to customize the Vite configuration of your Vaadin application.
+order: 30
+---
+
+
+= Vite
+
+Vaadin uses https://vite.dev/[Vite] to build and serve the frontend of an application: the JavaScript, TypeScript, and CSS that the application and its add-ons use. Vite runs on <<node-js#,Node.js>> and is installed into [filename]`node_modules` by the <<npm-pnpm-bun#,frontend package manager>>, like any other frontend package.
+
+
+[#when-vite-runs]
+== When Vite Runs
+
+Vite runs in the following situations:
+
+- *Frontend development server.* With `frontend.hotdeploy` set to `true`, Vaadin starts the Vite development server together with the application. It serves the frontend files to the browser and reloads them when they change. See <<index#disable-precompiled-bundle,Disabling the Pre-Compiled Bundle>>.
+- *Development bundle.* When the application has frontend customizations, Vaadin runs a Vite build to create an application-specific development bundle. See <<index#precompiled-bundle,Faster Starts by Pre-Compiling>>.
+- *Production bundle.* When the application has frontend customizations, the production build runs a Vite build to create an optimized production bundle. See <<{articles}/flow/production/production-build#,Production Build>>.
+
+Without the frontend development server, an application that has no frontend customizations uses a pre-compiled bundle. In that case, Vite doesn't run, and your Vite configuration has no effect.
+
+
+[#configuration-files]
+== Configuration Files
+
+Vaadin creates two Vite configuration files in the project root:
+
+[filename]`vite.generated.ts`::
+The configuration that every Vaadin application needs. Vaadin overwrites this file on every build, so don't edit it.
+
+[filename]`vite.config.ts`::
+The configuration file that Vite reads. It imports the configuration from [filename]`vite.generated.ts`, and is where you put your own settings. Vaadin creates the file when it doesn't exist, and replaces it with the current default as long as you haven't modified it. Once you've customized it, commit it to source control -- see <<{articles}/flow/configuration/source-control#,Source Control>>.
+
+The default [filename]`vite.config.ts` looks like this:
+
+.`vite.config.ts`
+[source,typescript]
+----
+import { UserConfigFn } from 'vite';
+import { overrideVaadinConfig } from './vite.generated.ts';
+
+const customConfig: UserConfigFn = (env) => ({
+  // Here you can add custom Vite parameters
+  // https://vitejs.dev/config/
+});
+
+export default overrideVaadinConfig(customConfig);
+----
+
+
+[#customizing]
+== Customizing the Configuration
+
+Add your settings to the object that `customConfig` returns. They can be any of the https://vite.dev/config/[Vite configuration options].
+
+The [methodname]`overrideVaadinConfig()` function merges your settings into Vaadin's configuration with Vite's https://vite.dev/guide/api-javascript#mergeconfig[`mergeConfig()`] function:
+
+- A value that you set replaces Vaadin's value for the same option.
+- Objects are merged option by option, so you only need to set the options you change.
+- Arrays are concatenated. For example, plugins in your `plugins` array are added after Vaadin's own plugins.
+
+For example, the following configuration adds an import alias for a folder of shared frontend code:
+
+.`vite.config.ts`
+[source,typescript]
+----
+import path from 'node:path';
+import type { UserConfigFn } from 'vite';
+import { overrideVaadinConfig } from './vite.generated.ts';
+
+const customConfig: UserConfigFn = (env) => ({
+  resolve: {
+    alias: {
+      '@shared': path.resolve(import.meta.dirname, 'src/main/frontend/shared')
+    }
+  }
+});
+
+export default overrideVaadinConfig(customConfig);
+----
+
+The `env` argument tells where the configuration is used. Its `command` property is `serve` for the frontend development server, and `build` when a development or production bundle is built.
+
+Vaadin doesn't take [filename]`vite.config.ts` into account when it checks whether an existing bundle is up to date. A change to the file alone therefore doesn't make Vaadin build a new bundle. To build a new development bundle with the changed configuration, delete the [filename]`src/main/bundles/dev.bundle` file and the [filename]`dev-bundle` folder in the build directory (i.e., `target` for Maven, `build` for Gradle). To build a new production bundle, run the build with `-Dvaadin.force.production.build=true`.
+
+Pages that need a specific Vite setting show it in their own context:
+
+- <<{articles}/flow/production/source-maps#,Source Maps in Production>> enables source maps for a production bundle.
+- <<{articles}/hilla/guides/testing#,Testing>> reuses Vaadin's Vite configuration for Vitest.
+
+
+[#related-settings]
+== Related Settings
+
+The following Vaadin settings affect how Vaadin runs Vite:
+
+- The `devmode.vite.options` <<{articles}/flow/configuration/properties#,configuration property>> passes extra command-line options to the Vite development server. Separate the options with spaces, for example `-Dvaadin.devmode.vite.options="--debug"`.
+- The `frontendExtraFileExtensions` plugin parameter adds file extensions, such as `scss`, to the files that go into a bundle. See <<index#precompiled-bundle,Faster Starts by Pre-Compiling>>.
+- The Maven and Gradle plugin parameters set the folder that Vite writes a bundle to, and the folders that Vaadin collects frontend files from. See <<{articles}/flow/configuration/maven#,Maven Configuration Properties>> and <<{articles}/flow/configuration/gradle#,Gradle Configuration Properties>>.

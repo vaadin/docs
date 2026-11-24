@@ -21,6 +21,7 @@ public class AIOrchestratorHistory extends Div {
     public AIOrchestratorHistory() {
         // tag::snippet[]
         MessageList messageList = new MessageList();
+        messageList.setMarkdown(true);
         MessageInput messageInput = new MessageInput();
 
         LLMProvider provider = getLLMProvider();

@@ -1,19 +1,17 @@
 import '@vaadin/icons';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import {
   AppLayout,
   DrawerToggle,
   HorizontalLayout,
-  type HorizontalLayoutElement,
   Icon,
   Scroller,
   SideNav,
-  type SideNavElement,
   SideNavItem,
 } from '@vaadin/react-components';
-import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper';
-import { patchAppLayoutNavigation } from '../app-layout-helper';
+import { patchSideNavNavigation } from '../../side-nav/react/side-nav-helper'; // hidden-source-line
+import { patchAppLayoutNavigation } from '../app-layout-helper'; // hidden-source-line
 
 const h1Style = {
   fontSize: '1.125rem',
@@ -35,23 +33,6 @@ const linkStyle = {
 };
 
 function Example() {
-  const sideNavRef = useRef<SideNavElement>(null);
-  const horizontalLayoutRef = useRef<HorizontalLayoutElement>(null);
-
-  useEffect(() => {
-    if (sideNavRef.current) {
-      // Example-specific workaround
-      patchSideNavNavigation(sideNavRef.current);
-    }
-  }, [sideNavRef.current]);
-
-  useEffect(() => {
-    if (horizontalLayoutRef.current) {
-      // Example-specific workaround
-      patchAppLayoutNavigation(horizontalLayoutRef.current);
-    }
-  }, [horizontalLayoutRef.current]);
-
   return (
     // tag::snippet[]
     <AppLayout primarySection="drawer">
@@ -59,7 +40,10 @@ function Example() {
         MyApp
       </h1>
       <Scroller slot="drawer">
-        <SideNav ref={sideNavRef} style={{ margin: 'var(--vaadin-gap-s)' }}>
+        <SideNav
+          style={{ margin: 'var(--vaadin-gap-s)' }}
+          ref={patchSideNavNavigation} // hidden-source-line
+        >
           <SideNavItem>
             <Icon icon="vaadin:dashboard" slot="prefix" />
             Dashboard
@@ -101,7 +85,7 @@ function Example() {
         </div>
 
         <HorizontalLayout
-          ref={horizontalLayoutRef}
+          ref={patchAppLayoutNavigation} // hidden-source-line
           style={{ height: '2.25rem', justifyContent: 'center', gap: '0.5rem' }}
         >
           <a href="/all" style={linkStyle}>

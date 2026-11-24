@@ -106,10 +106,14 @@ Upload and heartbeat requests aren't UIDL messages, so they don't carry `Vaadin-
 
 Requests that React views send to browser-callable services aren't UIDL requests, so they're protected by Spring Security's CSRF protection instead. Vaadin adds Spring Security's CSRF token to the page, and the client sends it in the HTTP header that Spring Security expects, by default `X-CSRF-TOKEN`. This token is a different one from the `Vaadin-Security-Key`.
 
+An application without Spring Security's CSRF protection uses the link:https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#alternative-using-a-double-submit-cookie-pattern[Double-Submit Cookie Pattern] instead. When the browser loads the page, the server sets a random token in the `csrfToken` cookie, which the browser code can read. The client sends the token of the cookie in the `X-CSRF-Token` header of every call, and the server checks that the header and the cookie match. A site on another domain can't read the cookie, so it can't send the header.
+
+The server rejects a call with a missing or wrong token with `401 Unauthorized`.
+
 
 === Disabling the Check
 
-The CSRF token check for UIDL requests can be disabled with the `disable-xsrf-protection` configuration parameter. See <<{articles}/flow/configuration/properties#,Configuration Properties>>. You might do this, for example, to enable repeatable load test scripts that use Gatling or similar tools. This is strongly discouraged, though, when running in production.
+The CSRF token check for UIDL requests can be disabled with the `disable-xsrf-protection` configuration parameter. The parameter also disables the check of the `csrfToken` cookie for browser-callable services, but not Spring Security's CSRF protection. See <<{articles}/flow/configuration/properties#,Configuration Properties>>. You might do this, for example, to enable repeatable load test scripts that use Gatling or similar tools. This is strongly discouraged, though, when running in production.
 
 
 [[xss]]
@@ -158,11 +162,11 @@ Pass a method reference or a lambda that builds the [classname]`Safelist`, rathe
 [role="since:com.vaadin:vaadin@V25.2"]
 === Unsafe URL Schemes
 
-URLs using a script-capable scheme, such as `javascript:`, are another common XSS vector. Vaadin validates URLs passed to [methodname]`Anchor.setHref(String)`, [methodname]`IFrame.setSrc(String)`, and [methodname]`Page.open(String)` against a list of safe schemes, and these methods throw an [classname]`IllegalArgumentException` if the scheme isn't considered safe. By default, the `http`, `https`, `mailto`, `tel`, and `ftp` schemes are accepted. Relative URLs have no scheme and are always accepted.
+URLs using a script-capable scheme, such as `javascript:`, are another common XSS vector. Vaadin validates URLs passed to [methodname]`Anchor.setHref(String)`, [methodname]`IFrame.setSrc(String)`, [methodname]`NativeForm.setAction(String)`, and [methodname]`Page.open(String)` against a list of safe schemes, and these methods throw an [classname]`IllegalArgumentException` if the scheme isn't considered safe. By default, the `http`, `https`, `mailto`, `tel`, and `ftp` schemes are accepted. Relative URLs have no scheme and are always accepted.
 
 The set of safe schemes can be customized with the `safeUrlSchemes` configuration parameter, which takes a comma-separated list of schemes. An entry of `*` marks every scheme as safe, disabling the validation. See <<{articles}/flow/configuration/properties#,Configuration Properties>> for how to set the parameter.
 
-If a URL is fully under your control and known to be safe, you can bypass the validation for that URL with the dedicated unsafe setters: [methodname]`Anchor.setUnsafeHref(String)`, [methodname]`IFrame.setUnsafeSrc(String)`, and [methodname]`Page.openUnsafe(String)`.
+If a URL is fully under your control and known to be safe, you can bypass the validation for that URL with the dedicated unsafe setters: [methodname]`Anchor.setUnsafeHref(String)`, [methodname]`IFrame.setUnsafeSrc(String)`, [methodname]`NativeForm.setUnsafeAction(String)`, and [methodname]`Page.openUnsafe(String)`.
 
 
 === Running Custom JavaScript

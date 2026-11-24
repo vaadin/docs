@@ -1,0 +1,125 @@
+---
+title: Service Access Control
+page-title: Access control for Vaadin browser-callable services
+description: The access annotations of browser-callable services, how Vaadin checks them, and how to audit the calls that it denies.
+meta-description: Reference for access control of Vaadin browser-callable services - access annotations, their precedence, role checks, error responses, and audit events.
+order: 10
+---
+
+
+= Service Access Control
+:toclevels: 2
+
+Vaadin checks every call to a browser-callable service against the access annotations of the service, before it reads the arguments of the call. Access is denied by default: nobody can call a method that has no access annotation, in a class that has none either.
+
+Vaadin makes these checks itself, without Spring method security, and only for the calls that come from the browser. Java code that calls the service bean directly isn't checked.
+
+section_outline::[]
+
+
+[[annotations]]
+== Access Annotations
+
+These annotations control the access to a service:
+
+[annotationname]`@AnonymousAllowed`::
+Allows everyone, including users who aren't logged in. The annotation is in the package `com.vaadin.flow.server.auth`.
+
+[annotationname]`@PermitAll`::
+Allows the users who are logged in.
+
+[annotationname]`@RolesAllowed`::
+Allows the users who have at least one of the given roles.
+
+[annotationname]`@DenyAll`::
+Denies everyone.
+
+The last three are the Jakarta annotations in the package `jakarta.annotation.security`.
+
+An annotation on the class applies to the public methods of the class that have no access annotation of their own. When a method has an access annotation, the annotations of the class don't apply to it:
+
+[source,java]
+----
+include::{root}/src/main/java/com/vaadin/demo/fusion/security/access/ProjectService.java[tags=snippet,indent=0]
+----
+
+When a class or a method has more than one access annotation, the first of them in this list applies:
+
+. [annotationname]`@DenyAll`
+. [annotationname]`@AnonymousAllowed`
+. [annotationname]`@RolesAllowed`
+. [annotationname]`@PermitAll`
+
+The access annotations of the service class also apply to the methods that the service inherits, as described in <<{articles}/flow/react-views/browser-callable-services#inherited-methods,Inherited Methods>>.
+
+
+[[roles]]
+== Role Checks
+
+Vaadin checks the roles of [annotationname]`@RolesAllowed` with the [methodname]`isUserInRole()` method of the HTTP request. With Spring Security, this method adds the role prefix `ROLE_` to a role name that doesn't start with it. Both `@RolesAllowed("ADMIN")` and `@RolesAllowed("ROLE_ADMIN")` therefore match the granted authority `ROLE_ADMIN`. See <<{articles}/flow/security/spring/roles-and-authorities#,Roles & Authorities>>.
+
+
+[[responses]]
+== Denied Calls
+
+A denied call fails with the HTTP status `401 Unauthorized` when nobody is logged in, and with `403 Forbidden` when a user is. In the browser, the call rejects with an `UnauthorizedResponseError` or a `ForbiddenResponseError`, as described in <<{articles}/flow/react-views/browser-callable-services#errors,Errors>>. In development mode, the error message lists the annotations that allow access.
+
+With [classname]`VaadinSecurityConfigurer`, Spring Security already rejects a call to a method that doesn't allow anonymous access when nobody is logged in. Vaadin's check doesn't run for such a call. The response is the same `401 Unauthorized`.
+
+
+[[current-user]]
+== The Current User
+
+A service method can get the user who called it from [classname]`AuthenticationContext`, as described in <<{articles}/flow/security/spring/authentication-context#,Authentication Context>>. The methods of the class that return the user and the roles work in services. Its [methodname]`logout()` method works only in Flow views.
+
+
+[role="since:com.vaadin:vaadin@V25.3"]
+[[auditing]]
+== Auditing Denied Calls
+
+When Vaadin's check denies a call, Vaadin publishes a Spring Security [classname]`AuthorizationDeniedEvent`, the same event that Spring method security publishes for a denied call. An application that audits denied access sees the denied service calls in the same audit trail.
+
+Vaadin publishes the events only when the application has an [classname]`AuthorizationEventPublisher` bean. Spring Security uses the same bean to opt in to these events:
+
+[source,java]
+----
+@Configuration
+public class AuditConfig {
+
+    @Bean
+    AuthorizationEventPublisher authorizationEventPublisher(
+            ApplicationEventPublisher publisher) {
+        return new SpringAuthorizationEventPublisher(publisher);
+    }
+}
+----
+
+The object of the event is an [classname]`EndpointInvocation`, which names the service and the method. It implements [interfacename]`MethodInvocation`, so a listener written for method security accepts it as it is:
+
+[source,java]
+----
+@Component
+public class DeniedCallAuditor {
+
+    @EventListener
+    public void onAccessDenied(AuthorizationDeniedEvent<?> event) {
+        if (event.getObject() instanceof EndpointInvocation invocation) {
+            LoggerFactory.getLogger(getClass()).warn(
+                    "Denied call: user={} service={} method={}",
+                    event.getAuthentication().get().getName(),
+                    invocation.getEndpointName(),
+                    invocation.getMethodName());
+        }
+    }
+}
+----
+
+The [methodname]`getThis()` method returns the service bean, which is useful for routing an alert to the owner of the service. The [methodname]`getArguments()` method always returns an empty array, and [methodname]`proceed()` throws an exception. Vaadin checks the access before it reads the arguments, so the arguments of a denied call can't end up in the audit log.
+
+A call that Spring Security rejects before Vaadin's check, as described in <<#responses,Denied Calls>>, doesn't publish an [classname]`EndpointInvocation`. Spring Security publishes its own [classname]`AuthorizationDeniedEvent` for it, with the HTTP request as the object.
+
+
+[[csrf]]
+== Cross-Site Request Forgery
+
+Every call to a service carries a token that protects it from cross-site request forgery. A call without a valid token fails with `401 Unauthorized`, even when the method allows anonymous access. See <<{articles}/flow/security/protections/vulnerabilities#react-views,Cross-Site Request Forgery>>.

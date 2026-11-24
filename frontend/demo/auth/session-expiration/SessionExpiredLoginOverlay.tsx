@@ -1,4 +1,3 @@
-import React from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
 import type { LoginResult } from '@vaadin/hilla-frontend';
 import { signal, useSignal } from '@vaadin/hilla-react-signals';
@@ -7,16 +6,11 @@ import { useAuth } from '../auth';
 
 // tag::snippet[]
 const sessionExpired = signal(false);
-const waiting: Array<(result: LoginResult) => void> = [];
 
-// Called by the InvalidSessionMiddleware once per request that ran into the
-// expired session. Opens the overlay, and resolves every waiting caller once
-// the user has signed in again, so that all of those calls can be retried.
 export async function promptLogin(): Promise<LoginResult> {
   sessionExpired.value = true;
-  return new Promise((resolve) => {
-    waiting.push(resolve);
-  });
+  // Never resolves: the page reloads after the login
+  return new Promise<LoginResult>(() => undefined);
 }
 
 export default function SessionExpiredLoginOverlay() {
@@ -33,12 +27,11 @@ export default function SessionExpiredLoginOverlay() {
         hasError.value = event.detail.value;
       }}
       onLogin={async ({ detail: { username, password } }) => {
-        const result = await login(username, password);
-        hasError.value = result.error;
-        if (!result.error) {
-          sessionExpired.value = false;
-          waiting.splice(0).forEach((resolve) => resolve(result));
-        }
+        const { error } = await login(username, password, {
+          // Reloads the current page instead of going to the default URL
+          navigate: () => window.location.reload(),
+        });
+        hasError.value = error;
       }}
     />
   );

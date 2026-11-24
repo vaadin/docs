@@ -1,0 +1,88 @@
+---
+title: Work Offline
+page-title: How to make React views work offline in a Vaadin application
+description: Keep React views and their data available when the browser can't reach the server.
+meta-description: Make Vaadin React views work offline - cache the application with a service worker, keep service data in the browser, and clear it when the user logs out.
+order: 50
+---
+
+
+= Work Offline
+:toclevels: 2
+
+A React view runs in the browser, so it can keep working when the browser can't reach the server. This guide shows how to make the application load without the server, and how to keep the data of a view available. Flow views need the server, so they show an offline page instead.
+
+The guide covers reading data offline. A call that changes data fails while the server can't be reached. To let users make changes offline, the application has to store them in the browser and send them when the connection is back.
+
+
+== Caching the Application
+
+Add the [annotationname]`@PWA` annotation to the application shell class. Vaadin then generates a service worker, which caches the application shell and the frontend files, including the React views:
+
+[source,java]
+----
+@PWA(name = "Task Tracker", shortName = "Tasks")
+public class Application implements AppShellConfigurator {
+    // ...
+}
+----
+
+The browser installs the service worker the first time it opens the application. After that, the application loads from the cache when the server can't be reached, and React views open as usual. Try this with a production build: in development mode, the service worker doesn't cache the frontend files.
+
+The service worker doesn't cache the data that views get from services. For the other options of the annotation, see <<{articles}/flow/configuration/pwa#,Progressive Web Applications>>.
+
+
+== Keeping Data in the Browser
+
+A service call fails when the server can't be reached. To show data anyway, store the result of each successful call in the browser, and use the stored result when a call fails. The following helper does this with local storage:
+
+[source,typescript]
+.[filename]`cacheable.ts`
+----
+include::{root}/frontend/demo/fusion/offline/cacheable.ts[tags=snippet,indent=0]
+----
+
+The helper uses the stored result only when the call doesn't reach the server. When the server answers with an error, such as access denied, the call throws an `EndpointError`, which the helper passes on. For more about errors, see <<{articles}/flow/react-views/browser-callable-services#errors,Errors>> in the reference.
+
+Wrap the service calls of a view with the helper:
+
+[source,tsx]
+.[filename]`views/tasks.tsx`
+----
+include::{root}/frontend/demo/fusion/offline/tasks-view.tsx[tags=snippet,indent=0]
+----
+
+When the browser opens the view without a connection to the server, the view shows the tasks that it stored the last time, or an empty list.
+
+
+== Showing the Connection Status
+
+Vaadin shows a status message at the top of the page when a call can't reach the server. You don't need to add anything for it. To change its texts or its look, see <<{articles}/flow/advanced/loading-indicator#,Loading and Connection Indicator>>.
+
+
+== Clearing the Data at Logout
+
+The data in local storage stays in the browser after the user logs out. Whoever uses the browser next can read it. Clear the data that may not stay before you log the user out:
+
+[source,tsx]
+----
+import { Button } from '@vaadin/react-components';
+import { clearCache } from 'Frontend/cacheable';
+import { useAuth } from 'Frontend/security/auth';
+
+export default function LogoutButton() {
+  const { logout } = useAuth();
+  return (
+    <Button
+      onClick={async () => {
+        clearCache();
+        await logout();
+      }}
+    >
+      Logout
+    </Button>
+  );
+}
+----
+
+For how to add login and logout, see <<security#,Secure React Views>>.
