@@ -59,7 +59,17 @@ A long-running daemon owns your application's process, and it starts on first us
 == Prerequisites
 
 * *Java 21 or newer.* A floor, not a preference: the daemon drops any candidate JVM below 21, even if your project targets an older release. Your code is still compiled at the release your project declares.
-* *A JetBrains Runtime, strongly recommended.* Enhanced class redefinition is a JVM feature that only a JetBrains Runtime provides. On a stock JDK, structural changes are rejected and the dev loop escalates to a restart -- nothing is broken, but you get fewer hot swaps. Candidates are discovered in [filename]`~/.jdks`, `JAVA_HOME`, and `JDK_HOME`.
+* *A JetBrains Runtime, strongly recommended.* Enhanced class redefinition is a JVM feature that only a JetBrains Runtime provides. On a stock JDK, structural changes are rejected and the dev loop escalates to a restart -- nothing is broken, but you get fewer hot swaps.
++
+To install one, download a JBRSDK build for your operating system and architecture from the https://github.com/JetBrains/JetBrainsRuntime/releases[JetBrains Runtime releases] page, at the Java version your project declares or newer. Pick the plain JBRSDK archive, `jbrsdk-<version>-<os>-<arch>-b<build>`, not the variants with an embedded browser, FreeType, legacy binaries, or debug builds. On Alpine Linux, pick the `linux-musl` build. Extract it into [filename]`~/.jdks/`. The daemon looks for a JVM in these places:
++
+--
+** [filename]`~/.jdks`
+** [filename]`~/.vaadin/jdk`, where the Vaadin plugins for IntelliJ IDEA, VS Code, and Eclipse install the runtime they offer to download
+** `JAVA_HOME` and `JDK_HOME`
+--
++
+Among those, it chooses a JetBrains Runtime over any other JDK, as long as the runtime meets the Java version the project needs.
 * *Maven*, as a wrapper next to your application or `mvn` on the path.
 * *Network access while installing*, to download the HotswapAgent the dev loop runs on. The install goal fetches it once per machine, and after that nothing in the loop needs the network again.
 * *The `com.vaadin:vaadin-dev` dependency*, declared optional so it can never reach a production build. Generated starters already declare it:
@@ -88,7 +98,7 @@ mvn vaadin:install-dev-cli
 
 The goal is unbound, so it never runs as a side effect of a normal build. Run it once per project, and again after a Vaadin upgrade.
 
-It writes the CLI into [filename]`.vaadin/` (with `.ps1` and `.cmd` launchers for Windows) and instructions for AI coding agents into [filename]`.agents/skills/vaadin-devloop/` and [filename]`.claude/skills/vaadin-devloop/`. *Commit all of it, like [filename]`mvnw`* -- it's project tooling, and the point is that every developer and every agent on the repository gets the same instructions. The goal rewrites these files whenever they differ from the shipped copy, so add your own skill beside them rather than editing them.
+It writes the CLI into [filename]`.vaadin/` (with `.ps1` and `.cmd` launchers for Windows) and instructions for AI coding agents into [filename]`.agents/skills/vaadin-devloop/` and [filename]`.claude/skills/vaadin-devloop/`. The [filename]`.claude` copy is the shared instructions plus notes on Claude Code's own tools, composed at install time, so the two can't drift apart. *Commit all of it, like [filename]`mvnw`* -- it's project tooling, and the point is that every developer and every agent on the repository gets the same instructions. The goal rewrites these files whenever they differ from the shipped copy, so add your own skill beside them rather than editing them.
 
 The goal also downloads HotswapAgent into [filename]`~/.vaadin/devloop`, which is the one asset the dev loop fetches rather than resolving from a Maven repository. It's provisioned here, rather than by the first `.vaadin/vaadin-dev start`, so that an image built with network access can be developed in without it -- a container or a sandboxed agent environment would otherwise install cleanly and then fail to start the loop at all. The download is checksum-verified against a pinned version, lands outside the project, and serves every application on the machine, so it happens once and never again.
 
@@ -255,10 +265,13 @@ Stylesheets, themes, and most view and component code go live in place, with no 
 
 `apply` performs a needed restart itself and names the reason for it. A compile failure reports file, line, and column, and leaves the running application on its last good bytes.
 
-Two outcomes are worth recognizing, because neither is the success it resembles:
+Three outcomes are worth recognizing, because none is the success it resembles:
 
 `Stable` with an `app log:` line under it::
 The bytes are live and the code then threw. Read the error before reporting the change as working.
+
+`→ live, but no Vaadin component was redefined` under a `hot-reload:` line::
+The new bytecode is live, but Flow had nothing to refresh -- for example, because the affected cells of a grid were rendered on the server and pushed once already. Interact with the view, or reload the page, to see the change. Don't run `apply` again, as there's nothing left to compile.
 
 `hmr: … no browser connected`::
 The file reached the classpath, but no page was open to push it into, so nothing went live in a page. Open the application and run `apply` again.
@@ -339,7 +352,7 @@ A change didn't take effect::
 Check `status`. If it reports the application stopped or crashed, the log says why. If `apply` reported a restart, reload the page.
 
 More edits restart than you expect::
-Check the daemon log for which JVM was chosen. Without a JetBrains Runtime, structural changes can't be hot-swapped at all. See <<hotswap-agent#,Live Reload with HotswapAgent>> for how to install one.
+Check the daemon log for which JVM was chosen. Without a JetBrains Runtime, structural changes can't be hot-swapped at all. See <<#prerequisites,Prerequisites>> for how to install one.
 
 The daemon seems wedged::
 Run `shutdown`. Any later command starts a fresh daemon.
@@ -357,5 +370,5 @@ The full reference ships with the CLI, because it's written for the agents that 
 == Related Topics
 
 * <<index#,Hot Deploy pass:[&] Live Reload>> -- the other ways to get changes into a running application
-* <<hotswap-agent#,Live Reload with HotswapAgent>> -- installing a JetBrains Runtime
+* <<hotswap-agent#,Live Reload with HotswapAgent>> -- hot-swapping from an IDE debug session instead
 * <<{articles}/flow/configuration/development-mode#,Development Mode>> -- the `com.vaadin:vaadin-dev` dependency
