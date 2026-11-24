@@ -249,6 +249,47 @@ Signal<Boolean> notLoading = Signal.not(loading);
 ----
 
 
+[[reactive-contexts]]
+== Reading Signals Inside and Outside Reactive Contexts
+
+A signal has two read methods, and they differ in where they can be called:
+
+[cols="1,3"]
+|===
+| Method | Where It Can Be Called
+
+| [methodname]`get()`
+| Only inside a reactive context. It registers the signal as a dependency of the effect or computed signal that is running.
+
+| [methodname]`peek()`
+| Anywhere. It returns the same value and never registers a dependency.
+|===
+
+These are reactive contexts:
+
+* The callback of an effect, including the callback of a binding method such as [methodname]`bindText()`, which runs as an effect
+* The callback of a computed signal or of [methodname]`Signal.cached()`
+* A [methodname]`Signal.untracked()` block, which allows [methodname]`get()` without registering a dependency
+* A <<transactions#,transaction>>, for shared signals
+
+Everywhere else, such as in a constructor, a click listener, or a background task, [methodname]`get()` throws an [classname]`IllegalStateException`. Read the value with [methodname]`peek()` there:
+
+[source,java]
+----
+Button save = new Button("Save", click -> {
+    // A click listener isn't a reactive context, so use peek()
+    service.save(nameSignal.peek());
+});
+----
+
+In an effect or a computed signal, read with [methodname]`get()` the signals that it should re-run for. Read the others with [methodname]`peek()` or in [methodname]`Signal.untracked()`, as described in <<#reading-without-dependencies,Reading without Dependencies>>.
+
+In a transaction, read shared signals with [methodname]`get()`: the transaction then fails if a value that it read changes concurrently, which [methodname]`peek()` doesn't detect.
+
+A [classname]`MissingSignalUsageException` comes from a different rule: an effect or a computed signal that reads no signal with [methodname]`get()` during a run. See <<#reading-signals-unconditionally,Read Signals Unconditionally>>.
+
+
+[[reading-without-dependencies]]
 == Reading without Dependencies
 
 

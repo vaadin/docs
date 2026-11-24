@@ -64,7 +64,7 @@ one.
 | Workflow            | What it checks                                                                 | Run locally                                   |
 | ------------------- | ------------------------------------------------------------------------------ | --------------------------------------------- |
 | lint (Vale)         | Writing style of `articles/`, reported as review annotations.                 | `vale articles/path/to/page.adoc`             |
-| Maven Compile       | The Java examples compile.                                                    | `mvn compile`                                 |
+| Maven Compile       | The Java examples compile and their tests under `src/test` pass.             | `mvn test`                                    |
 | Format Check        | The Java examples are formatted with the Vaadin Java conventions.             | `mvn spotless:apply`                          |
 | Check Redirects     | A moved or removed page leaves a redirect behind, and every redirect resolves. | `npm run check-redirects`                     |
 | Check Versions      | `articles/_vaadin-version.adoc` matches `pom.xml`; fixed automatically on the PR branch. | `npm run sync-versions -- --fix`    |

@@ -21,6 +21,7 @@ This documentation covers the main features of the `DownloadHandler` API, includ
 * <<#new-tab,Opening content in a new tab>>
 * <<#custom,Creating custom download handlers>>
 * <<#progress,Download progress tracking>>
+* <<#lifecycle,Transfer lifecycle>>
 * <<#low-level,Low-level API features>>
 
 [#common]
@@ -35,7 +36,7 @@ The [interfacename]`DownloadHandler` is a [annotationname]`FunctionalInterface` 
 [source,java]
 ----
 Anchor downloadLink = new Anchor((DownloadEvent event) -> {
-    event.setFileName("readme.md");
+    event.fileName("readme.md");
     var anchor = event.getOwningComponent();
     event.getResponse().setHeader("Cache-Control", "public, max-age=3600");
     try (OutputStream outputStream = event.getOutputStream()) {
@@ -49,8 +50,43 @@ Using [classname]`DownloadEvent` and lambda is particularly useful for:
 
 * Writing arbitrary data to the response output stream
 * Setting file meta-data like file name, content type, and content length
-* Update UI or owner component during the download
+* Update UI or owner component during the download, with [methodname]`UI.access()`
 * Having access to the [classname]`VaadinRequest`, [classname]`VaadinResponse`, and [classname]`VaadinSession` instances
+
+[#ui-state]
+=== Reading UI State in a Download Handler
+
+The browser requests the download in a request of its own, apart from the requests of the UI. Vaadin calls the handler for that request without holding the session lock. This applies to every `DownloadHandler`, including the callback of [methodname]`fromInputStream`.
+
+The [classname]`DownloadEvent` gives access to the session, the UI, and the owner component, but the lock isn't held while the handler uses them. Reading the value of a UI component in the handler races with the requests of the UI that change it. Changing the UI needs [methodname]`UI.access()`, as in the example above.
+
+When the content depends on what the user sees, such as the filter of a grid, copy the values that the handler needs in a listener. Listeners run while holding the lock. The handler then reads the copy:
+
+[source,java]
+----
+AtomicReference<String> filter = new AtomicReference<>("");
+TextField filterField = new TextField("Filter");
+filterField.addValueChangeListener(e -> filter.set(e.getValue()));
+
+Anchor export = new Anchor(DownloadHandler.fromInputStream(event -> {
+    try {
+        byte[] csv = reportService.exportCsv(filter.get());
+        return new DownloadResponse(new ByteArrayInputStream(csv),
+                "report.csv", "text/csv", csv.length);
+    } catch (Exception e) {
+        return DownloadResponse.error(500, e);
+    }
+}), "Export");
+----
+
+The copy holds the last value that the server has received. An [classname]`Anchor` or [methodname]`Download.onClick()` starts the download on the click, without waiting for a server round trip. A value that the user has typed last may reach the server only after that, for example when a [classname]`TextField` sends its value on blur. For content that the browser loads by itself, such as the data of an [classname]`HtmlObject`, you can create the handler in a server-side click listener instead, as in the dynamic image example in <<#custom-examples,Custom Download Handler Examples>>.
+
+[#errors]
+=== Handling Errors in a Download Handler
+
+Catch exceptions inside the handler and return [methodname]`DownloadResponse.error()`, as the example above does. The browser then gets a response with that status code. An exception that the handler throws goes to the error handler of the session and then to the servlet container, which answers with its own error response.
+
+In neither case does the UI show that the download failed. The handlers that the [classname]`DownloadHandler` factory methods create notify their progress listeners of the failure in both cases, so a [methodname]`whenComplete()` listener can tell the user -- see <<#progress,Download Progress Listeners>>.
 
 === Download Content from InputStream
 
@@ -108,7 +144,6 @@ If the resource name starts with `/`, it will then look from `/src/main/resource
 Video video = new Video();
 video.addSource(DownloadHandler.forClassResource(MyView.class, "intro.mp4")
         .enableRangeRequests(), "video/mp4");
-video.setControlsVisible(true);
 ----
 
 See <<#byte-ranges,Byte Range Requests>> for when this is safe and what it costs.
@@ -176,7 +211,7 @@ Download.onClick(export, DownloadHandler.fromInputStream(event -> {
 
 The download starts in the browser's own click handler, inside the user gesture, without waiting for a server round trip. The handler itself still runs on the server, but only once the browser requests the file -- so the file name and response headers can be decided at that point, as with any `DownloadHandler`.
 
-A download started this way is always saved as a file, so [methodname]`inline()` on the handler has no effect. To show the content in a new browser tab instead, use [methodname]`OpenInNewTab.onClick`, as described in <<#new-tab,Opening Content in a New Tab>>.
+This saves the content as a file: a handler that only gives a file name, with [methodname]`DownloadEvent.fileName(String)`, is served as an attachment, but a handler that calls [methodname]`DownloadEvent.inline()` itself keeps that choice. To show the content in a new browser tab instead, pass [classname]`DownloadTarget.NEW_TAB` as a third argument, as described in <<#new-tab,Opening Content in a New Tab>>.
 
 [methodname]`Download.onClick` also accepts a URL the browser can already address, optionally with a suggested file name:
 
@@ -202,35 +237,35 @@ Download.onClick(export,
 [role="since:com.vaadin:vaadin@V25.4"]
 == Opening Content in a New Tab
 
-Use [classname]`OpenInNewTab` to show the content of a `DownloadHandler`, or a URL, in a new browser tab when a button or any other clickable component is clicked, instead of downloading it:
+Pass [classname]`DownloadTarget.NEW_TAB` as a third argument to [methodname]`Download.onClick` to show the content of a `DownloadHandler`, or a URL, in a new browser tab when a button or any other clickable component is clicked, instead of downloading it:
 
 [source,java]
 ----
 Button view = new Button("View invoice");
-OpenInNewTab.onClick(view, DownloadHandler.fromInputStream(event -> {
+Download.onClick(view, DownloadHandler.fromInputStream(event -> {
     byte[] pdf = invoiceService.createPdf();
     return new DownloadResponse(new ByteArrayInputStream(pdf), "invoice.pdf",
             "application/pdf", pdf.length);
-}));
+}), DownloadTarget.NEW_TAB);
 ----
 
-As with <<#onclick,`Download.onClick`>>, the new tab opens in the browser's own click handler, without waiting for a server round trip, so popup blockers let it through. Opening a tab from a server-side click listener, for example with `Page.open`, happens only after the round trip and may be blocked. The new tab opens without access to the opening page (`noopener`) and without a `Referer` header (`noreferrer`).
+As with <<#onclick,`Download.onClick` without a target>>, the new tab opens in the browser's own click handler, without waiting for a server round trip, so popup blockers let it through. Opening a tab from a server-side click listener, for example with `Page.open`, happens only after the round trip and may be blocked. The new tab opens without access to the opening page (`noopener`) and without a `Referer` header (`noreferrer`).
 
-The handler runs only when the new tab requests the content, once per click, and the browser shows it when it can, for example a PDF, an image, or plain text. Built-in handlers, such as [methodname]`DownloadHandler.forFile`, are switched to serve the content inline automatically; this changes the given handler instance, so it also serves inline wherever else it's used. A custom handler has to call [methodname]`DownloadEvent.inline` itself, since content served as an attachment is downloaded instead of shown.
+The handler runs only when the new tab requests the content, once per click, and the browser shows it when it can, for example a PDF, an image, or plain text. A handler that only gives a file name, with [methodname]`DownloadEvent.fileName(String)`, is served inline for this use; a handler that calls [methodname]`DownloadEvent.attachment(String)` itself keeps that choice instead. The handler itself is not changed, so the same instance can also be used where the content is downloaded, such as in an `Anchor` or in <<#onclick,`Download.onClick` without a target>>.
 
-The handler follows the clicked component's lifecycle in the same way as with <<#onclick,`Download.onClick`>>, including [methodname]`allowDisabled()` for a button that disables itself on click. The handler that [methodname]`allowDisabled()` returns can no longer be switched to inline, so switch a built-in handler first:
+The handler follows the clicked component's lifecycle in the same way as without a target, including [methodname]`allowDisabled()` for a button that disables itself on click:
 
 [source,java]
 ----
-OpenInNewTab.onClick(button,
-        DownloadHandler.forFile(file).inline().allowDisabled());
+Download.onClick(button, DownloadHandler.forFile(file).allowDisabled(),
+        DownloadTarget.NEW_TAB);
 ----
 
-[methodname]`OpenInNewTab.onClick` also accepts a URL directly, for content the browser can already address, such as a static file, an application route, or an external page:
+[methodname]`Download.onClick` also accepts a URL directly, for content the browser can already address, such as a static file, an application route, or an external page:
 
 [source,java]
 ----
-OpenInNewTab.onClick(helpButton, "https://example.com/help");
+Download.onClick(helpButton, "https://example.com/help", DownloadTarget.NEW_TAB);
 ----
 
 Both overloads return a `Registration` for removing the behavior from the component; after removal, the handler or URL is no longer opened on click.
@@ -257,6 +292,7 @@ Anchor downloadLink = new Anchor(new DownloadHandler() {
 }, "Download me!");
 ----
 
+[#custom-examples]
 === Custom Download Handler Examples
 
 Here's an example of how a custom download handler can be written with lambda.
@@ -269,7 +305,7 @@ String contentType = getContentType();
 AtomicInteger numberOfDownloads = new AtomicInteger(0);
 Anchor link = new Anchor(event -> {
     try {
-        event.setFileName(filename);
+        event.fileName(filename);
         event.setContentType(contentType);
         byte[] data = loadFileFromS3(filename, contentType);
         event.getResponse().setHeader("Cache-Control", "public, max-age=3600");
@@ -311,14 +347,14 @@ The [classname]`DownloadEvent` gives the access to the following information and
 * [classname]`VaadinRequest`, [classname]`VaadinResponse`, [classname]`VaadinSession` instances
 * [methodname]`getOutputStream` method to write the download content represented as a stream of bytes to response
 * [methodname]`getWriter` method to write the download content represented as a formatted text to response
-* The owner component and element of the download that you can change when download is in progress, e.g. disable the component, or get attributes or properties
+* The owner component and element of the download that you can change with [methodname]`UI.access()` when download is in progress, e.g. disable the component, or get attributes or properties
 * [classname]`UI` instance that you can use to call `UI.access()` for asynchronous updates
-* The helper [methodname]`setFileName` method sets the file name for the download, empty name gives a default name and `null` value doesn't set anything
+* The helper [methodname]`fileName` method sets the file name for the download; a `null` or blank value is ignored. Whether the content is then saved or shown depends on where the handler is used, unless the handler calls [methodname]`attachment` or [methodname]`inline` itself to decide that explicitly
 * The helper [methodname]`setContentType` method sets the content type for the download
 * The helper [methodname]`setContentLength` method sets the content length for the download or does nothing if the `-1` value is given
 
 [NOTE]
-`UI.access` is needed for updating the UI and also session locking if you want to access the session.
+The handler runs without the session lock. `UI.access` is needed for updating the UI and also session locking if you want to access the session. See <<#ui-state,Reading UI State in a Download Handler>>.
 
 [NOTE]
 Methods [methodname]`getOutputStream` and [methodname]`getWriter` cannot be used simultaneously for the same response, either one or the other.
@@ -331,22 +367,21 @@ TextField name = new TextField("Input a name...");
 HtmlObject image = new HtmlObject();
 image.setType("image/svg+xml");
 image.getStyle().set("display", "block");
-Button button = new Button("Generate Image", click -> image.setData(
-    DownloadHandler.fromInputStream(event -> new DownloadResponse(
-            getImageInputStream(name), "image.svg", "image/svg+xml", -1))));
+Button button = new Button("Generate Image", click -> {
+    String value = name.getValue();
+    image.setData(DownloadHandler.fromInputStream(event -> new DownloadResponse(
+            getImageInputStream(value), "image.svg", "image/svg+xml", -1)));
+});
 ----
 
 The `HtmlObject` component is used to render the SVG image in the browser that is generated dynamically based on the input from the `TextField`.
 On a button click the [classname]`DownloadHandler` is created with the [methodname]`fromInputStream` method that is set to `HtmlObject` component and that sends content to a client.
+The click listener reads the value of the `TextField`, because the handler runs without the session lock.
 And here is an example of how to generate a svg image and create an input stream:
 
 [source,java]
 ----
-private InputStream getImageInputStream(TextField name) {
-    String value = name.getValue();
-    if (value == null) {
-        value = "";
-    }
+private InputStream getImageInputStream(String value) {
     String svg = "<?xml version='1.0' encoding='UTF-8' standalone='no'?>"
         + "<svg xmlns='http://www.w3.org/2000/svg' "
         + "xmlns:xlink='http://www.w3.org/1999/xlink'>"
@@ -411,8 +446,8 @@ The `DownloadHandler` API provides two ways to track download progress:
 Asynchronous UI updates in progress listeners are automatically wrapped into `UI.access()` calls by Vaadin, thus you don't need to call it manually.
 Vaadin `@Push` should be enabled in your application to be able to see UI updates while download is in progress.
 
-Since detaching the owner component doesn't interrupt an ongoing download, listeners are also notified for a download that outlives its owner: the UI used for the `UI.access` call is the one that was active when the download started, and it's kept attached to its session until the download has completed, even if it's closed while the download is ongoing.
-A download does not, however, outlive its session: if the session is invalidated, either explicitly or by timing out, the ongoing download is terminated and the listener is notified through `onError` rather than `onComplete`.
+The UI used for the `UI.access` call is the one that was active when the download started.
+Listeners are also notified for a download that outlives its owner component or its browser tab, as described in <<#lifecycle,Transfer Lifecycle>>.
 
 === Fluent API for Progress Tracking
 
@@ -509,6 +544,31 @@ The `TransferProgressListener` interface provides the following methods:
 
 The [classname]`TransferContext` objects are the same as in the fluent API.
 
+[#lifecycle]
+== Transfer Lifecycle
+
+A download is served independently of the owner component's lifecycle.
+The owner's attached, visible, enabled, and inert state is checked when the download request is received, but not while the download is being served.
+Once handling has started, detaching the owner component, navigating to another view, or closing the browser tab doesn't stop the download on the server.
+It runs to completion as long as the browser keeps reading the response.
+
+[since:com.vaadin:vaadin@V25.4]#A UI that's closed while a download for it is ongoing stays attached to its session until the download has completed#.
+This applies, for example, when the user closes the browser tab, or when the UI is closed because its heartbeats have stopped.
+Progress listeners bound to that UI are therefore still notified, although their UI changes no longer reach any browser.
+Once the download has completed, the UI is removed from the session.
+
+[since:com.vaadin:vaadin@V25.4]#A download doesn't outlive its session#, though.
+When the session is invalidated, either explicitly or by timing out, the ongoing download is terminated:
+
+* The output stream and the writer of the response stop accepting content and throw an [classname]`IOException`.
+* The browser receives a truncated file.
+* A warning with the request path and the owner component is logged.
+
+This applies to the built-in handlers and to custom handlers that write through the response they receive.
+Progress listener notifications are skipped once the UI has been removed from the ended session.
+To let a long download finish regardless, keep the session alive while the download is ongoing.
+You can also serve the download from a servlet of your own that isn't tied to a UI or a session.
+
 [#low-level]
 == Low-Level DownloadHandler API
 
@@ -586,7 +646,6 @@ A byte range request asks for part of a response instead of the whole thing. Med
 Video video = new Video();
 video.addSource(DownloadHandler.forClassResource(MyView.class, "intro.mp4")
         .enableRangeRequests(), "video/mp4");
-video.setControlsVisible(true);
 ----
 
 Enabling it isn't free or safe for every kind of content these methods can serve:

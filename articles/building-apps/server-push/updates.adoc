@@ -163,13 +163,7 @@ ui.access(() -> {
 
 === Getting the UI Instance
 
-Before you can call `access()`, you need to get the `UI` instance. You'd typically use `Component.getUI()` or `UI.getCurrent()` for this. However, both are problematic when it comes to server push.
-
-`Component.getUI()` is not thread-safe, which means you should only call it while the user session is locked. Therefore, you can't use it to call `access()`.
-
-`UI.getCurrent()` only returns a non-`null` value when the current thread owns the session lock. When called from a background thread, it returns `null`. Therefore, you can't use it either to call `access()`.
-
-Whenever you're planning to use server push, you have to get a hold of the `UI` instance while the user session is locked. This typically happens right before you start your background thread.
+Before you can call `access()`, you need to get the `UI` instance. A background thread can't look it up itself, so get it while the user session is locked. This typically happens right before you start your background thread. For why `UI.getCurrent()` and `Component.getUI()` don't work in the background thread, see <<{articles}/flow/advanced/server-push#push.access.ui,Getting the UI Instance>> in the reference.
 
 Below is an example of a button click listener that starts a background thread:
 
@@ -218,11 +212,7 @@ var subscription = myEventBus.subscribe((message) -> ui.access(() -> {
 }));
 ----
 
-In cases like these, you should consider using `UI.accessLater()`, instead of `UI.access()`.
-
-`UI.accessLater()` exists in two versions: one that wraps a `SerializableRunnable`; and another that wraps a `SerializableConsumer`. It stores the `UI` instance, and runs the wrapped delegate inside a call to `UI.access()`.
-
-It also takes a second parameter, which is a _detach handler_. The detach handler is a `Runnable` that runs if the `UI` has been detached when `UI.access()` is called. The detach handler can be `null` if no special actions are needed.
+In cases like these, you should consider using `UI.accessLater()`, instead of `UI.access()`. It wraps your update in a callback that runs it through `UI.access()`, and you can pass that callback to the job or the event bus as it is. For its two variants, and for the detach handler that it takes as its second argument, see <<{articles}/flow/advanced/server-push#push.access.later,Callbacks That Update the UI>> in the reference.
 
 Rewritten with `accessLater()`, the thread completion example becomes this:
 
@@ -284,35 +274,14 @@ The buffering duration depends on the size of the UI update, and the network lat
 [role="since:com.vaadin:vaadin@V25.3"]
 == Updates That Never Arrive
 
-Flooding is one failure; a client that receives nothing is another. Updates scheduled for a UI are held in memory until a response is written for its browser, so a job that keeps scheduling updates for a client that isn't receiving them -- a laptop that went to sleep, a closed push connection, a discarded tab -- grows the heap until the session expires. See <<{articles}/flow/component-internals/element-api/calling-javascript#undelivered-invocations, Undelivered Invocations>> for the warning Flow logs and for what to do instead.
+Flooding is one failure. A client that receives nothing is another. A job can keep updating a UI whose browser isn't receiving the updates, such as a tab on a laptop that went to sleep. The updates then pile up on the server's heap. See <<{articles}/flow/advanced/server-push#push.access.undelivered,Undelivered Updates>> in the reference for why this happens. See <<{articles}/flow/component-internals/element-api/calling-javascript#undelivered-invocations,Undelivered Invocations>> for the warning Flow logs, and for how to stop updating such a UI.
 
 
 == Avoiding Unnecessary Pushes
 
-The `UI.access()` method updates the user interface, asynchronously. The update operation is not executed immediately, but added to a queue and executed at some time later. If this is combined with regular event-driven updates in the HTTP request thread, you may have a situation in which the user interface is updated out-of-order.
+Don't call `UI.access()` in the HTTP request thread, such as in an event listener. The thread already holds the user session lock, so the call isn't needed. It can also update the user interface out of order: `UI.access()` queues the update, and runs it only after the event listener has returned. See <<{articles}/flow/advanced/server-push#push.access.order,When the Task Runs>> in the reference for an example.
 
-To understand better, look at this example:
-
-[source,java]
-----
-var button = new Button("Test Me", event -> {
-    UI.getCurrentOrThrow().access(() -> {
-        add(new Div("This <div> is added from within a call to UI.access()"));
-    });
-    add(new Div("This <div> is added from an event listener"));
-});
-add(button);
-----
-
-If you were to click the button, the user interface would look like this:
-
-[source]
-----
-This <div> is added from an event listener
-This <div> is added from within a call to UI.access()
-----
-
-In this particular case, the call to `UI.access()` would not have been needed. Sometimes, you can deduce this by looking at the code. However, there are situations in which this isn't obvious. You may have code that's executed sometimes by the HTTP request thread, and other times by another thread. For this situation, you can check whether the current thread has locked the user session, like this:
+Sometimes, you can tell from the code that the call to `UI.access()` isn't needed. However, there are situations in which this isn't obvious. You may have code that's executed sometimes by the HTTP request thread, and other times by another thread. For this situation, you can check whether the current thread has locked the user session, like this:
 
 [source,java]
 ----
