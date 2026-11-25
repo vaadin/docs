@@ -31,8 +31,6 @@ package com.example.product;
 
 import com.example.base.ui.ViewTitle;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.grid.ColumnTextAlign;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.notification.Notification;
@@ -65,7 +63,7 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 
 // tag::snippet[]
     private final ProductCatalogService service;
-    private final Grid<ProductCatalogItem> grid;
+    private final ProductCatalogGrid grid;
 // end::snippet[]
 
     ProductCatalogView(ProductCatalogService service) {
@@ -76,32 +74,13 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
         // Create components
         var title = new ViewTitle("Product Catalog");
 
-        var searchField = new TextField();
-        searchField.setPlaceholder("Search");
-        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
-        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+        var searchField = new SearchField();
 
 // tag::snippet[]
-        grid = new Grid<>();
+        grid = new ProductCatalogGrid();
 // end::snippet[]
-        grid.addColumn(ProductCatalogItem::name)
-                .setHeader("Name")
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
-        grid.addColumn(ProductCatalogItem::price)
-                .setHeader("Price")
-                .setTextAlign(ColumnTextAlign.END)
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
-        grid.addColumn(ProductCatalogItem::description)
-                .setHeader("Description")
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
-        grid.addColumn(ProductCatalogItem::category)
-                .setHeader("Category")
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
-        grid.addColumn(ProductCatalogItem::brand)
-                .setHeader("Brand")
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
         grid.setItemsPageable(pageable -> service
-                .findItems(searchField.getValue(), pageable)
+            .findItems(searchField.getValue(), pageable)
         ).setIdentifierProvider(ProductCatalogItem::productId);
 
         var drawer = new ProductFormDrawer(productDetails -> {
@@ -127,15 +106,15 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
         addDetailEscapePressListener(e -> grid.deselectAll());
 
         var addButton = new Button("Add Product", e ->
-                new AddProductDialog(
-                        productDetails -> {
-                            var saved = service.save(productDetails);
-                            grid.getDataProvider().refreshAll();
-                            service.findItemById(saved.getProductId())
-                                   .ifPresent(grid::select);
-                        },
-                        this::handleException
-                ).open()
+            new AddProductDialog(
+                productDetails -> {
+                    var saved = service.save(productDetails);
+                    grid.getDataProvider().refreshAll();
+                    service.findItemById(saved.getProductId())
+                           .ifPresent(grid::select);
+                },
+                this::handleException
+            ).open()
         );
 
         // Layout view
@@ -158,20 +137,11 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 
     private void handleException(RuntimeException exception) {
         if (exception instanceof OptimisticLockingFailureException) {
-            var notification = new Notification(
-                    "Another user has edited the same product. "
-                            + "Please refresh and try again.");
-            notification.setPosition(Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.WARNING);
-            notification.setDuration(3000);
-            notification.open();
+            new WarningNotification("Another user has edited the same product. "
+                + "Please refresh and try again.").open();
         } else if (exception instanceof DuplicateKeyException) {
-            var notification = new Notification(
-                    "The SKU is already in use. Please enter another one.");
-            notification.setPosition(Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.WARNING);
-            notification.setDuration(3000);
-            notification.open();
+            new WarningNotification(
+                "The SKU is already in use. Please enter another one.").open();
         } else {
             // Delegate to Vaadin's default error handler
             throw exception;
@@ -184,6 +154,23 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
         // To be implemented
     }
 // end::snippet[]
+
+    static class SearchField extends TextField {
+
+        SearchField() {
+            setPlaceholder("Search");
+            setPrefixComponent(VaadinIcon.SEARCH.create());
+            setValueChangeMode(ValueChangeMode.LAZY);
+        }
+    }
+
+    static class WarningNotification extends Notification {
+
+        WarningNotification(String text) {
+            super(text, 3000, Position.MIDDLE);
+            addThemeVariants(NotificationVariant.WARNING);
+        }
+    }
 }
 ----
 <1> Implement `HasUrlParameter<Long>` to add a single route parameter of type `Long` to the view.
@@ -207,8 +194,6 @@ package com.example.product;
 
 import com.example.base.ui.ViewTitle;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.grid.ColumnTextAlign;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.notification.Notification;
@@ -238,7 +223,7 @@ import java.util.Optional;
 class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<Long> {
 
     private final ProductCatalogService service;
-    private final Grid<ProductCatalogItem> grid;
+    private final ProductCatalogGrid grid;
 
     ProductCatalogView(ProductCatalogService service) {
         this.service = service;
@@ -246,30 +231,11 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
         // Create components
         var title = new ViewTitle("Product Catalog");
 
-        var searchField = new TextField();
-        searchField.setPlaceholder("Search");
-        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
-        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+        var searchField = new SearchField();
 
-        grid = new Grid<>();
-        grid.addColumn(ProductCatalogItem::name)
-                .setHeader("Name")
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
-        grid.addColumn(ProductCatalogItem::price)
-                .setHeader("Price")
-                .setTextAlign(ColumnTextAlign.END)
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
-        grid.addColumn(ProductCatalogItem::description)
-                .setHeader("Description")
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
-        grid.addColumn(ProductCatalogItem::category)
-                .setHeader("Category")
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
-        grid.addColumn(ProductCatalogItem::brand)
-                .setHeader("Brand")
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+        grid = new ProductCatalogGrid();
         grid.setItemsPageable(pageable -> service
-                .findItems(searchField.getValue(), pageable)
+            .findItems(searchField.getValue(), pageable)
         ).setIdentifierProvider(ProductCatalogItem::productId);
 
         var drawer = new ProductFormDrawer(productDetails -> {
@@ -295,15 +261,15 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
         addDetailEscapePressListener(e -> grid.deselectAll());
 
         var addButton = new Button("Add Product", e ->
-                new AddProductDialog(
-                        productDetails -> {
-                            var saved = service.save(productDetails);
-                            grid.getDataProvider().refreshAll();
-                            service.findItemById(saved.getProductId())
-                                   .ifPresent(grid::select);
-                        },
-                        this::handleException
-                ).open()
+            new AddProductDialog(
+                productDetails -> {
+                    var saved = service.save(productDetails);
+                    grid.getDataProvider().refreshAll();
+                    service.findItemById(saved.getProductId())
+                           .ifPresent(grid::select);
+                },
+                this::handleException
+            ).open()
         );
 
         // Layout view
@@ -326,20 +292,11 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 
     private void handleException(RuntimeException exception) {
         if (exception instanceof OptimisticLockingFailureException) {
-            var notification = new Notification(
-                    "Another user has edited the same product. "
-                            + "Please refresh and try again.");
-            notification.setPosition(Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.WARNING);
-            notification.setDuration(3000);
-            notification.open();
+            new WarningNotification("Another user has edited the same product. "
+                + "Please refresh and try again.").open();
         } else if (exception instanceof DuplicateKeyException) {
-            var notification = new Notification(
-                    "The SKU is already in use. Please enter another one.");
-            notification.setPosition(Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.WARNING);
-            notification.setDuration(3000);
-            notification.open();
+            new WarningNotification(
+                "The SKU is already in use. Please enter another one.").open();
         } else {
             // Delegate to Vaadin's default error handler
             throw exception;
@@ -350,9 +307,26 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
     public void setParameter(BeforeEvent event, @OptionalParameter Long productId) {
 // tag::snippet[]
         Optional.ofNullable(productId)
-                .flatMap(service::findItemById) // <1>
-                .ifPresentOrElse(grid::select, grid::deselectAll); // <2>
+            .flatMap(service::findItemById) // <1>
+            .ifPresentOrElse(grid::select, grid::deselectAll); // <2>
 // end::snippet[]
+    }
+
+    static class SearchField extends TextField {
+
+        SearchField() {
+            setPlaceholder("Search");
+            setPrefixComponent(VaadinIcon.SEARCH.create());
+            setValueChangeMode(ValueChangeMode.LAZY);
+        }
+    }
+
+    static class WarningNotification extends Notification {
+
+        WarningNotification(String text) {
+            super(text, 3000, Position.MIDDLE);
+            addThemeVariants(NotificationVariant.WARNING);
+        }
     }
 }
 ----
@@ -378,8 +352,6 @@ import com.example.base.ui.ViewTitle;
 import com.vaadin.flow.component.UI;
 // end::snippet[]
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.grid.ColumnTextAlign;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.notification.Notification;
@@ -407,7 +379,7 @@ import java.util.Optional;
 class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<Long> {
 
     private final ProductCatalogService service;
-    private final Grid<ProductCatalogItem> grid;
+    private final ProductCatalogGrid grid;
 
     ProductCatalogView(ProductCatalogService service) {
         this.service = service;
@@ -415,30 +387,11 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
         // Create components
         var title = new ViewTitle("Product Catalog");
 
-        var searchField = new TextField();
-        searchField.setPlaceholder("Search");
-        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
-        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+        var searchField = new SearchField();
 
-        grid = new Grid<>();
-        grid.addColumn(ProductCatalogItem::name)
-                .setHeader("Name")
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
-        grid.addColumn(ProductCatalogItem::price)
-                .setHeader("Price")
-                .setTextAlign(ColumnTextAlign.END)
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
-        grid.addColumn(ProductCatalogItem::description)
-                .setHeader("Description")
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
-        grid.addColumn(ProductCatalogItem::category)
-                .setHeader("Category")
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
-        grid.addColumn(ProductCatalogItem::brand)
-                .setHeader("Brand")
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+        grid = new ProductCatalogGrid();
         grid.setItemsPageable(pageable -> service
-                .findItems(searchField.getValue(), pageable)
+            .findItems(searchField.getValue(), pageable)
         ).setIdentifierProvider(ProductCatalogItem::productId);
 
         var drawer = new ProductFormDrawer(productDetails -> {
@@ -464,15 +417,15 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
         addDetailEscapePressListener(e -> grid.deselectAll());
 
         var addButton = new Button("Add Product", e ->
-                new AddProductDialog(
-                        productDetails -> {
-                            var saved = service.save(productDetails);
-                            grid.getDataProvider().refreshAll();
-                            service.findItemById(saved.getProductId())
-                                   .ifPresent(grid::select);
-                        },
-                        this::handleException
-                ).open()
+            new AddProductDialog(
+                productDetails -> {
+                    var saved = service.save(productDetails);
+                    grid.getDataProvider().refreshAll();
+                    service.findItemById(saved.getProductId())
+                           .ifPresent(grid::select);
+                },
+                this::handleException
+            ).open()
         );
 
         // Layout view
@@ -495,20 +448,11 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 
     private void handleException(RuntimeException exception) {
         if (exception instanceof OptimisticLockingFailureException) {
-            var notification = new Notification(
-                    "Another user has edited the same product. "
-                            + "Please refresh and try again.");
-            notification.setPosition(Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.WARNING);
-            notification.setDuration(3000);
-            notification.open();
+            new WarningNotification("Another user has edited the same product. "
+                + "Please refresh and try again.").open();
         } else if (exception instanceof DuplicateKeyException) {
-            var notification = new Notification(
-                    "The SKU is already in use. Please enter another one.");
-            notification.setPosition(Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.WARNING);
-            notification.setDuration(3000);
-            notification.open();
+            new WarningNotification(
+                "The SKU is already in use. Please enter another one.").open();
         } else {
             // Delegate to Vaadin's default error handler
             throw exception;
@@ -518,8 +462,8 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
     @Override
     public void setParameter(BeforeEvent event, @OptionalParameter Long productId) {
         Optional.ofNullable(productId)
-                .flatMap(service::findItemById)
-                .ifPresentOrElse(grid::select, grid::deselectAll);
+            .flatMap(service::findItemById)
+            .ifPresentOrElse(grid::select, grid::deselectAll);
     }
 
 // tag::snippet[]
@@ -531,6 +475,23 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
         UI.getCurrentOrThrow().navigate(ProductCatalogView.class);
     }
 // end::snippet[]
+
+    static class SearchField extends TextField {
+
+        SearchField() {
+            setPlaceholder("Search");
+            setPrefixComponent(VaadinIcon.SEARCH.create());
+            setValueChangeMode(ValueChangeMode.LAZY);
+        }
+    }
+
+    static class WarningNotification extends Notification {
+
+        WarningNotification(String text) {
+            super(text, 3000, Position.MIDDLE);
+            addThemeVariants(NotificationVariant.WARNING);
+        }
+    }
 }
 ----
 
@@ -553,8 +514,6 @@ package com.example.product;
 import com.example.base.ui.ViewTitle;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.grid.ColumnTextAlign;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.notification.Notification;
@@ -585,7 +544,7 @@ import java.util.Optional;
 class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<Long> {
 
     private final ProductCatalogService service;
-    private final Grid<ProductCatalogItem> grid;
+    private final ProductCatalogGrid grid;
 
     ProductCatalogView(ProductCatalogService service) {
         this.service = service;
@@ -593,30 +552,11 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
         // Create components
         var title = new ViewTitle("Product Catalog");
 
-        var searchField = new TextField();
-        searchField.setPlaceholder("Search");
-        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
-        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+        var searchField = new SearchField();
 
-        grid = new Grid<>();
-        grid.addColumn(ProductCatalogItem::name)
-                .setHeader("Name")
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
-        grid.addColumn(ProductCatalogItem::price)
-                .setHeader("Price")
-                .setTextAlign(ColumnTextAlign.END)
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
-        grid.addColumn(ProductCatalogItem::description)
-                .setHeader("Description")
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
-        grid.addColumn(ProductCatalogItem::category)
-                .setHeader("Category")
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
-        grid.addColumn(ProductCatalogItem::brand)
-                .setHeader("Brand")
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+        grid = new ProductCatalogGrid();
         grid.setItemsPageable(pageable -> service
-                .findItems(searchField.getValue(), pageable)
+            .findItems(searchField.getValue(), pageable)
         ).setIdentifierProvider(ProductCatalogItem::productId);
 
         var drawer = new ProductFormDrawer(productDetails -> {
@@ -650,15 +590,15 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
         addDetailEscapePressListener(e -> grid.deselectAll());
 
         var addButton = new Button("Add Product", e ->
-                new AddProductDialog(
-                        productDetails -> {
-                            var saved = service.save(productDetails);
-                            grid.getDataProvider().refreshAll();
-                            service.findItemById(saved.getProductId())
-                                   .ifPresent(grid::select);
-                        },
-                        this::handleException
-                ).open()
+            new AddProductDialog(
+                productDetails -> {
+                    var saved = service.save(productDetails);
+                    grid.getDataProvider().refreshAll();
+                    service.findItemById(saved.getProductId())
+                           .ifPresent(grid::select);
+                },
+                this::handleException
+            ).open()
         );
 
         // Layout view
@@ -681,20 +621,11 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 
     private void handleException(RuntimeException exception) {
         if (exception instanceof OptimisticLockingFailureException) {
-            var notification = new Notification(
-                    "Another user has edited the same product. "
-                            + "Please refresh and try again.");
-            notification.setPosition(Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.WARNING);
-            notification.setDuration(3000);
-            notification.open();
+            new WarningNotification("Another user has edited the same product. "
+                + "Please refresh and try again.").open();
         } else if (exception instanceof DuplicateKeyException) {
-            var notification = new Notification(
-                    "The SKU is already in use. Please enter another one.");
-            notification.setPosition(Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.WARNING);
-            notification.setDuration(3000);
-            notification.open();
+            new WarningNotification(
+                "The SKU is already in use. Please enter another one.").open();
         } else {
             // Delegate to Vaadin's default error handler
             throw exception;
@@ -705,15 +636,15 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
     public void setParameter(BeforeEvent event, @OptionalParameter Long productId) {
 // tag::snippet[]
         var selectedId = grid.asSingleSelect().getOptionalValue()
-                .map(ProductCatalogItem::productId)
-                .orElse(null);
+            .map(ProductCatalogItem::productId)
+            .orElse(null);
         if (Objects.equals(productId, selectedId)) {
             return; // <3>
         }
 // end::snippet[]
         Optional.ofNullable(productId)
-                .flatMap(service::findItemById)
-                .ifPresentOrElse(grid::select, grid::deselectAll);
+            .flatMap(service::findItemById)
+            .ifPresentOrElse(grid::select, grid::deselectAll);
     }
 
     public static void showProductDetails(long productId) {
@@ -722,6 +653,23 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 
     public static void showProductCatalog() {
         UI.getCurrentOrThrow().navigate(ProductCatalogView.class);
+    }
+
+    static class SearchField extends TextField {
+
+        SearchField() {
+            setPlaceholder("Search");
+            setPrefixComponent(VaadinIcon.SEARCH.create());
+            setValueChangeMode(ValueChangeMode.LAZY);
+        }
+    }
+
+    static class WarningNotification extends Notification {
+
+        WarningNotification(String text) {
+            super(text, 3000, Position.MIDDLE);
+            addThemeVariants(NotificationVariant.WARNING);
+        }
     }
 }
 ----
@@ -757,8 +705,6 @@ package com.example.product;
 import com.example.base.ui.ViewTitle;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.grid.ColumnTextAlign;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.notification.Notification;
@@ -787,7 +733,7 @@ import java.util.Optional;
 class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<Long> {
 
     private final ProductCatalogService service;
-    private final Grid<ProductCatalogItem> grid;
+    private final ProductCatalogGrid grid;
 
     ProductCatalogView(ProductCatalogService service) {
         this.service = service;
@@ -795,30 +741,11 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
         // Create components
         var title = new ViewTitle("Product Catalog");
 
-        var searchField = new TextField();
-        searchField.setPlaceholder("Search");
-        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
-        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+        var searchField = new SearchField();
 
-        grid = new Grid<>();
-        grid.addColumn(ProductCatalogItem::name)
-                .setHeader("Name")
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
-        grid.addColumn(ProductCatalogItem::price)
-                .setHeader("Price")
-                .setTextAlign(ColumnTextAlign.END)
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
-        grid.addColumn(ProductCatalogItem::description)
-                .setHeader("Description")
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
-        grid.addColumn(ProductCatalogItem::category)
-                .setHeader("Category")
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
-        grid.addColumn(ProductCatalogItem::brand)
-                .setHeader("Brand")
-                .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+        grid = new ProductCatalogGrid();
         grid.setItemsPageable(pageable -> service
-                .findItems(searchField.getValue(), pageable)
+            .findItems(searchField.getValue(), pageable)
         ).setIdentifierProvider(ProductCatalogItem::productId);
 
         var drawer = new ProductFormDrawer(productDetails -> {
@@ -850,15 +777,15 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
         addDetailEscapePressListener(e -> grid.deselectAll());
 
         var addButton = new Button("Add Product", e ->
-                new AddProductDialog(
-                        productDetails -> {
-                            var saved = service.save(productDetails);
-                            grid.getDataProvider().refreshAll();
-                            service.findItemById(saved.getProductId())
-                                   .ifPresent(grid::select);
-                        },
-                        this::handleException
-                ).open()
+            new AddProductDialog(
+                productDetails -> {
+                    var saved = service.save(productDetails);
+                    grid.getDataProvider().refreshAll();
+                    service.findItemById(saved.getProductId())
+                           .ifPresent(grid::select);
+                },
+                this::handleException
+            ).open()
         );
 
         // Layout view
@@ -881,20 +808,11 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 
     private void handleException(RuntimeException exception) {
         if (exception instanceof OptimisticLockingFailureException) {
-            var notification = new Notification(
-                    "Another user has edited the same product. "
-                            + "Please refresh and try again.");
-            notification.setPosition(Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.WARNING);
-            notification.setDuration(3000);
-            notification.open();
+            new WarningNotification("Another user has edited the same product. "
+                + "Please refresh and try again.").open();
         } else if (exception instanceof DuplicateKeyException) {
-            var notification = new Notification(
-                    "The SKU is already in use. Please enter another one.");
-            notification.setPosition(Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.WARNING);
-            notification.setDuration(3000);
-            notification.open();
+            new WarningNotification(
+                "The SKU is already in use. Please enter another one.").open();
         } else {
             // Delegate to Vaadin's default error handler
             throw exception;
@@ -904,14 +822,14 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
     @Override
     public void setParameter(BeforeEvent event, @OptionalParameter Long productId) {
         var selectedId = grid.asSingleSelect().getOptionalValue()
-                .map(ProductCatalogItem::productId)
-                .orElse(null);
+            .map(ProductCatalogItem::productId)
+            .orElse(null);
         if (Objects.equals(productId, selectedId)) {
             return;
         }
         Optional.ofNullable(productId)
-                .flatMap(service::findItemById)
-                .ifPresentOrElse(grid::select, grid::deselectAll);
+            .flatMap(service::findItemById)
+            .ifPresentOrElse(grid::select, grid::deselectAll);
     }
 
     public static void showProductDetails(long productId) {
@@ -920,6 +838,57 @@ class ProductCatalogView extends MasterDetailLayout implements HasUrlParameter<L
 
     public static void showProductCatalog() {
         UI.getCurrentOrThrow().navigate(ProductCatalogView.class);
+    }
+
+    static class SearchField extends TextField {
+
+        SearchField() {
+            setPlaceholder("Search");
+            setPrefixComponent(VaadinIcon.SEARCH.create());
+            setValueChangeMode(ValueChangeMode.LAZY);
+        }
+    }
+
+    static class WarningNotification extends Notification {
+
+        WarningNotification(String text) {
+            super(text, 3000, Position.MIDDLE);
+            addThemeVariants(NotificationVariant.WARNING);
+        }
+    }
+}
+----
+====
+
+.ProductCatalogGrid.java
+[%collapsible]
+====
+[source,java]
+----
+package com.example.product;
+
+import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
+
+class ProductCatalogGrid extends Grid<ProductCatalogItem> {
+
+    ProductCatalogGrid() {
+        addColumn(ProductCatalogItem::name)
+            .setHeader("Name")
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
+        addColumn(ProductCatalogItem::price)
+            .setHeader("Price")
+            .setTextAlign(ColumnTextAlign.END)
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
+        addColumn(ProductCatalogItem::description)
+            .setHeader("Description")
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
+        addColumn(ProductCatalogItem::category)
+            .setHeader("Category")
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
+        addColumn(ProductCatalogItem::brand)
+            .setHeader("Brand")
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
     }
 }
 ----
@@ -1301,7 +1270,6 @@ class ProductForm extends Composite<FormLayout>  {
 ----
 package com.example.product;
 
-import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
@@ -1310,7 +1278,7 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
-class ProductFormDrawer extends Composite<VerticalLayout> {
+class ProductFormDrawer extends VerticalLayout {
 
     @FunctionalInterface
     interface SaveCallback {
@@ -1347,11 +1315,10 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
         var deleteButton = new Button("Delete", e -> delete());
         deleteButton.addThemeVariants(ButtonVariant.ERROR);
 
-        var layout = getContent();
-        layout.add(header);
-        layout.add(new Scroller(form));
-        layout.add(new HorizontalLayout(saveButton, deleteButton));
-        layout.setHeightFull();
+        add(header);
+        add(new Scroller(form));
+        add(new HorizontalLayout(saveButton, deleteButton));
+        setHeightFull();
     }
 
     public void setProductDetails(ProductDetails productDetails) {
@@ -1371,20 +1338,24 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
     }
 
     private void delete() {
-        var dialog = new ConfirmDialog();
-        dialog.setHeader("Delete Product");
-        dialog.setText("Are you sure you want to permanently delete this product?");
-        dialog.setCancelable(true);
-        dialog.setConfirmText("Delete");
-        dialog.setConfirmButtonTheme("error primary");
-        dialog.addConfirmListener(event -> {
+        new DeleteProductDialog(() -> {
             try {
                 deleteCallback.delete(productDetails);
             } catch (RuntimeException e) {
                 errorCallback.handleException(e);
             }
-        });
-        dialog.open();
+        }).open();
+    }
+
+    static class DeleteProductDialog extends ConfirmDialog {
+
+        DeleteProductDialog(Runnable onDelete) {
+            super("Delete Product",
+                "Are you sure you want to permanently delete this product?",
+                "Delete", e -> onDelete.run());
+            setCancelable(true);
+            setConfirmButtonTheme("error primary");
+        }
     }
 }
 ----
@@ -1460,7 +1431,6 @@ import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.avatar.AvatarVariant;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.ScrollerVariant;
@@ -1473,33 +1443,40 @@ import com.vaadin.flow.server.menu.MenuConfiguration;
 class MainLayout extends AppLayout {
 
     MainLayout() {
-        // Create components
-        var appLogo = new Avatar("Click & Collect");
-        appLogo.addClassName("app-logo");
-        appLogo.addThemeVariants(AvatarVariant.AURA_FILLED, AvatarVariant.XSMALL);
-
-        var appName = new Span("Click & Collect");
-        appName.addClassName("app-name");
-
-        var menu = new SideNav();
-        menu.setMinWidth(200, Unit.PIXELS);
-        MenuConfiguration.getMenuEntries().forEach(entry -> {
-            var item = new SideNavItem(entry.title(), entry.menuClass(),
-                new Icon(entry.icon()));
-            item.setMatchNested(true);
-            menu.addItem(item);
-        });
-
-        // Layout drawer
-        var header = new HorizontalLayout(appLogo, appName);
-        header.setAlignItems(FlexComponent.Alignment.CENTER);
-        header.setPadding(true);
-
-        var scroller = new Scroller(menu);
+        var scroller = new Scroller(new MainMenu());
         scroller.addThemeVariants(ScrollerVariant.OVERFLOW_INDICATORS);
 
         setPrimarySection(Section.DRAWER);
-        addToDrawer(header, scroller);
+        addToDrawer(new DrawerHeader(), scroller);
+    }
+
+    static class DrawerHeader extends HorizontalLayout {
+
+        DrawerHeader() {
+            var appLogo = new Avatar("Click & Collect");
+            appLogo.addClassName("app-logo");
+            appLogo.addThemeVariants(AvatarVariant.AURA_FILLED, AvatarVariant.XSMALL);
+
+            var appName = new Span("Click & Collect");
+            appName.addClassName("app-name");
+
+            add(appLogo, appName);
+            setAlignItems(Alignment.CENTER);
+            setPadding(true);
+        }
+    }
+
+    static class MainMenu extends SideNav {
+
+        MainMenu() {
+            setMinWidth(200, Unit.PIXELS);
+            MenuConfiguration.getMenuEntries().forEach(entry -> {
+                var item = new SideNavItem(entry.title(), entry.menuClass(),
+                    new Icon(entry.icon()));
+                item.setMatchNested(true);
+                addItem(item);
+            });
+        }
     }
 }
 ----
