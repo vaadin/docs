@@ -25,7 +25,7 @@ You also create your own components. Some are one-off parts of a specific view. 
 
 A _view_ is a component that forms a logical whole of the user interface. A page shows one view at a time, and the view typically occupies most of the page. See the <<../views/add-view#,Add a View>> guide to learn how to create one.
 
-Views are entry points, not reusable building blocks. You don't extend or embed a view inside another view. For simple screens, you can build everything directly inside the view class. For complex screens, delegate to smaller components — the next section shows how.
+Views are entry points, not reusable building blocks. You don't extend or embed a view inside another view. For simple screens, you can build everything directly inside the view class, as long as its constructor stays a short list of what's on the page. For complex screens, delegate to smaller components — the next section shows how.
 
 
 == Decomposing a View
@@ -118,6 +118,37 @@ image::images/detail-footer.png[alt=A mock-up of a footer containing buttons]
 
 These components are not reusable — they exist only inside `EmployeeDetail`. Separating them into classes keeps each one focused and easier to maintain.
 
+=== Nesting One-Off Components
+
+Declare a component that only one class uses as a static nested class of that class. It stays next to the only code that uses it:
+
+[source,java]
+----
+public class EmployeeDetail extends Div {
+    private final DetailHeader header = new DetailHeader();
+    private final DetailContent content = new DetailContent();
+    private final DetailFooter footer = new DetailFooter();
+
+    public EmployeeDetail() {
+        add(header, content, footer);
+    }
+
+    static class DetailHeader extends Div {
+        // ...
+    }
+
+    static class DetailContent extends Div {
+        // ...
+    }
+
+    static class DetailFooter extends Div {
+        // ...
+    }
+}
+----
+
+Leave out `static` only when the nested class uses fields or methods of the class around it. A static nested class can't reach them, so it can't come to depend on its parent's state by accident. When a nested class grows large, or another class needs it, move it to a file of its own.
+
 === Identifying Reusable Components
 
 Looking at the full page again, two patterns repeat across different areas.
@@ -174,6 +205,8 @@ Each line is a Java class you create. Reusable components appear at multiple lev
 
 These custom components also contain built-in Vaadin components internally. For example, `EmployeeMaster` uses a `Grid` to display the list, `DetailHeader` uses `Tabs` for navigation, and `DetailFooter` uses `Button` components for its actions. Built-in components don't need to appear in the tree — they are implementation details inside each class.
 
+A built-in component can get a class of its own, too. When a class needs several calls to set up a built-in component, move the calls into a subclass named after what the component shows. For example, `EmployeeMaster` can use an `EmployeeGrid` that extends `Grid<Employee>`. See <<../components/build-component#extending-an-existing-component,Extending an Existing Component>>.
+
 This tree is not exhaustive, either. Implementing the view is likely to reveal further components. For instance, `EmployeeDetail` has multiple tabs, and each tab's content would become at least its own component. Decomposition is an ongoing process, not a one-time exercise.
 
 [TIP]
@@ -182,7 +215,32 @@ You don't need to identify every component upfront. Start with the view and its 
 
 == Component Communication
 
-Components in a tree need to communicate. Data flows in two directions: the view pushes data _down_ to its children, and children push user actions _up_ to the view. The view maintains state and calls application <<../business-logic/add-service#,services>>. Child components stay simple and business-logic-agnostic.
+Components in a tree need to communicate. Data flows in two directions: the view pushes data _down_ to its children, and children push user actions _up_ to the view. The view keeps the state that its children share, and calls application <<../business-logic/add-service#,services>>. Child components stay business-logic-agnostic, and keep the state that only they use.
+
+=== Keeping State Where It's Used
+
+Put each piece of state in the component that uses it, together with the code that reads and changes it. For example, only the master panel uses the search text, so the master panel keeps the search field and filters its own list:
+
+[source,java]
+----
+public class EmployeeMaster extends Div {
+    private final TextField search = new TextField();
+    private final EmployeeGrid grid = new EmployeeGrid();
+
+    public EmployeeMaster() {
+        search.addValueChangeListener(event -> filter(event.getValue()));
+        add(search, grid);
+    }
+
+    private void filter(String text) {
+        // Show the employees whose name contains the text
+    }
+}
+----
+
+The view never sees the search text. If the view kept the search field and its listener instead, it would grow with every detail of its children. You also couldn't understand the master panel without reading the view.
+
+When the view has to act on a child, give the child a method that says what it does, such as `setEmployee()`, rather than reaching into the child's fields. State that several children share stays in the view. The next sections show how to pass it down, and how the children report back.
 
 === Passing Data to Components
 
