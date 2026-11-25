@@ -1,8 +1,8 @@
 ---
-title: Dev Loop Tutorial
-page-title: Vaadin Dev Loop Tutorial for Claude Code and Codex
-description: Let an AI coding agent build a feature in a running application, and see what the session actually costs.
-meta-description: Hands-on tutorial - install the Vaadin dev loop CLI and agent skills, drive Claude Code and Codex against a running app, and measure session token cost.
+title: Dev Loop
+page-title: Faster Turnaround for AI Coding Agents with Vaadin Dev Loop
+description: Let an AI coding agent verify each change against the running application in seconds, instead of rebuilding and restarting it.
+meta-description: Give Claude Code or Codex faster turnaround on a Vaadin app with Dev Loop. The agent applies and verifies its own changes without restarts, and you measure it.
 order: 20
 version: since:com.vaadin:vaadin@V25.3
 section-nav: badge-preview
@@ -10,34 +10,41 @@ section-nav: badge-preview
 
 include::{articles}/_vaadin-version.adoc[]
 
-= [since:com.vaadin:vaadin@V25.3]#Tutorial: Build a Feature with an AI Agent#
+= [since:com.vaadin:vaadin@V25.3]#Give Agents Faster Turnaround with Dev Loop#
 
 :preview-feature: The Dev Loop CLI
 :ticket-url: https://github.com/vaadin/flow/issues/new/choose
 include::{articles}/_preview-banner.adoc[opts=optional]
 
-This tutorial takes a generated Vaadin starter, installs the dev loop CLI and the agent skills that come with it, and then hands the application to Claude Code or Codex. The agent makes three changes to it -- a stylesheet tweak, a change to a view, and a feature that spans several files -- without ever restarting the application by hand, and without you checking screenshots to find out whether its work landed.
+An AI coding agent is quick at writing a change and slow at finding out whether it worked. Left alone, it rebuilds the project, restarts the application, and waits for it to come up. Then it takes a screenshot and reasons about a picture to decide whether its change landed. Every round trip costs wall-clock time. It also costs tokens: the agent re-reads startup output and rebuilds state that the application had a moment earlier.
 
-At the end you measure what the session costs, and compare that against the same work done the ordinary way.
+Dev Loop cuts that round trip down to one command. The agent edits, runs `apply`, and has an answer within seconds. The exit code says whether the change is live. The line under it names what happened: a hot swap, a push into the open page, a restart, or a failure. The application keeps running between changes, so the agent doesn't pay to warm it up again.
 
-Nothing here is agent-only. Every command below is one you can run yourself, and the answer is the same either way. What the agent gets is a loop it can close on its own: it edits, it runs one command, and the exit code tells it whether the change is live.
+In this tutorial, you set up Dev Loop on a generated Vaadin starter and hand the application to Claude Code or Codex. The agent makes three changes of increasing size:
 
+* a stylesheet tweak
+* a change to a view
+* a feature that spans several files
+
+None of them needs a restart by hand, or a screenshot to confirm. At the end, you measure the turnaround against the same work done with ordinary restarts, on your own project.
+
+Nothing here is agent-only. Every command below is one you can run yourself, and you get the same answers. What the agent gets is a loop it can close on its own.
 
 == What You Need
 
-* *Java 21 or newer.* The daemon doesn't use anything older, whatever release your project targets.
-* *A JetBrains Runtime, strongly recommended.* Enhanced class redefinition is a JVM feature that only a JetBrains Runtime provides. Without it, more of your edits restart the application instead of hot-swapping. Nothing breaks -- you get fewer of the fast outcomes this tutorial demonstrates.
-* *Maven*, as `mvn` on the path or as the wrapper in the project.
-* *Network access the first time you install*, to download HotswapAgent once per machine.
-* *https://www.claude.com/product/claude-code[Claude Code] or https://developers.openai.com/codex/cli[Codex CLI]*, installed and signed in.
+* *Java 21 or newer*
+* *A JetBrains Runtime, strongly recommended.* Without one, more of your edits restart the application instead of hot-swapping, and the agent's turnaround suffers. Download a JBRSDK build from the https://github.com/JetBrains/JetBrainsRuntime/releases[JetBrains Runtime releases] page, at your project's Java version or newer, and extract it into [filename]`~/.jdks/`.
+* *Maven*, as `mvn` on the path or as the wrapper in the project
+* *Network access the first time you install*
+* *https://www.claude.com/product/claude-code[Claude Code] or https://developers.openai.com/codex/cli[Codex CLI]*, installed and signed in
 
-See <<{articles}/flow/configuration/live-reload/dev-loop-cli#prerequisites,Prerequisites>> for the full list.
+See <<{articles}/flow/configuration/live-reload/dev-loop-cli#prerequisites,Prerequisites>> for the details of each.
 
 
 [[step-1]]
 == 1. Get the Base Application
 
-Open https://start.vaadin.com[Vaadin Start] and keep the sample view. The dev loop [since:com.vaadin:vaadin@V25.3]#needs a recent enough platform version#, so expand *Configure Project Settings* and check which version the project uses. Download the project, extract it, and open it in your IDE.
+Open https://start.vaadin.com[Vaadin Start] and keep the sample view. Dev Loop [since:com.vaadin:vaadin@V25.3]#needs a recent enough platform version#, so expand *Configure Project Settings* and check which version the project uses. Download the project, extract it, and open it in your IDE.
 
 You get a small Spring Boot and Maven application -- a task list, with a grid of tasks, a toolbar for creating them, and a stylesheet:
 
@@ -56,7 +63,7 @@ src/main/resources/
   application.properties
 ----
 
-Each of the three changes in <<#step-5,Step 5>> targets a different one of those, because each produces a different result from the dev loop.
+Each of the three changes in <<#step-5,Step 5>> targets a different one of those, because each produces a different result from Dev Loop.
 
 Check two things in [filename]`pom.xml` before going further. First, that the version you picked came through:
 
@@ -90,29 +97,11 @@ One goal installs both:
 mvn vaadin:install-dev-cli
 ----
 
-Run it in the directory that holds your application's [filename]`pom.xml`. The goal isn't bound to a phase, so it never runs as a side effect of an ordinary build. Run it once per project, and again after a Vaadin upgrade.
+Run it in the directory that holds your application's [filename]`pom.xml`. It writes the CLI into [filename]`.vaadin/`, and the skills into [filename]`.agents/skills/` and [filename]`.claude/skills/`.
 
-It writes these files:
+There's no separate step for installing the skills, and nothing to configure per agent. Claude Code discovers skills in [filename]`.claude/skills/`, and Codex discovers them in [filename]`.agents/skills/`, so the single goal above covers both -- and any other agent that follows either convention.
 
-[cols="2,3"]
-|===
-| Path | What It Is
-
-| [filename]`.vaadin/vaadin-dev`, plus `.ps1` and `.cmd`
-| The CLI, with launchers for Windows.
-
-| [filename]`.agents/skills/vaadin-devloop/SKILL.md` and [filename]`reference.md`
-| The instructions, written for any coding agent.
-
-| [filename]`.claude/skills/vaadin-devloop/SKILL.md`
-| A thin adapter that points Claude Code at the same instructions.
-|===
-
-There's no separate step for installing the skills, and nothing to configure per agent. Claude Code discovers skills in [filename]`.claude/skills/`, and Codex discovers them in [filename]`.agents/skills/`, so the single goal above covers both -- and any other agent that follows either convention. The [filename]`.claude` copy is composed from the shared file at install time rather than maintained separately, so the two can't drift apart.
-
-*Commit all of it*, the way you commit [filename]`mvnw`. It's project tooling, and the point is that every developer and every agent working on the repository gets the same instructions. The goal rewrites these files when they differ from the shipped version, so add your own skills beside them rather than editing them.
-
-The goal also downloads HotswapAgent into [filename]`~/.vaadin/devloop/`, outside the project, once per machine. If the machine has no network access, see <<{articles}/flow/configuration/live-reload/dev-loop-cli#install,Installing the CLI>> for the offline variant.
+*Commit all of it*, the way you commit [filename]`mvnw`, so that every developer and every agent working on the repository gets the same instructions. See <<{articles}/flow/configuration/live-reload/dev-loop-cli#install,Installing the CLI>> for what else the goal does, and for installing without network access.
 
 
 == 3. Give the Agent Vaadin's Documentation
@@ -138,7 +127,7 @@ codex plugin add vaadin-skills@vaadin-marketplace
 
 One plugin installs the MCP server and a set of Vaadin development skills together. For manual configuration, or for any other tool, see <<{articles}/agentic-development/mcp/supported-tools/claude-code#,Claude Code>>, <<{articles}/agentic-development/mcp/supported-tools/codex#,Codex>>, or the <<{articles}/agentic-development/mcp#,MCP Server>> overview.
 
-While you're here, add a browser automation tool. A Playwright MCP server is the usual choice. The dev loop skills expect one for verifying changes that have a visual surface, but they don't install it. Without one, the agent falls back to your project's own browser tests, and says that's what it did.
+While you're here, add a browser automation tool. A Playwright MCP server is the usual choice. The Dev Loop skills expect one for verifying changes that have a visual surface, but they don't install it. Without one, the agent falls back to your project's own browser tests, and says that's what it did.
 
 
 == 4. Start the Loop
@@ -153,43 +142,19 @@ Ask what's running, and then start it:
 
 The `status` command costs milliseconds, as it starts no JVM. The `start` command takes roughly 30 seconds cold, and blocks until the application is serving or has failed.
 
-On Windows, a checkout carries no executable bit, so the Bash script may refuse to run:
-
-[.example]
---
-[source,bash]
-----
-<source-info group="macOS/Linux"></source-info>
-.vaadin/vaadin-dev status
-----
-
-[source,bash]
-----
-<source-info group="Windows"></source-info>
-.\.vaadin\vaadin-dev.cmd status
-----
-
-[source,bash]
-----
-<source-info group="Git Bash"></source-info>
-bash .vaadin/vaadin-dev status
-----
---
-
-Every command, option, and exit code is identical whichever launcher you use.
+On Windows, use [filename]`.vaadin\vaadin-dev.cmd` instead. See <<{articles}/flow/configuration/live-reload/dev-loop-cli#cycle,The Cycle>> for the launchers.
 
 Now *open http://localhost:8080 and leave the page open*. This matters more than it looks: a stylesheet push has somewhere to land only if a page is already connected. Run `apply` with no page open, and it reports the file copied to the classpath and says nothing about a push -- honest, but not the answer you came for. Open the page before the first change, not after.
 
-[IMPORTANT]
-The daemon owns the application's process. Don't also start the application with `spring-boot:run` or an IDE run configuration: the second launcher fights the daemon for port 8080. Use `.vaadin/vaadin-dev start` and `restart` instead.
+From now on, the daemon owns the application's process. Don't also start the application with `spring-boot:run` or an IDE run configuration, since a second launcher fights the daemon for port 8080.
 
 
 [[step-5]]
 == 5. Let the Agent Work
 
-Start your agent in the project directory, and give it the prompts below one at a time. Each is chosen to produce a different outcome, so that by the end you can read what the dev loop tells you.
+Start your agent in the project directory, and give it the prompts below one at a time. Each produces a different outcome, and each comes back verified without a restart by hand. The time on the `compiling` line is the agent's turnaround for the change.
 
-You don't need to mention the dev loop in the prompt. The installed skill tells the agent to use it, and to treat an edit that hasn't been applied as unfinished.
+You don't need to mention Dev Loop in the prompt. The installed skill tells the agent to use it, and to treat an edit that hasn't been applied as unfinished.
 
 === A Stylesheet Change
 
@@ -233,14 +198,14 @@ Example prompt:
 
 Now the agent touches [classname]`Task`, [classname]`TaskService`, and [classname]`TaskListView`. It should make all of those edits and then apply *once*: `apply` finds the change-set itself by scanning the sources, so running it per file wastes a cycle each time.
 
-A changed JPA mapping never hot-reloads, because Hibernate fixes its metamodel and schema at startup, so the dev loop escalates:
+A changed JPA mapping never hot-reloads, because Hibernate fixes its metamodel and schema at startup, so Dev Loop escalates:
 
 ----
 change-set: 3 file(s): .../Task.java, .../TaskService.java, .../ui/TaskListView.java
 compiling → runtime → restarting → Stable   (9.8s)
 ----
 
-Reload the page to see it. The escalation is the point: rather than report a hot swap that didn't take, the dev loop does the thing that works and names it. Everything the agent needs to know is in that one line.
+Reload the page to see it. The escalation is the point: rather than report a hot swap that didn't take, Dev Loop does the thing that works and names it. Everything the agent needs to know is in that one line.
 
 [NOTE]
 ====
@@ -259,14 +224,14 @@ Read the error before treating the change as working. A well-behaved agent does 
 If you watch the agent's tool calls, you shouldn't see `mvn compile`, `mvn test`, or `mvn spring-boot:run` between edits. A Maven cycle pays for a fresh JVM and a fresh Spring context to answer a narrower question than `apply` answers against the application that's already running. Running the test suite once at the end, over the change as a whole, is a different matter, and still worth doing.
 
 
-== 6. Measure What the Session Costs
+== 6. Measure the Turnaround
 
-The dev loop is meant to make agentic development cheaper as well as faster, and you can check that on your own project rather than taking anyone's word for it.
+The faster turnaround should show up in the whole session, as less wall-clock time and as fewer tokens spent after each restart. You can check that on your own project rather than taking anyone's word for it.
 
 Use the same prompt, the same model, and two clean copies of the project:
 
 . *Baseline.* Start the application with `mvn spring-boot:run`, and let the agent restart it however it likes. Run the prompt in a fresh session.
-. *Dev loop.* Start the application with `.vaadin/vaadin-dev start`, and run the same prompt in another fresh session.
+. *Dev Loop.* Start the application with `.vaadin/vaadin-dev start`, and run the same prompt in another fresh session.
 
 Read the session total at the end of each:
 
@@ -295,28 +260,25 @@ Read the session total at the end of each:
 | Costs in dollars, read from the local session logs. Codex is supported as a beta data source.
 |===
 
-Three numbers are worth comparing: wall-clock time, total cost, and *cache-read tokens*. The last one explains the other two. Every restart throws away a warm application and makes the agent re-establish context it had already paid for -- recreating test data in an in-memory database, re-reading files, and reasoning about startup output. The longer the session, the more of that the dev loop avoids.
+Three numbers are worth comparing: wall-clock time, total cost, and *cache-read tokens*. The last one explains the other two. Every restart throws away a warm application and makes the agent re-establish context it had already paid for -- recreating test data in an in-memory database, re-reading files, and reasoning about startup output. The longer the session, the more of that Dev Loop avoids.
 
 A few things to be fair about when you read your own numbers:
 
 * *One run per scenario is noise.* Model sampling varies more than the effect you're measuring on a single small change. Run a realistic multi-step session, not a one-liner.
 * *A compile error can be slower under `apply`*, which recompiles only the change-set. An edit that splits across files can surface at runtime rather than at compile time, and cost a turn to diagnose.
-* *Some changes restart either way.* Structural changes to Spring beans, JPA mappings, and non-theme frontend files restart under the dev loop too, as the third prompt above demonstrated. The saving comes from everything else.
-* *Annotation processors don't run* in the dev loop, so a project using Lombok or MapStruct needs `mvn compile`. See <<{articles}/flow/configuration/live-reload/dev-loop-cli#limitations,Limitations>> before drawing conclusions from a project that uses one.
+* *Some changes restart either way.* Structural changes to Spring beans, JPA mappings, and non-theme frontend files restart under Dev Loop too, as the third prompt above demonstrated. The saving comes from everything else.
+* *Annotation processors don't run* in Dev Loop, so a project using Lombok or MapStruct needs `mvn compile`. See <<{articles}/flow/configuration/live-reload/dev-loop-cli#limitations,Limitations>> before drawing conclusions from a project that uses one.
 
 
 == What You Built
 
-* An application running under a daemon that owns its process, instead of under Maven or an IDE.
+* An agent that verifies each change in seconds: it edits, applies, reads a verdict, and knows the difference between a hot swap, a restart, and a failure.
+* An application that stays warm between changes, running under a daemon that owns its process instead of under Maven or an IDE.
 * A CLI and a set of agent skills committed to the project, so that every agent and every developer on it works the same way.
-* An agent that closes its own loop: it edits, applies, reads a verdict, and knows the difference between a hot swap, a restart, and a failure.
-* A measurement you can repeat on your own project, rather than a claim.
+* A measurement of the turnaround you can repeat on your own project, rather than a claim.
 
 
 == Troubleshooting
-
-`this project does not depend on the dev-loop daemon`::
-The `com.vaadin:vaadin-dev` dependency is missing from [filename]`pom.xml`. See <<#step-1,Step 1>>.
 
 `its network source differs from the one declared for it in settings`::
 Claude Code already has a marketplace named `vaadin-marketplace` with a different source, such as the deprecated `vaadin/claude-plugin`. Remove it, add the marketplace again, and reinstall the plugin, which the removal disabled:
@@ -328,13 +290,7 @@ Claude Code already has a marketplace named `vaadin-marketplace` with a differen
 /plugin install vaadin-skills@vaadin-marketplace
 ----
 
-More changes restart than you expect::
-Check which JVM was chosen, in [filename]`target/devloop/daemon.log`. On a stock JDK, structural changes can't be hot-swapped at all.
-
-The application won't start, or the daemon seems stuck::
-The `start` command names the reason, and prints the tail of [filename]`target/devloop/app.log`. If the daemon itself is wedged, run `.vaadin/vaadin-dev shutdown`, and the next command starts a fresh one.
-
-For everything else, see <<{articles}/flow/configuration/live-reload/dev-loop-cli#troubleshooting,Troubleshooting>> in the reference, or the [filename]`reference.md` installed next to the skill, which documents every outcome the dev loop can report.
+For problems with Dev Loop itself, see <<{articles}/flow/configuration/live-reload/dev-loop-cli#troubleshooting,Troubleshooting>> in the reference, or the [filename]`reference.md` installed next to the skill, which documents every outcome Dev Loop can report.
 
 
 == Related Topics
