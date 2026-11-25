@@ -576,7 +576,7 @@ The factory function runs once per list item. When you modify the list:
 
 == Binding Items to Data Components
 
-Data components, such as [classname]`Grid` and [classname]`ComboBox`, don't have a method for binding their items to a list signal. Instead, pass a mutable list to [methodname]`setItems()` once. Then use [methodname]`Signal.effect()` to copy the values of the list signal into that list, and to refresh the data view:
+Data components, such as [classname]`Grid` and [classname]`ComboBox`, don't have a method for binding their items to a list signal. Instead, call the component's [methodname]`setItems()` once with a mutable list, such as an empty [classname]`ArrayList`. Then use [methodname]`Signal.effect()` to pass the values of the list signal to [methodname]`setItems()` of the returned data view:
 
 [source,java]
 ----
@@ -590,23 +590,17 @@ items.insertLast("Item 2");
 Grid<String> grid = new Grid<>();
 grid.addColumn(item -> item).setHeader("Name");
 
-List<String> rows = new ArrayList<>();
-GridListDataView<String> dataView = grid.setItems(rows);
-Signal.effect(grid, () -> {
-    List<String> values = items.getValues().toList();
-    rows.clear();
-    rows.addAll(values);
-    dataView.refreshAll();
-});
+GridListDataView<String> dataView = grid.setItems(new ArrayList<>());
+Signal.effect(grid, () -> dataView.setItems(items.getValues().toList()));
 
 // Adding or updating an item refreshes the grid
 items.insertLast("Item 3");
 items.peek().get(0).set("Updated Item 1");
 ----
 
-The effect reads the list signal and the signal of each item, so it runs again when an item is added, removed, moved, or changed. Each run refreshes the entire data set.
+The effect reads the list signal and the signal of each item, so it runs again when an item is added, removed, moved, or changed. Each run replaces the content of the list that was passed to the component, and refreshes the entire data set. The list must be mutable: with an immutable list, such as one from `List.of()`, [methodname]`dataView.setItems()` throws an [classname]`UnsupportedOperationException`.
 
-Don't call [methodname]`setItems()` from the effect. Each call replaces the data provider, and replacing the data provider clears the selection. When you bind the selection to a signal, for example with `grid.asSingleSelect().bindValue(selected, selected::set)`, every change to the list then sets that signal to `null` (https://github.com/vaadin/flow-components/issues/10575[flow-components#10575]).
+Don't call the component's own [methodname]`setItems()` from the effect. Each call replaces the data provider, and replacing the data provider clears the selection. When you bind the selection to a signal, for example with `grid.asSingleSelect().bindValue(selected, selected::set)`, every change to the list then sets that signal to `null` (https://github.com/vaadin/flow-components/issues/10575[flow-components#10575]).
 
 Refreshing the data view keeps the selection of a [classname]`Grid`, a [classname]`ComboBox`, or a [classname]`MultiSelectComboBox`. Components that show each item as a child component, such as [classname]`Select`, [classname]`RadioButtonGroup`, and [classname]`CheckboxGroup`, clear their value on every refresh.
 
