@@ -183,8 +183,31 @@ Setting the `Content-Security-Policy` header another way, such as from a servlet
 The `strict` mode has the following limitations:
 
 - A chart option that takes a JavaScript function as a string, such as [methodname]`Tooltip.setFormatter()`, throws a [classname]`ContentSecurityPolicyViolationException`.
-- An add-on that calls a string-based JavaScript API throws the same exception. Run the application with `warn` first to see which of its add-ons are affected.
+- An add-on that calls a string-based JavaScript API throws the same exception, unless the application declares the string as a fallback (see <<#declaring-fallbacks-for-add-ons,Declaring Fallbacks for Add-on JavaScript Strings>>). Run the application with `warn` first to see which of its add-ons are affected.
 - The policy keeps `'unsafe-inline'` in `style-src`, because UI components add styles to the page while the application runs.
+
+
+[[declaring-fallbacks-for-add-ons]]
+=== Declaring Fallbacks for Add-on JavaScript Strings
+
+An add-on that sends JavaScript to the browser as a string, through an API such as [methodname]`executeJs()`, throws the same exception as application code that does -- but the add-on can only be fixed by its maintainers. Declare the exact strings it sends in a <<{articles}/flow/component-internals/element-api/calling-javascript#declaring-javascript,`@JsDefinition`>> interface marked [annotationname]`@JsStringFallback`, and a string that matches runs the declared JavaScript from the bundle instead of being refused:
+
+[source,java]
+----
+@JsDefinition
+@JsStringFallback(filters = "event.key === 'Escape'")
+public interface AddonFallbacks extends JsInvokers {
+
+    @JsExpression("return this.scrollTop")
+    PendingJavaScriptResult scrollTop();
+}
+----
+
+A fallback for a string passed to [methodname]`executeJs()` or [methodname]`Page.executeJs()` is a method in an interface that extends [interfacename]`JsInvokers`, declared the same way as <<{articles}/flow/component-internals/element-api/calling-javascript#declaring-javascript,any other JavaScript in Java>>. A fallback for a function built with [methodname]`JsFunction.of()` -- which also covers the string overloads of [methodname]`addJsInitializer()` and [methodname]`Page.addDynamicImport()` -- is a method in an interface that extends [interfacename]`JsSnippets` instead (see <<{articles}/flow/component-internals/element-api/calling-javascript#declaring-snippets,Declaring Snippets>>). A fallback for a listener filter or event data string, as passed to [methodname]`setFilter()` or [methodname]`addEventData()`, goes into the `filters` or `eventData` of the annotation rather than into a method.
+
+The exception or log message for a refused string already contains the declaration to paste, with a note to add [annotationname]`@JsStringFallback` when the call is in an add-on. Copy it into an interface, add the annotation, and the next build puts the function into the bundle.
+
+A declaration matches one exact string, including whitespace. An add-on release that changes the string is refused again until the fallback is updated for the new text. A string built from a value that changes, such as a color joined into the JavaScript, can't be matched this way -- it has to become a parameter instead, which only the add-on's own code can do. JavaScript that the browser refuses on its own, such as an inline `onclick` attribute or a call to `eval` in the add-on's frontend files, isn't covered either, since Flow never runs it.
 
 
 [[spring-security]]
