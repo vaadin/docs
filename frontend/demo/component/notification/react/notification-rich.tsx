@@ -3,6 +3,7 @@ import '@vaadin/vaadin-lumo-styles/icons.js';
 import { reactExample } from 'Frontend/demo/react-example'; // hidden-source-line
 import React from 'react';
 import { useSignals } from '@preact/signals-react/runtime'; // hidden-source-line
+import { useSignal } from '@vaadin/hilla-react-signals';
 import { Avatar } from '@vaadin/react-components/Avatar.js';
 import { Button } from '@vaadin/react-components/Button.js';
 import { HorizontalLayout } from '@vaadin/react-components/HorizontalLayout.js';
@@ -11,40 +12,72 @@ import { Notification } from '@vaadin/react-components/Notification.js';
 
 function Example() {
   useSignals(); // hidden-source-line
+  const submitOpened = useSignal(true);
+  const errorOpened = useSignal(true);
+  const mentionOpened = useSignal(true);
+
+  const openNotifications = () => {
+    submitOpened.value = true;
+    errorOpened.value = true;
+    mentionOpened.value = true;
+  };
 
   return (
     <>
+      <Button onClick={openNotifications}>Show notifications</Button>
+
       {/* tag::snippet[] */}
       {/* The duration is set to 0-sec to prevent the notification from auto-close. */}
-      <Notification duration={0} theme="success" position="middle" opened>
+      <Notification duration={0} theme="success" position="middle" opened={submitOpened.value}>
         <HorizontalLayout theme="spacing" style={{ alignItems: 'center', minWidth: '350px' }}>
           <Icon icon="vaadin:check-circle" />
           <div>Application submitted!</div>
           <Button slot="end">View</Button>
-          <Button slot="end" theme="icon" aria-label="Close">
+          <Button
+            slot="end"
+            theme="icon"
+            aria-label="Close"
+            onClick={() => {
+              submitOpened.value = false;
+            }}
+          >
             <Icon icon="lumo:cross" />
           </Button>
         </HorizontalLayout>
       </Notification>
 
-      <Notification duration={0} theme="error" position="middle" opened>
+      <Notification duration={0} theme="error" position="middle" opened={errorOpened.value}>
         <HorizontalLayout theme="spacing" style={{ alignItems: 'center', minWidth: '350px' }}>
           <Icon icon="vaadin:warning" />
           <div>Failed to generate report</div>
           <Button slot="end">Retry</Button>
-          <Button slot="end" theme="icon" aria-label="Close">
+          <Button
+            slot="end"
+            theme="icon"
+            aria-label="Close"
+            onClick={() => {
+              errorOpened.value = false;
+            }}
+          >
             <Icon icon="lumo:cross" />
           </Button>
         </HorizontalLayout>
       </Notification>
 
-      <Notification duration={0} position="middle" opened>
+      <Notification duration={0} position="middle" opened={mentionOpened.value}>
         <HorizontalLayout theme="spacing" style={{ alignItems: 'center', minWidth: '350px' }}>
           <Avatar name="Jason Bailey" />
           <div>
             <b>Jason Bailey</b> mentioned you in <a href="#">Project Q4</a>
           </div>
-          <Button slot="end" theme="icon" aria-label="Close">
+          <Button
+            slot="end"
+            theme="icon"
+            aria-label="Close"
+            onClick={() => {
+              mentionOpened.value = false;
+            }}
+          >
             <Icon icon="lumo:cross" />
           </Button>
         </HorizontalLayout>
