@@ -434,6 +434,25 @@ For dates, you can use a subset of PHP [methodname]`strftime()` formatting
 specifiers. For example, `{value:%Y-%m-%d %H:%M:%S}` would
 format a date and time in the ISO 8601 format.
 
+Besides variables, a format string can contain conditions and helpers for arithmetic, comparison and text, which replace many JavaScript formatters. See the https://www.highcharts.com/docs/chart-concepts/templating[Highcharts templating documentation] for the full syntax. The following table shows a few JavaScript formatters and the format strings that replace them:
+
+[cols="1,2,2"]
+|===
+|Option |JavaScript Formatter |Format String
+
+|Axis labels
+|`function() { return this.value / 1000 + 'k'; }`
+|`{divide value 1000}k`
+
+|Data labels
+|`function() { return this.y > 5000 ? 'high' : 'low'; }`
+|`{#if (gt y 5000)}high{else}low{/if}`
+
+|Tooltip point
+|`function() { return this.series.name + ': ' + this.y + ' kg'; }`
+|`{series.name}: {point.y} kg`
+|===
+
 
 [[charts.configuration.format.formatter]]
 === Using a JavaScript Formatter
@@ -452,6 +471,8 @@ Labels ylabels = yaxis.getLabels();
 ylabels.setFormatter("function() {return this.value + ' km';}");
 ----
 
+The browser compiles the function from the string. A strict Content Security Policy doesn't allow this. See <<charts.configuration.csp>> for the alternatives.
+
 
 [[charts.configuration.format.simplified]]
 === Simplified Formatting
@@ -459,6 +480,75 @@ ylabels.setFormatter("function() {return this.value + ' km';}");
 Some contexts that display labels allow defining simple formatting for the
 labels. For example, data point tooltips allow defining prefix, suffix, and
 floating-point precision for the values.
+
+[role="since:com.vaadin:vaadin@V25.4"]
+[[charts.configuration.csp]]
+== Chart Functions Under a Strict Content Security Policy
+
+Setters of chart options that take a function, such as [methodname]`setFormatter()`, [methodname]`setPositioner()`, [methodname]`setOnclick()` or [methodname]`setCallback()`, take the source code of a JavaScript function as a string. The browser compiles the function with `eval()`, which a Content Security Policy without `'unsafe-eval'` in `script-src` blocks. See <<{articles}/flow/security/protections/content-security-policy#,Content Security Policy>> for how Vaadin uses such a policy.
+
+When the `contentSecurityPolicy` configuration parameter is set, Vaadin reports a chart configuration that has such a function when it sends it to the browser. In the `warn` mode, it logs a warning. In the `strict` mode, it throws a [classname]`ContentSecurityPolicyViolationException`.
+
+Use a format string or a [interfacename]`ChartFunction` instead, as described next.
+
+
+=== Using Format Strings Instead of Formatters
+
+A format string is a template, not JavaScript, so a strict policy doesn't affect it. Many options that take a formatter also have a format string for the same purpose, for example tooltips, data labels, axis labels and legend items. Set it with [methodname]`setFormat()`, [methodname]`setPointFormat()`, [methodname]`setHeaderFormat()`, [methodname]`setFooterFormat()` or [methodname]`setLabelFormat()`. See <<charts.configuration.format.string>> for what a format string can contain, and for format strings that replace common formatters.
+
+For example, the following sets the format of the tick labels on a chart axis:
+
+[source,java]
+----
+YAxis yaxis = chart.getConfiguration().getyAxis();
+yaxis.getLabels().setFormat("{divide value 1000}k");
+----
+
+
+=== Using a ChartFunction
+
+For an option that has no format string, or when a format string isn't enough, declare the function as a [interfacename]`ChartFunction`. Every setter that takes a function as a string has a matching setter that takes a [interfacename]`ChartFunction`, such as [methodname]`setFormatterFunction()`, [methodname]`setPositionerFunction()`, [methodname]`setOnclickFunction()` or [methodname]`setCallbackFunction()`. The build adds the declared JavaScript to the bundle, so the browser doesn't compile it.
+
+Declare the function in an interface that's annotated with [annotationname]`@JsDefinition` and extends [interfacename]`JsSnippets`, as a method that returns [interfacename]`ChartFunction`. Get an implementation of the interface from [methodname]`JsSnippets.of()`. See <<{articles}/flow/component-internals/element-api/calling-javascript#declaring-snippets,Declaring Snippets>> for how such interfaces work.
+
+The expression is the body of the function. Highcharts calls it with the context of the option as `this`, the same as a formatter given as a string. The arguments of the Java method are available as `$0`, `$1`, and so on:
+
+[source,java]
+----
+@JsDefinition
+public interface SalesFormatters extends JsSnippets {
+
+    @JsExpression("return this.y / $0 + $1;")
+    ChartFunction scaled(int divisor, String suffix);
+}
+
+SalesFormatters formatters = JsSnippets.of(SalesFormatters.class);
+
+DataLabels dataLabels = new DataLabels(true);
+dataLabels.setFormatterFunction(formatters.scaled(1000, "k"));
+----
+
+When Highcharts passes arguments to the function, declare their names with [annotationname]`@JsFunctionParameterNames`. For example, the tooltip positioner gets the size of the tooltip and the position of the point:
+
+[source,java]
+----
+@JsDefinition
+public interface TooltipFunctions extends JsSnippets {
+
+    @JsExpression("return { x: this.chart.plotLeft + point.plotX - labelWidth / 2, y: $0 };")
+    @JsFunctionParameterNames({ "labelWidth", "labelHeight", "point" })
+    ChartFunction above(int y);
+}
+
+chart.getConfiguration().getTooltip().setPositionerFunction(
+        JsSnippets.of(TooltipFunctions.class).above(10));
+----
+
+Setting a [interfacename]`ChartFunction` clears a function set as a string for the same option, and the other way around. The getters return the one that's set: after [methodname]`setFormatterFunction()`, [methodname]`getFormatterFunction()` returns the function and [methodname]`getFormatter()` returns `null`.
+
+A chart exported to SVG with [classname]`SVGGenerator` doesn't have the function, because it runs only in the browser. Neither does a chart state that's saved or restored with [classname]`ChartAIController`.
+
+
 
 [[charts.configuration.lang-option]]
 == Chart Language
