@@ -20,10 +20,10 @@ import com.vaadin.demo.domain.DataService;
 @Route("grid-dynamic-height")
 public class GridDynamicHeight extends Div {
 
-    private static final List<Person> invitedPeople = new ArrayList<>();
+    private final List<Person> invitedPeople = new ArrayList<>();
 
-    private static Grid<Person> grid;
-    private static Div hint;
+    private Grid<Person> grid;
+    private Div hint;
 
     public GridDynamicHeight() {
         this.setupInvitationForm();
