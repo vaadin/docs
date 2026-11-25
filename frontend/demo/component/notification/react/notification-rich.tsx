@@ -16,8 +16,16 @@ function Example() {
   const errorOpened = useSignal(true);
   const mentionOpened = useSignal(true);
 
+  const openNotifications = () => {
+    submitOpened.value = true;
+    errorOpened.value = true;
+    mentionOpened.value = true;
+  };
+
   return (
     <>
+      <Button onClick={openNotifications}>Show notifications</Button>
+
       {/* tag::snippet[] */}
       {/* The duration is set to 0-sec to prevent the notification from auto-close. */}
       <Notification duration={0} theme="success" position="middle" opened={submitOpened.value}>

@@ -21,13 +21,13 @@ export class Example extends LitElement {
   }
 
   protected override firstUpdated() {
-    this.renderRoot
-      .querySelectorAll<Notification>('vaadin-notification')
-      .forEach((notification) => notification.open());
+    this.openNotifications();
   }
 
   protected override render() {
     return html`
+      <vaadin-button @click="${this.openNotifications}">Show notifications</vaadin-button>
+
       <!-- tag::snippet[] -->
       <!-- The duration is set to 0-sec to prevent the notification from auto-close. -->
       <vaadin-notification
@@ -110,5 +110,11 @@ export class Example extends LitElement {
       ></vaadin-notification>
       <!-- end::snippet[] -->
     `;
+  }
+
+  private openNotifications() {
+    this.renderRoot
+      .querySelectorAll<Notification>('vaadin-notification')
+      .forEach((notification) => notification.open());
   }
 }

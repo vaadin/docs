@@ -15,24 +15,25 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
-import java.util.function.Supplier;
+import java.util.List;
 
 import static com.vaadin.flow.component.button.ButtonVariant.*;
 
 @Route("notification-rich")
 public class NotificationRich extends HorizontalLayout {
     public NotificationRich() {
-        openNotification(this::createSubmitSuccess);
-        openNotification(this::createReportError);
-        openNotification(this::createMentionNotification);
-    }
+        List<Notification> notifications = List.of(createSubmitSuccess(),
+                createReportError(), createMentionNotification());
+        notifications.forEach(notification -> {
+            notification.setPosition(Notification.Position.MIDDLE);
+            notification.setDuration(0);
+            notification.open();
+        });
 
-    private void openNotification(Supplier<Notification> notificationSupplier) {
-        Notification notification = notificationSupplier.get();
-        notification.setPosition(Notification.Position.MIDDLE);
-        notification.setDuration(0);
-        notification.open();
-    };
+        // Opening a notification that is already open does nothing
+        add(new Button("Show notifications",
+                event -> notifications.forEach(Notification::open)));
+    }
 
     // tag::snippet[]
     public Notification createSubmitSuccess() {
