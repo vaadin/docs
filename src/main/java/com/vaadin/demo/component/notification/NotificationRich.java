@@ -45,7 +45,7 @@ public class NotificationRich extends HorizontalLayout {
 
         HorizontalLayout layout = new HorizontalLayout(icon,
                 new Text("Application submitted!"));
-        layout.addToEnd(viewBtn, createCloseBtn());
+        layout.addToEnd(viewBtn, new CloseButton());
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
         layout.setMinWidth("350px");
 
@@ -63,7 +63,7 @@ public class NotificationRich extends HorizontalLayout {
 
         HorizontalLayout layout = new HorizontalLayout(icon,
                 new Text("Failed to generate report!"));
-        layout.addToEnd(retryBtn, createCloseBtn());
+        layout.addToEnd(retryBtn, new CloseButton());
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
         layout.setMinWidth("350px");
 
@@ -84,7 +84,7 @@ public class NotificationRich extends HorizontalLayout {
                 new Anchor("#", "Project Q4"));
 
         HorizontalLayout layout = new HorizontalLayout(avatar, info);
-        layout.addToEnd(createCloseBtn());
+        layout.addToEnd(new CloseButton());
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
         layout.setMinWidth("350px");
 
@@ -93,10 +93,12 @@ public class NotificationRich extends HorizontalLayout {
         return notification;
     }
 
-    public static Button createCloseBtn() {
-        Button closeBtn = new Button(VaadinIcon.CLOSE.create());
-
-        return closeBtn;
+    static class CloseButton extends Button {
+        CloseButton() {
+            super(new Icon("lumo", "cross"));
+            setAriaLabel("Close");
+            addClickListener(e -> findAncestor(Notification.class).close());
+        }
     }
     // end::snippet[]
 
