@@ -4,16 +4,16 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
-import com.vaadin.flow.component.ai.common.AIAttachment;
+import com.vaadin.flow.component.ai.common.AiAttachment;
 import com.vaadin.flow.component.ai.common.ChatMessage;
-import com.vaadin.flow.component.ai.provider.LLMProvider;
+import com.vaadin.flow.component.ai.provider.LlmProvider;
 
 import reactor.core.publisher.Flux;
 
 /**
  * Mock LLM provider for documentation examples.
  */
-public class MockLLMProvider implements LLMProvider {
+public class MockLlmProvider implements LlmProvider {
 
     private static final String MOCK_RESPONSE = """
             I can help you with:
@@ -29,7 +29,7 @@ public class MockLLMProvider implements LLMProvider {
             """;
 
     @Override
-    public Flux<String> stream(LLMRequest request) {
+    public Flux<String> stream(LlmRequest request) {
         var tokens = MOCK_RESPONSE.split(" ");
         return Flux.fromArray(tokens).delaySubscription(Duration.ofSeconds(1))
                 .delayElements(Duration.ofMillis(100))
@@ -38,7 +38,7 @@ public class MockLLMProvider implements LLMProvider {
 
     @Override
     public void setHistory(List<ChatMessage> history,
-            Map<String, List<AIAttachment>> attachmentsByMessageId) {
+            Map<String, List<AiAttachment>> attachmentsByMessageId) {
         // Accept history silently for demo purposes
     }
 }
