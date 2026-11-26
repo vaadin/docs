@@ -18,29 +18,28 @@ This step is based on the <</building-apps/forms-data/add-form#,Add a Form>> gui
 
 == Add a Product Form Drawer
 
-You'll display the product details in a drawer next to the grid. Start by creating the drawer component - `ProductFormDrawer` - in the `com.example.product` package:
+You'll display the product details in a drawer next to the grid. By the end of the next step, the drawer contains a header, a form, buttons, and the code that runs when the user clicks them. That's too much for a nested class, so give it a file of its own. Start by creating the drawer component - `ProductFormDrawer` - in the `com.example.product` package:
 
 .ProductFormDrawer.java
 [source,java]
 ----
 package com.example.product;
 
-import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
-class ProductFormDrawer extends Composite<VerticalLayout> { // <1>
+class ProductFormDrawer extends VerticalLayout { // <1>
 
     ProductFormDrawer() {
         var header = new H2("Product Details");
 
-        var layout = getContent(); // <2>
-        layout.add(header);
+        add(header);
     }
 }
 ----
-<1> Create a <</flow/component-internals/basic#composite-components,composite component>> that encapsulates a `VerticalLayout`.
-<2> The `getContent()` method returns the encapsulated layout.
+<1> The drawer arranges its contents in a column, so it extends `VerticalLayout`.
+
+Because the drawer extends `VerticalLayout`, any code that uses it can call the methods of `VerticalLayout` on it, such as `add()` and `removeAll()`. That's fine for a part of a view that only the view uses. A component that you reuse in many places should hide these methods instead, as you'll see in the next section. See <<{articles}/building-apps/components/build-component#choosing-a-base-class,Choosing a Base Class>> for how to choose the class to extend.
 
 Next, add the drawer to `ProductCatalogView`, turning it into a master-detail view. You'll use the <</components/master-detail-layout#,Master-Detail Layout>> component for this. It has a _master_ area, which shows the product list, and a _detail_ area, which shows the drawer. When there's enough room, it shows the areas side by side, with a border between them. When there isn't, it shows the detail area as an overlay on top of the master area. See <</building-apps/views/add-master-detail#,Add a Master-Detail View>> for more about this pattern.
 
@@ -56,8 +55,6 @@ Change the code of the `ProductCatalogView` as follows:
 ----
 package com.example.product;
 
-import com.vaadin.flow.component.grid.ColumnTextAlign;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
 // tag::snippet[]
 import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
@@ -76,28 +73,9 @@ class ProductCatalogView extends MasterDetailLayout {
 
     ProductCatalogView(ProductCatalogItemRepository repository) {
         // Create components
-        var searchField = new TextField();
-        searchField.setPlaceholder("Search");
-        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
-        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+        var searchField = new SearchField();
 
-        var grid = new Grid<ProductCatalogItem>();
-        grid.addColumn(ProductCatalogItem::name)
-            .setHeader("Name")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
-        grid.addColumn(ProductCatalogItem::price)
-            .setHeader("Price")
-            .setTextAlign(ColumnTextAlign.END)
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
-        grid.addColumn(ProductCatalogItem::description)
-            .setHeader("Description")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
-        grid.addColumn(ProductCatalogItem::category)
-            .setHeader("Category")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
-        grid.addColumn(ProductCatalogItem::brand)
-            .setHeader("Brand")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+        var grid = new ProductCatalogGrid();
         grid.setItemsPageable(pageable -> repository
             .findByNameContainingIgnoreCase(searchField.getValue(),
                 pageable)
@@ -126,6 +104,15 @@ class ProductCatalogView extends MasterDetailLayout {
         setDetail(drawer); // <5>
         // end::snippet[]
     }
+
+    static class SearchField extends TextField {
+
+        SearchField() {
+            setPlaceholder("Search");
+            setPrefixComponent(VaadinIcon.SEARCH.create());
+            setValueChangeMode(ValueChangeMode.LAZY);
+        }
+    }
 }
 ----
 <1> Make the detail area, and thereby the drawer, 300 pixels wide.
@@ -142,7 +129,7 @@ image::images/empty-product-drawer.png[The empty product drawer]
 
 == Create a Product Form
 
-Now that you have the drawer in place, it's time to add a form to display the product details. Create a new class called `ProductForm` in the `com.example.product` package:
+Now that you have the drawer in place, it's time to add a form to display the product details. Later in the tutorial, you'll use the same form in a dialog for adding new products. A component that more than one class uses should only offer the methods that its users need. Therefore, the form doesn't extend `FormLayout`. Instead, it extends `Composite`, which wraps a `FormLayout` and hides its methods. Create a new class called `ProductForm` in the `com.example.product` package:
 
 .ProductForm.java
 [source,java]
@@ -156,7 +143,7 @@ import com.vaadin.flow.component.textfield.BigDecimalField;
 import com.vaadin.flow.component.textfield.TextArea;
 import com.vaadin.flow.component.textfield.TextField;
 
-class ProductForm extends Composite<FormLayout>  {
+class ProductForm extends Composite<FormLayout>  { // <1>
 
     ProductForm() {
         // Create components
@@ -170,7 +157,7 @@ class ProductForm extends Composite<FormLayout>  {
         var discountField = new BigDecimalField("Discount");
 
         // Layout form
-        var layout = getContent();
+        var layout = getContent(); // <2>
         layout.add(nameField);
         layout.add(descriptionField);
         layout.add(categoryField);
@@ -182,6 +169,8 @@ class ProductForm extends Composite<FormLayout>  {
     }
 }
 ----
+<1> Create a <<{articles}/flow/component-internals/basic#composite-components,composite component>> that encapsulates a `FormLayout`. The code that uses the form can't add fields to it, or remove them.
+<2> The `getContent()` method returns the encapsulated layout.
 
 Then add it to the drawer:
 
@@ -189,14 +178,13 @@ Then add it to the drawer:
 ----
 package com.example.product;
 
-import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.H2;
 // tag::snippet[]
 import com.vaadin.flow.component.orderedlayout.Scroller;
 // end::snippet[]
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
-class ProductFormDrawer extends Composite<VerticalLayout> {
+class ProductFormDrawer extends VerticalLayout {
 
     ProductFormDrawer() {
         var header = new H2("Product Details");
@@ -204,11 +192,10 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
         var form = new ProductForm();
         // end::snippet[]
 
-        var layout = getContent();
-        layout.add(header);
+        add(header);
         // tag::snippet[]
-        layout.add(new Scroller(form)); // <1>
-        layout.setHeightFull(); // <2>
+        add(new Scroller(form)); // <1>
+        setHeightFull(); // <2>
         // end::snippet[]
     }
 }
@@ -458,12 +445,11 @@ You now have all the building blocks needed to show product details in the drawe
 ----
 package com.example.product;
 
-import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
-class ProductFormDrawer extends Composite<VerticalLayout> {
+class ProductFormDrawer extends VerticalLayout {
 
 // tag::snippet[]
     private final ProductForm form;
@@ -475,10 +461,9 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
         form = new ProductForm(); // <1>
 // end::snippet[]
 
-        var layout = getContent();
-        layout.add(header);
-        layout.add(new Scroller(form));
-        layout.setHeightFull();
+        add(header);
+        add(new Scroller(form));
+        setHeightFull();
     }
 
 // tag::snippet[]
@@ -499,8 +484,6 @@ Update `ProductCatalogView` as follows. Also remove the `setDetail(drawer)` call
 ----
 package com.example.product;
 
-import com.vaadin.flow.component.grid.ColumnTextAlign;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -518,28 +501,9 @@ class ProductCatalogView extends MasterDetailLayout {
                        ProductDetailsRepository productDetailsRepository) { // <1>
 // end::snippet[]
         // Create components
-        var searchField = new TextField();
-        searchField.setPlaceholder("Search");
-        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
-        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+        var searchField = new SearchField();
 
-        var grid = new Grid<ProductCatalogItem>();
-        grid.addColumn(ProductCatalogItem::name)
-            .setHeader("Name")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
-        grid.addColumn(ProductCatalogItem::price)
-            .setHeader("Price")
-            .setTextAlign(ColumnTextAlign.END)
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
-        grid.addColumn(ProductCatalogItem::description)
-            .setHeader("Description")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
-        grid.addColumn(ProductCatalogItem::category)
-            .setHeader("Category")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
-        grid.addColumn(ProductCatalogItem::brand)
-            .setHeader("Brand")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+        var grid = new ProductCatalogGrid();
         grid.setItemsPageable(pageable -> repository
             .findByNameContainingIgnoreCase(searchField.getValue(),
                 pageable)
@@ -574,6 +538,15 @@ class ProductCatalogView extends MasterDetailLayout {
 
         setMaster(listLayout);
     }
+
+    static class SearchField extends TextField {
+
+        SearchField() {
+            setPlaceholder("Search");
+            setPrefixComponent(VaadinIcon.SEARCH.create());
+            setValueChangeMode(ValueChangeMode.LAZY);
+        }
+    }
 }
 ----
 <1> Inject `ProductDetailsRepository` so that you can call it from the selection listener. The view still only reads data, so it can keep calling the repositories directly.
@@ -606,8 +579,6 @@ The https://github.com/vaadin/tutorial/tree/step/show-details[`step/show-details
 ----
 package com.example.product;
 
-import com.vaadin.flow.component.grid.ColumnTextAlign;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -623,28 +594,9 @@ class ProductCatalogView extends MasterDetailLayout {
     ProductCatalogView(ProductCatalogItemRepository repository,
                        ProductDetailsRepository productDetailsRepository) {
         // Create components
-        var searchField = new TextField();
-        searchField.setPlaceholder("Search");
-        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
-        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+        var searchField = new SearchField();
 
-        var grid = new Grid<ProductCatalogItem>();
-        grid.addColumn(ProductCatalogItem::name)
-            .setHeader("Name")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
-        grid.addColumn(ProductCatalogItem::price)
-            .setHeader("Price")
-            .setTextAlign(ColumnTextAlign.END)
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
-        grid.addColumn(ProductCatalogItem::description)
-            .setHeader("Description")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
-        grid.addColumn(ProductCatalogItem::category)
-            .setHeader("Category")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
-        grid.addColumn(ProductCatalogItem::brand)
-            .setHeader("Brand")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+        var grid = new ProductCatalogGrid();
         grid.setItemsPageable(pageable -> repository
             .findByNameContainingIgnoreCase(searchField.getValue(),
                 pageable)
@@ -676,6 +628,49 @@ class ProductCatalogView extends MasterDetailLayout {
         grid.setSizeFull();
 
         setMaster(listLayout);
+    }
+
+    static class SearchField extends TextField {
+
+        SearchField() {
+            setPlaceholder("Search");
+            setPrefixComponent(VaadinIcon.SEARCH.create());
+            setValueChangeMode(ValueChangeMode.LAZY);
+        }
+    }
+}
+----
+====
+
+.ProductCatalogGrid.java
+[%collapsible]
+====
+[source,java]
+----
+package com.example.product;
+
+import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
+
+class ProductCatalogGrid extends Grid<ProductCatalogItem> {
+
+    ProductCatalogGrid() {
+        addColumn(ProductCatalogItem::name)
+            .setHeader("Name")
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
+        addColumn(ProductCatalogItem::price)
+            .setHeader("Price")
+            .setTextAlign(ColumnTextAlign.END)
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
+        addColumn(ProductCatalogItem::description)
+            .setHeader("Description")
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
+        addColumn(ProductCatalogItem::category)
+            .setHeader("Category")
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
+        addColumn(ProductCatalogItem::brand)
+            .setHeader("Brand")
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
     }
 }
 ----
@@ -937,12 +932,11 @@ class ProductForm extends Composite<FormLayout>  {
 ----
 package com.example.product;
 
-import com.vaadin.flow.component.Composite;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 
-class ProductFormDrawer extends Composite<VerticalLayout> {
+class ProductFormDrawer extends VerticalLayout {
 
     private final ProductForm form;
 
@@ -950,10 +944,9 @@ class ProductFormDrawer extends Composite<VerticalLayout> {
         var header = new H2("Product Details");
         form = new ProductForm();
 
-        var layout = getContent();
-        layout.add(header);
-        layout.add(new Scroller(form));
-        layout.setHeightFull();
+        add(header);
+        add(new Scroller(form));
+        setHeightFull();
     }
 
     public void setProductDetails(ProductDetails productDetails) {

@@ -22,6 +22,8 @@ This step is based on the <</building-apps/views/add-router-layout#,Add a Router
 
 A layout that the router shows views inside is called a _router layout_. You'll build yours with the <</components/app-layout#,App Layout>> component. It has a _drawer_ on the side, where you'll put the application name and a <</components/side-nav#,Side Navigation>> menu. The views appear next to the drawer.
 
+The drawer has two parts: a header with a logo and the application name, and the menu below it. Each part takes several calls to set up, so each gets a static nested class of its own, like the search field in the product catalog. The constructor of the layout then only puts the parts together.
+
 The layout doesn't belong to any feature, so put it in a package of its own. Create a new package `com.example.base.ui`, and inside it, a class named `MainLayout`:
 
 .MainLayout.java
@@ -35,7 +37,6 @@ import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.avatar.AvatarVariant;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.ScrollerVariant;
@@ -48,45 +49,52 @@ import com.vaadin.flow.server.menu.MenuConfiguration;
 class MainLayout extends AppLayout {
 
     MainLayout() {
-        // Create components
-        var appLogo = new Avatar("Click & Collect"); // <2>
-        appLogo.addClassName("app-logo");
-        appLogo.addThemeVariants(AvatarVariant.AURA_FILLED, AvatarVariant.XSMALL);
+        var scroller = new Scroller(new MainMenu());
+        scroller.addThemeVariants(ScrollerVariant.OVERFLOW_INDICATORS); // <2>
 
-        var appName = new Span("Click & Collect");
-        appName.addClassName("app-name"); // <3>
+        setPrimarySection(Section.DRAWER); // <3>
+        addToDrawer(new DrawerHeader(), scroller);
+    }
 
-        var menu = new SideNav();
-        menu.setMinWidth(200, Unit.PIXELS); // <4>
-        MenuConfiguration.getMenuEntries().forEach(entry -> { // <5>
-            var item = new SideNavItem(entry.title(), entry.menuClass(), // <6>
-                new Icon(entry.icon()));
-            item.setMatchNested(true); // <7>
-            menu.addItem(item);
-        });
+    static class DrawerHeader extends HorizontalLayout {
 
-        // Layout drawer
-        var header = new HorizontalLayout(appLogo, appName);
-        header.setAlignItems(FlexComponent.Alignment.CENTER);
-        header.setPadding(true);
+        DrawerHeader() {
+            var appLogo = new Avatar("Click & Collect"); // <4>
+            appLogo.addClassName("app-logo");
+            appLogo.addThemeVariants(AvatarVariant.AURA_FILLED, AvatarVariant.XSMALL);
 
-        var scroller = new Scroller(menu);
-        scroller.addThemeVariants(ScrollerVariant.OVERFLOW_INDICATORS); // <8>
+            var appName = new Span("Click & Collect");
+            appName.addClassName("app-name"); // <5>
 
-        setPrimarySection(Section.DRAWER); // <9>
-        addToDrawer(header, scroller);
+            add(appLogo, appName);
+            setAlignItems(Alignment.CENTER);
+            setPadding(true);
+        }
+    }
+
+    static class MainMenu extends SideNav {
+
+        MainMenu() {
+            setMinWidth(200, Unit.PIXELS); // <6>
+            MenuConfiguration.getMenuEntries().forEach(entry -> { // <7>
+                var item = new SideNavItem(entry.title(), entry.menuClass(), // <8>
+                    new Icon(entry.icon()));
+                item.setMatchNested(true); // <9>
+                addItem(item);
+            });
+        }
     }
 }
 ----
 <1> `@Layout` makes this the layout of every view in the application, so you don't have to change the views to use it.
-<2> An <</components/avatar#,Avatar>> shows the initials of a name. Here, it stands in for a logo. The variants make it small, with a filled background.
-<3> The class names connect the logo and the name to the styles that you'll add next.
-<4> Keep the menu, and thereby the drawer, at least 200 pixels wide.
-<5> `MenuConfiguration.getMenuEntries()` returns an entry for every view that has a `@Menu` annotation. You'll add the annotation to the views later in this step.
-<6> A `SideNavItem` is a link to a view, with a label and an icon. The menu highlights the item of the view that the user is on.
-<7> Highlight the item also when the URL continues past the view's path. You'll need this in the next step, when the product ID becomes part of the URL.
-<8> The scroller makes the menu scrollable when it has more items than fit in the window. The variant shows an indicator at the edge where there is more to scroll to.
-<9> Make the drawer the primary section, so that it takes the full height of the window. This layout doesn't use the navigation bar of App Layout. Each view shows its own title instead, as you'll see in the next section.
+<2> The scroller makes the menu scrollable when it has more items than fit in the window. The variant shows an indicator at the edge where there is more to scroll to.
+<3> Make the drawer the primary section, so that it takes the full height of the window. This layout doesn't use the navigation bar of App Layout. Each view shows its own title instead, as you'll see in the next section.
+<4> An <<{articles}/components/avatar#,Avatar>> shows the initials of a name. Here, it stands in for a logo. The variants make it small, with a filled background.
+<5> The class names connect the logo and the name to the styles that you'll add next.
+<6> Keep the menu, and thereby the drawer, at least 200 pixels wide.
+<7> `MenuConfiguration.getMenuEntries()` returns an entry for every view that has a `@Menu` annotation. You'll add the annotation to the views later in this step.
+<8> A `SideNavItem` is a link to a view, with a label and an icon. The menu highlights the item of the view that the user is on.
+<9> Highlight the item also when the URL continues past the view's path. You'll need this in the next step, when the product ID becomes part of the URL.
 
 The layout doesn't refer to any view class. Instead, each view declares its own menu entry with an annotation. This keeps the layout independent of the features. Adding a view to the menu doesn't require changes to the layout, and the layout can link to views in other packages, even though the view classes are package-private.
 
@@ -203,7 +211,7 @@ class ProductCatalogView extends MasterDetailLayout {
         var title = new ViewTitle("Product Catalog");
 // end::snippet[]
 
-        var searchField = new TextField();
+        var searchField = new SearchField();
         // ...
 
         // Layout view
@@ -289,8 +297,6 @@ package com.example.product;
 
 import com.example.base.ui.ViewTitle;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.grid.ColumnTextAlign;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.notification.Notification;
@@ -316,28 +322,9 @@ class ProductCatalogView extends MasterDetailLayout {
         // Create components
         var title = new ViewTitle("Product Catalog");
 
-        var searchField = new TextField();
-        searchField.setPlaceholder("Search");
-        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
-        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+        var searchField = new SearchField();
 
-        var grid = new Grid<ProductCatalogItem>();
-        grid.addColumn(ProductCatalogItem::name)
-            .setHeader("Name")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
-        grid.addColumn(ProductCatalogItem::price)
-            .setHeader("Price")
-            .setTextAlign(ColumnTextAlign.END)
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
-        grid.addColumn(ProductCatalogItem::description)
-            .setHeader("Description")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
-        grid.addColumn(ProductCatalogItem::category)
-            .setHeader("Category")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
-        grid.addColumn(ProductCatalogItem::brand)
-            .setHeader("Brand")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+        var grid = new ProductCatalogGrid();
         grid.setItemsPageable(pageable -> service
             .findItems(searchField.getValue(), pageable)
         ).setIdentifierProvider(ProductCatalogItem::productId);
@@ -365,15 +352,15 @@ class ProductCatalogView extends MasterDetailLayout {
         addDetailEscapePressListener(e -> grid.deselectAll());
 
         var addButton = new Button("Add Product", e ->
-                new AddProductDialog(
-                        productDetails -> {
-                            var saved = service.save(productDetails);
-                            grid.getDataProvider().refreshAll();
-                            service.findItemById(saved.getProductId())
-                                   .ifPresent(grid::select);
-                        },
-                        this::handleException
-                ).open()
+            new AddProductDialog(
+                productDetails -> {
+                    var saved = service.save(productDetails);
+                    grid.getDataProvider().refreshAll();
+                    service.findItemById(saved.getProductId())
+                           .ifPresent(grid::select);
+                },
+                this::handleException
+            ).open()
         );
 
         // Layout view
@@ -396,23 +383,31 @@ class ProductCatalogView extends MasterDetailLayout {
 
     private void handleException(RuntimeException exception) {
         if (exception instanceof OptimisticLockingFailureException) {
-            var notification = new Notification(
-                "Another user has edited the same product. "
-                + "Please refresh and try again.");
-            notification.setPosition(Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.WARNING);
-            notification.setDuration(3000);
-            notification.open();
+            new WarningNotification("Another user has edited the same product. "
+                + "Please refresh and try again.").open();
         } else if (exception instanceof DuplicateKeyException) {
-            var notification = new Notification(
-                "The SKU is already in use. Please enter another one.");
-            notification.setPosition(Notification.Position.MIDDLE);
-            notification.addThemeVariants(NotificationVariant.WARNING);
-            notification.setDuration(3000);
-            notification.open();
+            new WarningNotification(
+                "The SKU is already in use. Please enter another one.").open();
         } else {
             // Delegate to Vaadin's default error handler
             throw exception;
+        }
+    }
+
+    static class SearchField extends TextField {
+
+        SearchField() {
+            setPlaceholder("Search");
+            setPrefixComponent(VaadinIcon.SEARCH.create());
+            setValueChangeMode(ValueChangeMode.LAZY);
+        }
+    }
+
+    static class WarningNotification extends Notification {
+
+        WarningNotification(String text) {
+            super(text, 3000, Position.MIDDLE);
+            addThemeVariants(NotificationVariant.WARNING);
         }
     }
 }
@@ -432,7 +427,6 @@ import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.avatar.AvatarVariant;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.ScrollerVariant;
@@ -445,33 +439,40 @@ import com.vaadin.flow.server.menu.MenuConfiguration;
 class MainLayout extends AppLayout {
 
     MainLayout() {
-        // Create components
-        var appLogo = new Avatar("Click & Collect");
-        appLogo.addClassName("app-logo");
-        appLogo.addThemeVariants(AvatarVariant.AURA_FILLED, AvatarVariant.XSMALL);
-
-        var appName = new Span("Click & Collect");
-        appName.addClassName("app-name");
-
-        var menu = new SideNav();
-        menu.setMinWidth(200, Unit.PIXELS);
-        MenuConfiguration.getMenuEntries().forEach(entry -> {
-            var item = new SideNavItem(entry.title(), entry.menuClass(),
-                new Icon(entry.icon()));
-            item.setMatchNested(true);
-            menu.addItem(item);
-        });
-
-        // Layout drawer
-        var header = new HorizontalLayout(appLogo, appName);
-        header.setAlignItems(FlexComponent.Alignment.CENTER);
-        header.setPadding(true);
-
-        var scroller = new Scroller(menu);
+        var scroller = new Scroller(new MainMenu());
         scroller.addThemeVariants(ScrollerVariant.OVERFLOW_INDICATORS);
 
         setPrimarySection(Section.DRAWER);
-        addToDrawer(header, scroller);
+        addToDrawer(new DrawerHeader(), scroller);
+    }
+
+    static class DrawerHeader extends HorizontalLayout {
+
+        DrawerHeader() {
+            var appLogo = new Avatar("Click & Collect");
+            appLogo.addClassName("app-logo");
+            appLogo.addThemeVariants(AvatarVariant.AURA_FILLED, AvatarVariant.XSMALL);
+
+            var appName = new Span("Click & Collect");
+            appName.addClassName("app-name");
+
+            add(appLogo, appName);
+            setAlignItems(Alignment.CENTER);
+            setPadding(true);
+        }
+    }
+
+    static class MainMenu extends SideNav {
+
+        MainMenu() {
+            setMinWidth(200, Unit.PIXELS);
+            MenuConfiguration.getMenuEntries().forEach(entry -> {
+                var item = new SideNavItem(entry.title(), entry.menuClass(),
+                    new Icon(entry.icon()));
+                item.setMatchNested(true);
+                addItem(item);
+            });
+        }
     }
 }
 ----
