@@ -188,6 +188,8 @@ A fallback doesn't help in the following cases, which only the maintainers of th
 
 Report these cases to the maintainers of the add-on, with the logged message or the error in the browser console. The section <<#make-add-ons-compatible,Make Add-Ons Compatible>> describes what they need to change.
 
+Until the add-on is fixed, the application can't use the `strict` mode. It can still run under a strict policy with the <<{articles}/flow/security/protections/content-security-policy#function-execution-eval-calls,manual overrides of the `Function` constructor and `eval()`>>. The overrides map every string that the browser would compile to a function collected in advance. This includes [classname]`LitRenderer` templates, chart options, and calls to `eval()` in frontend files. Like a fallback, they can't map strings built from changing values, and they don't cover inline event handler attributes.
+
 
 [[allow-external-resources]]
 == Allow External Resources
@@ -200,7 +202,9 @@ The policy that Vaadin sends allows resources only from the origin of the applic
 
 Add the sources that the application needs in an [interfacename]`IndexHtmlRequestListener`, as described in <<{articles}/flow/security/protections/content-security-policy#built-in-strict-csp,Built-in Strict Content Security Policy>>. Keep `script-src` unchanged. To load a script from another origin, add a `<script>` element to the page, which gets the nonce automatically.
 
-Vaadin has to be the only code that sets the `Content-Security-Policy` header of the page. Remove any other code that sets it, such as a servlet filter, or a listener that adds a nonce to the page itself. In production mode, the request fails if the header is already set when Vaadin writes the page. If your application overrides the [classname]`Function` constructor and `eval()` with pre-defined functions, it doesn't need that script anymore. A policy that Spring Security sends doesn't fail the request, but isn't applied to the page either. See <<{articles}/flow/security/protections/content-security-policy#spring-security,Spring Security>> for how to move its directives.
+Vaadin has to be the only code that sets the `Content-Security-Policy` header of the page. Remove any other code that sets it, such as a servlet filter, or a listener that adds a nonce to the page itself. In production mode, the request fails if the header is already set when Vaadin writes the page. A policy that Spring Security sends doesn't fail the request, but isn't applied to the page either. See <<{articles}/flow/security/protections/content-security-policy#spring-security,Spring Security>> for how to move its directives.
+
+The `strict` mode replaces the <<{articles}/flow/security/protections/content-security-policy#creating-random-nonce,manual nonce>> and the <<{articles}/flow/security/protections/content-security-policy#function-execution-eval-calls,manual overrides of the `Function` constructor and `eval()`>>. If your application uses them, remove its nonce listener and the script with the overrides when you switch.
 
 
 [[switch-to-strict]]
