@@ -1,0 +1,245 @@
+---
+title: Migrate to a Strict CSP
+page-title: How to migrate a Vaadin application to a strict CSP | Vaadin
+description: Find and replace the code that doesn't work under a strict Content Security Policy, in applications and add-ons.
+meta-description: Migrate a Vaadin application or add-on to a strict, nonce-based Content Security Policy. Find the affected calls with the warn mode and replace them.
+order: 6
+section-nav: badge-preview
+---
+
+
+= [since:com.vaadin:vaadin@V25.4]#Migrate to a Strict Content Security Policy#
+:toclevels: 2
+
+:preview-feature: The strict Content Security Policy mode
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+A strict Content Security Policy lets the browser run only the scripts that the server marked with a nonce, and blocks JavaScript that's compiled from a string. Vaadin sends such a policy itself when the `contentSecurityPolicy` configuration parameter is `strict`. See <<{articles}/flow/security/protections/content-security-policy#built-in-strict-csp,Built-in Strict Content Security Policy>> for the policy it sends.
+
+Code that sends JavaScript to the browser as a string, such as [methodname]`executeJs("...")`, doesn't work under the policy. This guide shows how to find that code with the `warn` mode, and what to replace it with. Follow these steps for an application:
+
+. <<#find-the-calls,Find the calls>> with the `warn` mode.
+. <<#replace-string-javascript,Replace string JavaScript>> in your own code.
+. <<#handle-add-ons,Handle add-ons>> that send string JavaScript.
+. <<#allow-external-resources,Allow external resources>> that the default policy blocks.
+. <<#switch-to-strict,Switch to the strict mode>>, and test a production build.
+
+If you maintain an add-on, see <<#make-add-ons-compatible,Make Add-Ons Compatible>>.
+
+
+[[find-the-calls]]
+== Find the Calls with the Warn Mode
+
+The `warn` mode leaves the application unchanged, but logs every call that wouldn't work under a strict policy. Set the parameter in [filename]`application.properties`:
+
+[source,properties]
+----
+vaadin.contentSecurityPolicy=warn
+----
+
+Without Spring Boot, set `contentSecurityPolicy` as described in <<{articles}/flow/configuration/properties#,Configuration Properties>>.
+
+The `warn` mode works in development mode, too. Start the application, and use every view and feature, so that each call runs at least once. Each call is logged as a warning with a [classname]`ContentSecurityPolicyViolationException`, whose stack trace starts at the API that sent the string, and leads to the code that called it. The call can be in your own code, in a Vaadin UI component, or in an add-on.
+
+For [methodname]`executeJs()`, [methodname]`JsFunction.of()`, and the string overloads of listener filters and event data, the message also contains the declaration that replaces the string, ready to paste, and how to use it.
+
+A call site is logged once for each string that it sends, and at most ten times. A call site that sends five or more different strings probably builds them from changing values. The message then says so. See <<#pass-changing-values-as-parameters,Pass Changing Values as Parameters>>.
+
+The `warn` mode doesn't send the policy, so the browser doesn't block anything yet. JavaScript that the browser compiles on its own, such as a call to `eval()` in a frontend file, and resources from other origins don't show up in the log. You find them in the last step, when you test under the policy.
+
+
+[[replace-string-javascript]]
+== Replace String JavaScript
+
+Replace each logged call in your own code with the API that runs JavaScript from the frontend bundle. You declare the JavaScript in a Java interface annotated with [annotationname]`@JsDefinition`, and the build puts it into the bundle. The browser runs it from there, without compiling anything.
+
+[cols="1,1",options=header]
+|===
+| String-based API | Replacement
+
+| [methodname]`Element.executeJs(String, Object...)` and [methodname]`Page.executeJs(String, Object...)`
+| A method of a [interfacename]`JsInvokers` interface, called through [methodname]`executeJs(Class)`. See <<{articles}/flow/component-internals/element-api/calling-javascript#declaring-javascript,Declaring JavaScript in Java>>.
+
+| [methodname]`JsFunction.of()`
+| A method that returns [classname]`JsFunction` in a [interfacename]`JsSnippets` interface. See <<{articles}/flow/component-internals/element-api/calling-javascript#declaring-snippets,Declaring Snippets>>.
+
+| [methodname]`Element.addJsInitializer(String, Object...)`
+| [methodname]`addJsInitializer(JsFunction)` with a declared snippet.
+
+| [methodname]`Page.addDynamicImport(String)`
+| [methodname]`addDynamicImport(JsFunction)` with a declared snippet. See <<{articles}/flow/advanced/loading-resources#dynamic-imports,Dynamic Imports>>.
+
+| [methodname]`DomListenerRegistration.setFilter(String)`
+| A property path, such as `event.key?.length`, or [methodname]`setFilterExpression()` with a declared [classname]`DomEventFilter`. See <<{articles}/flow/component-internals/element-api/event-listener#declaring-a-filter,Declaring a Filter>>.
+
+| [methodname]`DomListenerRegistration.addEventData(String)` and [methodname]`addEventDataElement(String)`
+| [methodname]`addEventDataPath()` and [methodname]`addEventDataElementPath()` for property paths, or [methodname]`addEventData()` with a declared [classname]`DomEventData`. See <<{articles}/flow/component-internals/element-api/event-listener#declaring-event-data,Declaring Event Data>>.
+
+| [methodname]`LitRenderer.of(String)`
+| [methodname]`LitRenderer.of()` with a declared [classname]`CompiledLitTemplate`. See <<#declare-lit-renderer-templates,Declare Lit Renderer Templates>>.
+
+| Chart options that take a function as a string, such as [methodname]`setFormatter()`
+| A format string, or a declared [interfacename]`ChartFunction`. See <<{articles}/components/charts/configuration#charts.configuration.csp,Chart Functions Under a Strict Content Security Policy>>.
+
+| [methodname]`Shortcuts.setShortcutListenOnElement(String, Component)`
+| [methodname]`Shortcuts.setShortcutListenOnElementLocator()` with a declared [classname]`JsFunction`.
+
+| [methodname]`MenuItemBase.executeJsWhenAttached()`
+| A method of a [interfacename]`JsInvokers` interface, called through [methodname]`executeJs(Class)`.
+|===
+
+The following APIs work under a strict policy without changes:
+
+- [methodname]`callJsFunction()`, unless an argument is a [classname]`JsFunction` built with [methodname]`JsFunction.of()`
+- The `filter` of [annotationname]`@DomEvent` and the values of [annotationname]`@EventData`, which the build puts into the bundle
+- The built-in renderers of Grid and other UI components, such as [classname]`LocalDateRenderer` and [classname]`ComponentRenderer`, unless a subclass overrides [methodname]`getTemplateExpression()`
+
+A production build that optimizes the bundle, which is the default, only includes the [annotationname]`@DomEvent` classes and the [annotationname]`@JsDefinition` interfaces that it reaches from the routes of the application. If you use one of them only through reflection, name it in [annotationname]`@Uses` on a class that the build reaches.
+
+
+=== Replace a Call to executeJs
+
+For example, the following code scrolls an element to a position with a string expression:
+
+[source,java]
+----
+getElement().executeJs("this.scrollTop = $0", position);
+----
+
+Declare the expression as a method of an interface instead, and call the method:
+
+[source,java]
+----
+@JsDefinition
+public interface ScrollJs extends JsInvokers {
+
+    @JsExpression("this.scrollTop = $0")
+    void scrollTo(int position);
+}
+----
+
+[source,java]
+----
+getElement().executeJs(ScrollJs.class).scrollTo(position);
+----
+
+The build generates a function into the bundle for each method of the interface.
+
+
+[[pass-changing-values-as-parameters]]
+=== Pass Changing Values as Parameters
+
+The build can only put JavaScript into the bundle that you know when you build the application. JavaScript that's assembled from values at runtime has to take those values as parameters instead:
+
+[source,java]
+----
+// Can't be declared: a different string for each color
+getElement().executeJs("this.style.color = '" + color + "'");
+
+// Declared once, with the color as a parameter
+@JsDefinition
+public interface ColorJs extends JsInvokers {
+
+    @JsExpression("this.style.color = $0")
+    void setColor(String color);
+}
+----
+
+If the varying part is itself code, such as one of several functions, declare one method for each of them.
+
+
+[[declare-lit-renderer-templates]]
+=== Declare Lit Renderer Templates
+
+A [classname]`LitRenderer` created from a string template sends the template to the browser as a string. Declare the template as a method that returns [classname]`CompiledLitTemplate` in a [interfacename]`JsSnippets` interface. The expression is the body of a function that returns the template. The function gets `html`, the tag of a Lit template, and the values that the template renders, such as `item` and `index`. The functions added with [methodname]`withFunction()` are members of `functions`, as in `${functions.select}`:
+
+[source,java]
+----
+@JsDefinition
+public interface PersonTemplates extends JsSnippets {
+
+    @JsExpression("return html`<span @click=${functions.select}>${item.name}</span>`;")
+    CompiledLitTemplate name();
+}
+----
+
+[source,java]
+----
+private static final PersonTemplates TEMPLATES = JsSnippets.of(PersonTemplates.class);
+
+grid.addColumn(LitRenderer.<Person> of(TEMPLATES.name())
+        .withProperty("name", Person::getName)
+        .withFunction("select", this::select));
+----
+
+
+[[handle-add-ons]]
+== Handle Add-Ons
+
+When the stack trace of a logged call leads into an add-on, check first whether a newer version of the add-on supports a strict Content Security Policy.
+
+If it doesn't, you can often declare the strings that the add-on sends in your application, in an interface annotated with [annotationname]`@JsStringFallback`. When the add-on sends a string that matches a declaration exactly, Vaadin runs the declared JavaScript from the bundle instead. The logged message contains the declaration to paste for most such calls. See <<{articles}/flow/security/protections/content-security-policy#declaring-fallbacks-for-add-ons,Declaring Fallbacks for Add-on JavaScript Strings>> for the APIs that look for a fallback, and how to declare one.
+
+A fallback doesn't help in the following cases, which only the maintainers of the add-on can fix:
+
+- The add-on builds the string from changing values, so that it's different each time.
+- The add-on sends the string through an API that doesn't look for a fallback, such as a [classname]`LitRenderer` template or a chart option.
+- The frontend files of the add-on call `eval()` or `new Function()`, or set inline event handler attributes, such as `onclick`. The `warn` mode doesn't log these, because they don't go through a Vaadin API. The browser blocks them under the policy.
+
+Report these cases to the maintainers of the add-on, with the logged message or the error in the browser console. The section <<#make-add-ons-compatible,Make Add-Ons Compatible>> describes what they need to change.
+
+
+[[allow-external-resources]]
+== Allow External Resources
+
+The policy that Vaadin sends allows resources only from the origin of the application, plus images, fonts, and fetches of `data:` URLs. The browser blocks anything else, for example:
+
+- Images, fonts, or stylesheets from a content delivery network
+- Requests to an API on another origin, from the browser
+- An [classname]`IFrame` that shows a page from another origin
+
+Add the sources that the application needs in an [interfacename]`IndexHtmlRequestListener`, as described in <<{articles}/flow/security/protections/content-security-policy#built-in-strict-csp,Built-in Strict Content Security Policy>>. Keep `script-src` unchanged. To load a script from another origin, add a `<script>` element to the page, which gets the nonce automatically.
+
+Vaadin has to be the only code that sets the `Content-Security-Policy` header of the page. Remove any other code that sets it, such as a servlet filter, or a listener that adds a nonce to the page itself. In production mode, the request fails if the header is already set when Vaadin writes the page. If your application overrides the [classname]`Function` constructor and `eval()` with pre-defined functions, it doesn't need that script anymore. A policy that Spring Security sends doesn't fail the request, but isn't applied to the page either. See <<{articles}/flow/security/protections/content-security-policy#spring-security,Spring Security>> for how to move its directives.
+
+
+[[switch-to-strict]]
+== Switch to the Strict Mode
+
+When the log stays free of warnings, switch to the `strict` mode:
+
+[source,properties]
+----
+vaadin.contentSecurityPolicy=strict
+----
+
+In this mode, every call to a string-based API throws a [classname]`ContentSecurityPolicyViolationException`, in both development and production mode. A call that you missed fails visibly instead of being logged.
+
+Vaadin sends the policy only in production mode, because the development server and the development tools need `eval()`. Create a <<../production/build#,production build>> and run it. Then use every view and feature of the application with the developer tools of the browser open. The browser logs every script, style, or resource that the policy blocks as an error in the console. Fix each of them by adding a source, or by changing the code that needs it.
+
+Keep the `strict` mode in the tests that run against a production build, so that a new string-based call fails a test.
+
+
+[[make-add-ons-compatible]]
+== Make Add-Ons Compatible
+
+An add-on works under a strict policy when it sends no JavaScript as a string, and its frontend files compile no JavaScript from strings.
+
+For the Java code, replace every string-based API as listed in <<#replace-string-javascript,Replace String JavaScript>>. Declare the [annotationname]`@JsDefinition` interfaces in the add-on JAR. The build of the application puts their JavaScript into the bundle when it reaches the classes of the add-on that use them. Never build JavaScript from changing values: pass them as parameters, as described in <<#pass-changing-values-as-parameters,Pass Changing Values as Parameters>>.
+
+For the frontend files, avoid the code that the browser blocks under the policy:
+
+- `eval()`, `new Function()`, and `setTimeout()` or `setInterval()` with a string
+- Inline event handler attributes, such as `onclick`, also when set from Java with [methodname]`setAttribute()`
+- `javascript:` URLs
+- `<script>` elements without the nonce, created from HTML strings
+- Third-party libraries that do any of these
+
+Inline styles aren't affected, because the policy allows `'unsafe-inline'` in `style-src`.
+
+To test the add-on, set `contentSecurityPolicy` to `strict` in its test application. The string-based calls then throw when the test application runs, also in development mode. Run the browser tests against a production build, so that the browser enforces the policy.
+
+The declared JavaScript APIs need the Vaadin version that introduced the strict mode. Say in the description of the add-on which of its versions support a strict policy.
+
+
+[discussion-id]`7B0D3C5E-2F4A-4E8B-9C61-5A8E2D7F14B3`
