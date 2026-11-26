@@ -76,19 +76,47 @@ record ProductCatalogItem( // <1>
 
 == Add a Grid Component
 
-To display the product data, you'll use a <</components/grid#,Grid>> component. In the constructor of the `ProductCatalogView` class, create a new `Grid` instance and configure it to display the columns you want.
+To display the product data, you'll use a <<{articles}/components/grid#,Grid>> component. A grid takes several calls to set up: one for each column, and more for the headers and the alignment of the columns. Instead of making these calls in the view, create a class that extends `Grid`, and set up the grid in its constructor. The name of the class then says what the grid shows, and the view stays short.
 
-When building views with Vaadin, you typically create and layout the UI components in separate sections of the constructor for better readability. Here's how to set up the grid in the `ProductCatalogView` class:
+Only the view uses the grid, so the class could be nested in the view. However, the setup is long, and it grows when you make the columns sortable in the next step. Therefore, create a new class named `ProductCatalogGrid` in a file of its own, in the same package as the view:
+
+.ProductCatalogGrid.java
+[source,java]
+----
+package com.example.product;
+
+import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
+
+class ProductCatalogGrid extends Grid<ProductCatalogItem> { // <1>
+
+    ProductCatalogGrid() {
+        addColumn(ProductCatalogItem::name) // <2>
+            .setHeader("Name");
+        addColumn(ProductCatalogItem::price)
+            .setHeader("Price")
+            .setTextAlign(ColumnTextAlign.END);
+        addColumn(ProductCatalogItem::description)
+            .setHeader("Description");
+        addColumn(ProductCatalogItem::category)
+            .setHeader("Category");
+        addColumn(ProductCatalogItem::brand)
+            .setHeader("Brand");
+    }
+}
+----
+<1> The grid shows `ProductCatalogItem` records.
+<2> Use method references to define how the columns get their values from the `ProductCatalogItem` record. Since the class is a grid, it calls the methods of `Grid` directly.
+
+The class is still a grid, so the code that uses it can call every method of `Grid` on it. See <<{articles}/building-apps/components/build-component#extending-an-existing-component,Extending an Existing Component>> for more about this pattern.
+
+Next, add the grid to the view. The constructor of the view creates the components first, and then lays them out:
 
 .ProductCatalogView.java
 [source,java]
 ----
 package com.example.product;
 
-// tag::snippet[]
-import com.vaadin.flow.component.grid.ColumnTextAlign;
-import com.vaadin.flow.component.grid.Grid;
-// end::snippet[]
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -100,31 +128,19 @@ class ProductCatalogView extends VerticalLayout {
     ProductCatalogView() {
 // tag::snippet[]
         // Create components
-        var grid = new Grid<ProductCatalogItem>();
-        grid.addColumn(ProductCatalogItem::name) // <1>
-            .setHeader("Name");
-        grid.addColumn(ProductCatalogItem::price)
-            .setHeader("Price")
-            .setTextAlign(ColumnTextAlign.END);
-        grid.addColumn(ProductCatalogItem::description)
-            .setHeader("Description");
-        grid.addColumn(ProductCatalogItem::category)
-            .setHeader("Category");
-        grid.addColumn(ProductCatalogItem::brand)
-            .setHeader("Brand");
+        var grid = new ProductCatalogGrid();
 
         // Layout view
-        setSizeFull(); // <2>
-        grid.setSizeFull(); // <3>
-        add(grid); // <4>
+        setSizeFull(); // <1>
+        grid.setSizeFull(); // <2>
+        add(grid); // <3>
 // end::snippet[]
     }
 }
 ----
-<1> Use method references to define how the columns get their values from the `ProductCatalogItem` record.
-<2> Make the view take the full size of the browser window.
-<3> Make the grid take the full size of the view.
-<4> Add the grid to the view layout.
+<1> Make the view take the full size of the browser window.
+<2> Make the grid take the full size of the view.
+<3> Add the grid to the view layout.
 
 `VerticalLayout` arranges its components in a column. Under the hood, it's a CSS flexbox container, and sizing components inside it follows flexbox rules, which can be surprising at first. The <</building-apps/ui-basics/layouts#,Arrange with Layouts>> guide explains them.
 
@@ -157,7 +173,7 @@ Spring Data provides the implementation of the repository interface at runtime, 
 
 == Add Data to the Grid
 
-Finally, you'll fetch the product data from the database and set it as the items of the grid. To do this, inject the `ProductCatalogItemRepository` into the constructor of the `ProductCatalogView` class and use it to retrieve all products.
+Finally, you'll fetch the product data from the database and set it as the items of the grid. To do this, inject the `ProductCatalogItemRepository` into the constructor of the `ProductCatalogView` class and use it to retrieve all products. The view does this, not the grid. The grid only shows the items that it gets, and the view decides where they come from.
 
 In production applications, you should never perform unbounded queries that can return a large number of items. Since Grid has built-in support for pagination, you'll use that to fetch only the items needed for the current page:
 
@@ -166,8 +182,6 @@ In production applications, you should never perform unbounded queries that can 
 ----
 package com.example.product;
 
-import com.vaadin.flow.component.grid.ColumnTextAlign;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -180,18 +194,7 @@ class ProductCatalogView extends VerticalLayout {
     ProductCatalogView(ProductCatalogItemRepository repository) { // <1>
 // end::snippet[]
         // Create components
-        var grid = new Grid<ProductCatalogItem>();
-        grid.addColumn(ProductCatalogItem::name)
-            .setHeader("Name");
-        grid.addColumn(ProductCatalogItem::price)
-            .setHeader("Price")
-            .setTextAlign(ColumnTextAlign.END);
-        grid.addColumn(ProductCatalogItem::description)
-            .setHeader("Description");
-        grid.addColumn(ProductCatalogItem::category)
-            .setHeader("Category");
-        grid.addColumn(ProductCatalogItem::brand)
-            .setHeader("Brand");
+        var grid = new ProductCatalogGrid();
 // tag::snippet[]
         grid.setItemsPageable(pageable -> repository
             .findAll(pageable)
@@ -233,8 +236,6 @@ The https://github.com/vaadin/tutorial/tree/step/list-data[`step/list-data` bran
 ----
 package com.example.product;
 
-import com.vaadin.flow.component.grid.ColumnTextAlign;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
@@ -245,18 +246,7 @@ class ProductCatalogView extends VerticalLayout {
 
     ProductCatalogView(ProductCatalogItemRepository repository) {
         // Create components
-        var grid = new Grid<ProductCatalogItem>();
-        grid.addColumn(ProductCatalogItem::name)
-            .setHeader("Name");
-        grid.addColumn(ProductCatalogItem::price)
-            .setHeader("Price")
-            .setTextAlign(ColumnTextAlign.END);
-        grid.addColumn(ProductCatalogItem::description)
-            .setHeader("Description");
-        grid.addColumn(ProductCatalogItem::category)
-            .setHeader("Category");
-        grid.addColumn(ProductCatalogItem::brand)
-            .setHeader("Brand");
+        var grid = new ProductCatalogGrid();
         grid.setItemsPageable(pageable -> repository
             .findAll(pageable)
             .getContent()
@@ -266,6 +256,35 @@ class ProductCatalogView extends VerticalLayout {
         setSizeFull();
         grid.setSizeFull();
         add(grid);
+    }
+}
+----
+====
+
+.ProductCatalogGrid.java
+[%collapsible]
+====
+[source,java]
+----
+package com.example.product;
+
+import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
+
+class ProductCatalogGrid extends Grid<ProductCatalogItem> {
+
+    ProductCatalogGrid() {
+        addColumn(ProductCatalogItem::name)
+            .setHeader("Name");
+        addColumn(ProductCatalogItem::price)
+            .setHeader("Price")
+            .setTextAlign(ColumnTextAlign.END);
+        addColumn(ProductCatalogItem::description)
+            .setHeader("Description");
+        addColumn(ProductCatalogItem::category)
+            .setHeader("Category");
+        addColumn(ProductCatalogItem::brand)
+            .setHeader("Brand");
     }
 }
 ----

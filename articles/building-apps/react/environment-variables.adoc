@@ -1,0 +1,117 @@
+---
+title: Use Environment Variables
+page-title: How to use environment variables in Vaadin React views
+description: Give React views build-time configuration from .env files and environment variables.
+meta-description: Read .env files and environment variables in Vaadin React views with import.meta.env, and learn where Vite looks for them and when it sets their values.
+order: 80
+---
+
+
+= Use Environment Variables in React Views
+:toclevels: 2
+
+A React view can read configuration from environment variables, such as the address of an external service that differs between development and production. Vaadin builds the frontend with Vite, so React views use Vite's support for environment variables and [filename]`.env` files. This guide shows how to set it up in a Vaadin project.
+
+Vite replaces each variable with its value when it builds the frontend. The value then becomes part of the JavaScript code that the browser downloads. This has two consequences:
+
+- Anyone who opens the application can read the values. Never put passwords, API keys, or other secrets in them.
+- Vite fixes the values when it builds the frontend. A build has the same values on every server that you deploy it to.
+
+For values that are secret, or that differ between servers, see <<#runtime,Values That Differ Between Deployments>>.
+
+
+== Defining Variables
+
+Put the variables in a file called [filename]`.env` in the frontend folder, [filename]`src/main/frontend`:
+
+.[filename]`src/main/frontend/.env`
+[source,properties]
+----
+VITE_MAP_TILES_URL=https://tiles.example.com
+----
+
+Vaadin makes the frontend folder the root folder of Vite, and Vite reads [filename]`.env` files from its root folder. A [filename]`.env` file next to [filename]`pom.xml` has no effect, unless you configure Vite as described in <<#project-root,Keeping the Files in the Project Root>>.
+
+Only the variables whose names start with `VITE_` are available to the views. Vite leaves out the other variables, so that they don't end up in the browser by accident.
+
+Variables set in the environment also work, and take precedence over the values in the files. Set them where Vite runs: in the production build, or in the application when it starts in development mode. For example, a build server can set a value for a production build:
+
+[source,terminal]
+----
+VITE_MAP_TILES_URL=https://tiles.example.com mvn clean package
+----
+
+
+== Reading Variables in a View
+
+Read the variables from `import.meta.env`:
+
+[source,tsx]
+----
+export default function MapView() {
+  const tilesUrl = import.meta.env.VITE_MAP_TILES_URL;
+  // ...
+}
+----
+
+A variable that Vite didn't find is `undefined` in the view. When that happens, check that the [filename]`.env` file is in the frontend folder, and that the name of the variable starts with `VITE_`.
+
+TypeScript needs to know the type of `import.meta.env`. Without it, the production build fails with the error `Property 'env' does not exist on type 'ImportMeta'`. Add a file called [filename]`vite-env.d.ts` to the frontend folder:
+
+.[filename]`src/main/frontend/vite-env.d.ts`
+[source,typescript]
+----
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_MAP_TILES_URL: string;
+}
+----
+
+The first line adds the types that Vite provides, including those of its built-in variables, such as `import.meta.env.MODE`. The interface gives your own variables the type `string`. Without it, they have the type `any`.
+
+
+== Different Values for Development and Production
+
+Vite also reads [filename]`.env.development` in development mode, and [filename]`.env.production` in a production build. Their values take precedence over the values in [filename]`.env`:
+
+.[filename]`src/main/frontend/.env.development`
+[source,properties]
+----
+VITE_MAP_TILES_URL=http://localhost:9000
+----
+
+In development mode, Vite restarts when a [filename]`.env` file changes. Reload the browser to get the new values.
+
+For the other files that Vite reads, and the order of precedence among them, see https://vite.dev/guide/env-and-mode[Environment Variables and Modes] in the Vite documentation.
+
+
+[[project-root]]
+== Keeping the Files in the Project Root
+
+To keep the [filename]`.env` files next to [filename]`pom.xml`, set the Vite `envDir` option in the [filename]`vite.config.ts` file in the project root:
+
+.[filename]`vite.config.ts`
+[source,typescript]
+----
+import type { UserConfigFn } from 'vite';
+import { overrideVaadinConfig } from './vite.generated.ts';
+
+const customConfig: UserConfigFn = (env) => ({
+  envDir: import.meta.dirname
+});
+
+export default overrideVaadinConfig(customConfig);
+----
+
+`import.meta.dirname` is the folder of [filename]`vite.config.ts`. Vite then reads the [filename]`.env` files from the project root, and no longer from the frontend folder.
+
+Vaadin generates [filename]`vite.config.ts` if the file doesn't exist yet, and doesn't overwrite your changes. Commit the file to source control.
+
+
+[[runtime]]
+== Values That Differ Between Deployments
+
+Keep secrets, and values that differ between servers that run the same build, on the server. Pass them to the application from outside the build, for example as environment variables or mounted files. See <<{articles}/building-apps/production/configure#,Configure the Application>>.
+
+A React view gets these values by calling a browser-callable service, which returns only what the view needs. A secret, such as the API key of an external service, stays on the server: the service uses the key to call the external service on behalf of the view. See <<call-services#,Call Java Services>>.

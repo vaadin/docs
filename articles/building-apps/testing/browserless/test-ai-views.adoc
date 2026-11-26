@@ -27,7 +27,7 @@ To test a whole view in a Spring Boot application, see <<#spring-boot,Test the V
 == Enable the Feature Flag
 
 The AI integration features are a preview.
-Unless their feature flag is enabled, the orchestrator throws an [classname]`AIComponentsExperimentalFeatureException` on the first prompt.
+Unless their feature flag is enabled, the orchestrator throws an [classname]`AiComponentsExperimentalFeatureException` on the first prompt.
 In a test, that's the call that sends the message.
 
 Browserless tests read the flag from the same [filename]`src/main/resources/vaadin-featureflags.properties` file as the application, so a project that enables the flag there needs nothing more.
@@ -66,8 +66,8 @@ It has a Message List and a Message Input, an Upload for attachments, a tool tha
 .`SupportChat.java`
 [source,java]
 ----
-import com.vaadin.flow.component.ai.orchestrator.AIOrchestrator;
-import com.vaadin.flow.component.ai.provider.LLMProvider;
+import com.vaadin.flow.component.ai.orchestrator.AiOrchestrator;
+import com.vaadin.flow.component.ai.provider.LlmProvider;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.messages.MessageInput;
 import com.vaadin.flow.component.messages.MessageList;
@@ -77,7 +77,7 @@ import com.vaadin.flow.component.upload.Upload;
 
 public class SupportChat extends VerticalLayout {
 
-    public SupportChat(LLMProvider provider) {
+    public SupportChat(LlmProvider provider) {
         var selectedOrder = new Span();
         selectedOrder.setId("selected-order");
         var messageList = new MessageList();
@@ -85,7 +85,7 @@ public class SupportChat extends VerticalLayout {
         var messageInput = new MessageInput();
         var upload = new Upload();
 
-        AIOrchestrator.builder(provider,
+        AiOrchestrator.builder(provider,
                         "You are a customer support assistant.")
                 .withMessageList(messageList)
                 .withInput(messageInput)
@@ -137,7 +137,7 @@ The view creates the provider from the model that Spring AI configures, as in th
 [source,java]
 ----
 import org.springframework.ai.chat.model.ChatModel;
-import com.vaadin.flow.component.ai.provider.SpringAILLMProvider;
+import com.vaadin.flow.component.ai.provider.SpringAiLlmProvider;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 
@@ -145,7 +145,7 @@ import com.vaadin.flow.router.Route;
 public class ChatView extends VerticalLayout {
 
     public ChatView(ChatModel chatModel) {
-        add(new SupportChat(new SpringAILLMProvider(chatModel)));
+        add(new SupportChat(new SpringAiLlmProvider(chatModel)));
     }
 }
 ----
@@ -157,7 +157,7 @@ The scripted provider answers each prompt with the next reply in its queue.
 A reply is a function of the request, so it can depend on the prompt, the attachments, and the tools.
 The provider also records the requests, so that a test can check what the model would have received:
 
-.`ScriptedLLMProvider.java`
+.`ScriptedLlmProvider.java`
 [source,java]
 ----
 import java.util.ArrayDeque;
@@ -165,14 +165,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.function.Function;
-import com.vaadin.flow.component.ai.provider.LLMProvider;
+import com.vaadin.flow.component.ai.provider.LlmProvider;
 import reactor.core.publisher.Flux;
 
-public class ScriptedLLMProvider implements LLMProvider {
+public class ScriptedLlmProvider implements LlmProvider {
 
-    private final Queue<Function<LLMRequest, Flux<String>>> replies =
+    private final Queue<Function<LlmRequest, Flux<String>>> replies =
             new ArrayDeque<>();
-    private final List<LLMRequest> requests = new ArrayList<>();
+    private final List<LlmRequest> requests = new ArrayList<>();
 
     /** Answers the next prompt with the given chunks. */
     public void reply(String... chunks) {
@@ -185,17 +185,17 @@ public class ScriptedLLMProvider implements LLMProvider {
     }
 
     /** Answers the next prompt with a function of its request. */
-    public void replyWith(Function<LLMRequest, Flux<String>> reply) {
+    public void replyWith(Function<LlmRequest, Flux<String>> reply) {
         replies.add(reply);
     }
 
     /** Returns the requests that the orchestrator has sent. */
-    public List<LLMRequest> requests() {
+    public List<LlmRequest> requests() {
         return requests;
     }
 
     @Override
-    public Flux<String> stream(LLMRequest request) {
+    public Flux<String> stream(LlmRequest request) {
         requests.add(request);
         var reply = replies.poll();
         if (reply == null) {
@@ -238,12 +238,12 @@ import reactor.core.publisher.Sinks;
 
 class SupportChatTest {
 
-    private ScriptedLLMProvider provider;
+    private ScriptedLlmProvider provider;
     private BrowserlessUIContext window;
 
     @BeforeEach
     void setUp() {
-        provider = new ScriptedLLMProvider();
+        provider = new ScriptedLlmProvider();
         window = BrowserlessUIContext.forComponent(
                 () -> new SupportChat(provider));
     }
@@ -278,9 +278,9 @@ class SupportChatTest {
 ----
 
 The orchestrator updates the Message List with [methodname]`UI.access()`.
-In a browserless test, such an update waits until the test runs its next component query.
+In a browserless test, such an update waits until the test runs its next component query [since:com.vaadin:vaadin@V25.4]#or calls [methodname]`window.roundTrip()`#.
 Read the conversation with a new query after each step, such as [methodname]`window.findMessageList()`.
-A component that the test already holds, for example in a field, shows the update only after the next query.
+A component that the test already holds, for example in a field, shows the update only after one of these calls.
 See <<{articles}/flow/testing/browserless/test-environment#access-tasks,Tasks Submitted with UI.access()>> for the details.
 
 The recorded requests show what the model would have received: the user message, the system prompt, the attachments, and the tools.
@@ -502,7 +502,7 @@ class FakeChatModel implements ChatModel {
 }
 ----
 
-The real [classname]`SpringAILLMProvider` runs between the view and the fake model, and it streams the response on a background thread, as it does in production.
+The real [classname]`SpringAiLlmProvider` runs between the view and the fake model, and it streams the response on a background thread, as it does in production.
 That's why the test waits for the response with Awaitility, which Spring Boot's test starter includes.
 Test the conversation itself with the scripted provider, as shown earlier on this page.
 Keep Spring Boot tests for what needs the application, such as navigation, access control, and the beans that the view uses.

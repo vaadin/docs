@@ -78,28 +78,49 @@ Create a component when you notice any of the following:
 
 - *Need for a clean API* — other parts of the code should interact with this section through setters and events, not by reaching into its internals.
 - *Complex sections* — a part of a view has grown large and has its own internal logic.
-- *Repeated patterns* — the same group of elements appears in multiple places.
+- *Repeated patterns* — the same group of elements appears in multiple places, or you set up the same component the same way in several places.
+- *Long setup* — a built-in component takes several calls to set up, and a name would say what it's for.
 
 Creating components is primarily about structuring code, not reuse. Even one-off components, like a detail panel used only inside one view, are worth extracting — they keep each class focused, give the section a name, and define a clear boundary for its behavior. See <<../ui-basics/compose#,Compose with Components>> for more on decomposition.
 
 
 == Choosing a Base Class
 
-You have two main approaches: extending an existing component, and using `Composite`.
+Choose the base class by what your component is:
+
+[cols="1,1"]
+|===
+| Your Component | Base Class
+
+| A built-in component set up for one purpose, such as a grid of employees or a delete confirmation
+| That component, for example `Grid<Employee>` or `ConfirmDialog`
+
+| A part of one view that arranges other components, such as the footer of a detail panel
+| `Div` or a layout component, in a static nested class of the class that uses it. See <<../ui-basics/compose#nesting-one-off-components,Nesting One-Off Components>>.
+
+| A reusable component that contains other components
+| `Composite`
+|===
 
 === Extending an Existing Component
 
-The simplest option is to extend an existing component. This can be an HTML element wrapper like `Div` or `Span` for basic containers, or a higher-level Vaadin component like `Button` or `VerticalLayout` for specializations:
+Extend a component when your component _is_ that component, set up for one purpose. Put the setup in the constructor, and name the class after what the component is for:
 
 [source,java]
 ----
-public class InfoCard extends Div {
-    public InfoCard(String title, String content) {
-        addClassName("info-card");
-        add(new H3(title), new Paragraph(content));
+public class EmployeeGrid extends Grid<Employee> {
+    public EmployeeGrid() {
+        super(Employee.class, false);
+        addColumn(Employee::getName).setHeader("Name");
+        addColumn(Employee::getTitle).setHeader("Title");
+        setEmptyStateText("No employees found");
     }
 }
 ----
+
+Compare this with a `createGrid()` method, or a block of `grid.` calls in the view. The setup reads without a variable in front of each call, and the class name says what the grid shows. The view creates the grid with `new EmployeeGrid()`, and still has the whole `Grid` API, for example to add a selection listener.
+
+This works for any component, such as a button that is always primary:
 
 [source,java]
 ----
@@ -111,9 +132,9 @@ public class PrimaryButton extends Button {
 }
 ----
 
-This is straightforward, but every public method of the parent — like `add()`, `removeAll()`, `setText()` — is available to callers. That means external code can modify the component's internal structure. Be cautious about extending layout components like `VerticalLayout` — you inherit all layout methods, and callers can rearrange your internals.
+Every public method of the parent is available to callers. For a grid or a button, that's the point: callers use it like the built-in component. For a container that extends `Div` or a layout component, it means that callers can change its internal structure with methods like `add()`, `removeAll()`, and `setText()`. That's acceptable for a one-off part of a view, whose only caller is that view. A reusable container, such as a card with a title and a description, uses `Composite` instead, like the `InfoCard` in <<style-component#,Style a Component>>.
 
-=== Using Composite (Recommended for Reusable Components)
+=== Using Composite
 
 `Composite` wraps a root component and hides its API. Only methods you explicitly define are available to callers:
 
@@ -139,10 +160,6 @@ public class SearchField extends Composite<HorizontalLayout> {
 ----
 
 Callers see `setPlaceholder()` and `addSearchListener()`, but not `add()`, `removeAll()`, or other `HorizontalLayout` methods. This encapsulation prevents accidental misuse and makes the component easier to evolve.
-
-[TIP]
-.When to Use Each Approach
-Use `Composite` when the component is intended for reuse. Use direct extension when you want quick access to the parent's API and encapsulation isn't a concern.
 
 
 == Defining a Component API
@@ -207,13 +224,17 @@ Use callbacks — `Runnable`, `Consumer<T>`, or a custom interface you define �
 
 [source,java]
 ----
-public class ConfirmDialog extends Composite<Div> {
-    public ConfirmDialog(String message, Runnable onConfirm) {
-        // ...
-        confirmButton.addClickListener(e -> onConfirm.run());
+public class DeleteEmployeeDialog extends ConfirmDialog {
+    public DeleteEmployeeDialog(Employee employee, Runnable onDelete) {
+        super("Delete " + employee.getName() + "?",
+                "This can't be undone.",
+                "Delete", event -> onDelete.run());
+        setCancelable(true);
     }
 }
 ----
+
+The view opens it with `new DeleteEmployeeDialog(employee, () -> service.delete(employee)).open()`. The dialog doesn't know about the service, and the view doesn't know the dialog's texts and buttons.
 
 See <<../ui-basics/compose#,Compose with Components>> for guidance on choosing between events and callbacks.
 
@@ -281,7 +302,7 @@ See <</flow/component-internals/mixins#,Mixin Interfaces>> for the full list.
 
 == Pitfalls
 
-*Don't expose the root component's API unintentionally.* If you extend `Div`, callers can call `add()`, `removeAll()`, and `setText()` to break your component's internal structure. Use `Composite` to prevent this.
+*Don't expose the root component's API unintentionally.* If a reusable component extends `Div`, callers can call `add()`, `removeAll()`, and `setText()` to break your component's internal structure. Use `Composite` to prevent this.
 
 *Keep component scope narrow.* A component should do one thing well. If it's growing beyond a couple of hundred lines, split it into smaller components. The component shouldn't know about other components' internals.
 

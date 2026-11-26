@@ -1,0 +1,248 @@
+---
+title: Agent Skills
+page-title: Vaadin Agent Skills Plugin for Claude Code and Codex
+description: Install the Vaadin MCP server together with skills for theming, visual design, form layout, browserless testing, and code review.
+meta-description: Install the Vaadin Skills plugin for Claude Code and Codex to get the Vaadin MCP server plus skills for theming, UI design, forms, testing, and code review.
+order: 22
+---
+
+
+= Vaadin Agent Skills
+
+Vaadin Skills is a plugin for Claude Code and Codex that sets up an AI coding agent for Vaadin Flow development in one step. It bundles two things:
+
+* The *<<mcp#,Vaadin MCP server>>*, so the agent looks up the documentation and Java API for your Vaadin version instead of recalling them from its training data.
+* *Agent skills* -- instruction files that teach the agent how to do specific Vaadin tasks well. Examples are generating an Aura theme, laying out a form, and testing a view without a browser.
+
+The MCP server tells the agent what the API is. The skills tell it how Vaadin UIs are usually put together and tested, and which of the many valid ways to do something produces a good result. The skills target Java and Flow, except for the usage review, which also covers React views. They call the MCP server whenever they need an exact API detail.
+
+
+== Install the Plugin
+
+The plugin is published through the https://github.com/vaadin/agent-marketplace[Vaadin Agent Marketplace], which also hosts the experimental <<agent-tools#,Agent Tools>> plugin.
+
+[.example]
+--
+[source,terminal]
+----
+<source-info group="Claude Code"></source-info>
+/plugin marketplace add vaadin/agent-marketplace
+/plugin install vaadin-skills@vaadin-marketplace
+----
+
+[source,terminal]
+----
+<source-info group="Codex"></source-info>
+codex plugin marketplace add vaadin/agent-marketplace --ref main
+codex plugin add vaadin-skills@vaadin-marketplace
+----
+--
+
+In Claude Code, you can also run `/plugin` and pick [guilabel]*vaadin-skills* from the marketplace browser. Installing the plugin configures the Vaadin MCP server automatically, so skip the manual configuration steps in the <<mcp/supported-tools#,setup guides>>. Run `/mcp` in a new session to check that the `vaadin` server is connected.
+
+If Claude Code refuses to add the marketplace because its source differs from the one declared in settings, see <<mcp/supported-tools/claude-code#replacing-an-earlier-marketplace,Replacing an Earlier Marketplace>>.
+
+To pick up later changes:
+
+[.example]
+--
+[source,terminal]
+----
+<source-info group="Claude Code"></source-info>
+/plugin marketplace update vaadin-marketplace
+----
+
+[source,terminal]
+----
+<source-info group="Codex"></source-info>
+codex plugin marketplace upgrade
+----
+--
+
+
+=== Install Only the Skills
+
+For an agent that doesn't support Claude Code or Codex plugins, or to pick individual skills, install the skill files with the https://github.com/vercel-labs/skills[`skills` CLI]:
+
+[source,terminal]
+----
+npx skills add vaadin/agent-skills
+----
+
+Add `--skill` followed by a skill name, once per skill, to install only those:
+
+[source,terminal]
+----
+npx skills add vaadin/agent-skills --skill aura-theme --skill vaadin-form-layout
+----
+
+This installs the skills but not the MCP server, which the skills rely on to look up the API. Add the server yourself, as described in <<mcp/supported-tools#,Supported Tools>>.
+
+
+== Use It With Your Agent
+
+There's nothing to invoke by name. Each skill has a description that says which requests it's meant for, and the agent loads the skill when your request matches. Describe the task the way you'd describe it to a colleague:
+
+* "Create a dark theme with emerald accents and a compact layout."
+* "Make the dashboard view look more polished."
+* "Build an editor form for the `Customer` entity, with the address in its own section."
+* "Write tests for the ordering use cases."
+* "Check that the new code uses the official Vaadin API instead of workarounds."
+
+The skill also works when you don't use the words it's named after. Asking for a view to "collect a customer's shipping details" triggers the form layout skill, even though it doesn't mention a form.
+
+If the agent doesn't pick up a skill you expected, name the task more directly, or ask it to use the skill by name.
+
+
+== The Skills
+
+The plugin includes the following skills.
+
+
+=== Aura Theme
+
+`aura-theme` turns a free-form description of a look -- "warm and earthy", "high contrast", "very rounded", "edge-to-edge layout" -- into a CSS file of <<{articles}/styling/themes/aura#,Aura>> custom properties.
+
+The skill maps the description to Aura's customizable properties: color scheme, accent and background colors, contrast, surface level and opacity, border radius, density, font size and family, and the application layout inset. It then creates the theme file next to your application's [filename]`styles.css` and imports it from there. Component-specific properties, for example for Grid or input fields, are only set when you ask for them.
+
+The property values and defaults the skill works from are generated from the published `@vaadin/aura` package and the Aura documentation, rather than maintained by hand. That keeps the skill from assigning values to read-only properties that Aura computes from others, which would break the other color scheme.
+
+The skill only covers Aura. For a project that uses Lumo, use the visual design skill instead.
+
+
+=== Visual Design
+
+`vaadin-frontend-design` guides the agent when a view should look designed rather than default. Before it writes code, the agent settles on an aesthetic direction that fits the application and its users, and then applies it consistently to typography, color, spacing, elevation, and motion.
+
+The skill works top-down through the theme system: theme properties first, then component theme variants, and custom CSS only for what those don't cover. It covers both Aura and Lumo, including Lumo's <<{articles}/styling/utility-classes#,utility classes>>, and includes recipes for animations, color palettes, and commonly styled component parts. It also lists anti-patterns to avoid, such as hard-coded colors that break dark mode, or heavy animations on every server-side update.
+
+Reach for it for requests like "make it look good", "add polish", or "design the landing view".
+
+
+=== Form Layout
+
+`vaadin-form-layout` builds the structure of a form, entity editor, or data-entry view from any specification: a Figma URL, a screenshot, a list of fields, or a short prompt.
+
+The agent works in three steps:
+
+. *Plan.* When the specification is explicit, the agent implements exactly the fields and labels it contains. When it's vague, the agent asks which fields you need, what types they have, and how they group, rather than inventing them. It then decides on the sections: a single one, several stacked vertically, or several side by side.
+. *Gather references.* The agent checks which theme the application loads, as some component variants depend on it. It reads the closest of the skill's example forms, and fetches the Java API of every component it's going to use from the MCP server, since the <<{articles}/components/form-layout#,Form Layout>> API differs between Vaadin versions.
+. *Write the code.* The agent builds the form with one `FormLayout` per section, using auto-responsive columns or explicit responsive steps, column spans, and constrained widths to keep it readable at every viewport size.
+
+The skill only covers the layout and the components. Binding the fields to a Java bean, with converters and validation, is left to the agent working from the <<{articles}/building-apps/forms-data/add-form#,Forms guides>>, which it finds through the MCP server.
+
+
+=== Browserless Testing
+
+`vaadin-browserless-testing` writes <<{articles}/building-apps/testing/browserless#,browserless tests>> for Flow views. The tests run whole use cases in the test JVM, without a browser or a server, so the agent can run them after every change to the UI. Each test reads as the use case it checks, following the structure in <<{articles}/building-apps/testing/browserless/write-user-stories#,Write Tests as User Stories>>.
+
+The agent works in four steps:
+
+. *Collect the use cases.* The agent takes them from your request, from issues and specifications in the repository, or from the view under test. For each one, it notes who acts, what they want, and which alternative and failure paths matter. When the agent inferred the list itself, it shows you the list before writing tests, since the list is the specification.
+. *Write the stories.* The agent writes one test method for each use case, named after it, using the verbs of the domain. The UI mechanics stay out of the test methods: actor classes describe what each user does, and page objects hold the locators for each view. The locators find components the way a user does: by label, by button text, or by accessible name.
+. *Set up the tests.* When the project has no browserless tests yet, the agent adds the dependency for Spring Boot, Quarkus, or plain Java. It writes every test with the [since:com.vaadin:vaadin@V25.2]#application, user, and window contexts#, so a second user can join a story later. The agent leaves existing browserless and Karibu-Testing tests as they are, and writes the new tests alongside them.
+. *Run the tests.* The agent runs the tests until they pass. A failure means either a bug in the UI or a wrong assumption in the story, and the agent decides which before changing anything. It doesn't weaken a story to make its test pass.
+
+Browserless tests prove behavior, not appearance. They can't show that the theme and the CSS look right, that a component's client-side JavaScript works, or how the layout responds in a browser. The agent reports what its tests don't cover, and recommends a <<{articles}/building-apps/testing#browser-tests,thin layer of browser tests>> for that part.
+
+
+=== Usage Review
+
+`vaadin-usage-review` reviews Vaadin code for workarounds where Vaadin already has an API or a UI component, and reports them without changing any code. Code that an agent wrote is a typical target, because an agent tends to work around an API it didn't look up.
+
+The review looks for patterns such as these:
+
+* JavaScript run with [methodname]`executeJs()`, inline CSS set with [methodname]`getStyle()`, and properties set through [methodname]`getElement()`
+* Paging, filtering, or sorting done by hand instead of by a data provider
+* Hand-built dialogs, notifications, and access checks
+* Deprecated API
+* Project-owned JavaScript or TypeScript that patches Vaadin web components or uses their private members
+* Raw HTML elements, or hand-styled markup, where a UI component such as Text Field, Button, or Card fits
+
+The agent works in four steps:
+
+. *Check the MCP server.* The review bases every finding on the Vaadin MCP server. If the server isn't reachable, the agent says so and stops, rather than reviewing from memory.
+. *Find the context.* The agent reads the project's Vaadin version, whether it has Flow views, React views, or both, and whether it uses Aura or Lumo. That keeps it from recommending an API or a theme variant the project can't use.
+. *Settle the scope.* When your request doesn't say what to review, the agent asks you. It suggests the changed files, the staged files, a file or package you name, or the whole project. It skips dependencies and generated code.
+. *Review and report.* The agent reviews the files in batches, in parallel subagents if your agent supports them. The agent reports a workaround as a finding only when the MCP server confirms an official alternative, and cites the source for each finding. A suspected workaround that the agent couldn't confirm is either left out or listed in a separate section of the report, for you to judge.
+
+The skill doesn't edit, fix, or commit anything: the report describes the official alternative, and you decide what to change. Bare `Div` and `Span` elements used for structure aren't reported. When raw HTML has a concrete advantage over a UI component, the review presents it as a trade-off for you to decide, not as a required change. In CSS, the review flags custom properties of the theme the project doesn't use, such as `--lumo-*` properties in an Aura project. It doesn't review the values assigned to the properties of the active theme.
+
+
+[[self-hosted-server]]
+== Use a Self-Hosted MCP Server
+
+The plugin connects to the hosted Vaadin MCP server at `https://mcp.vaadin.com/docs`. If your organization <<mcp/self-hosting#,runs the MCP server itself>>, block the hosted server and add your own under the name `vaadin`. The skills refer to the MCP tools by name, such as `search_vaadin_docs` and `get_java_symbol`, so they work with your server unchanged.
+
+The commands below use `\https://mcp.example.com/docs` as the address of your server. Replace it with your own.
+
+
+=== Claude Code
+
+Block the hosted server in your user settings, [filename]`~/.claude/settings.json`:
+
+[source,json]
+----
+{
+  "deniedMcpServers": [
+    { "serverUrl": "https://mcp.vaadin.com/*" }
+  ]
+}
+----
+
+To block it for everyone in your organization, put the same entry in https://code.claude.com/docs/en/managed-mcp[managed settings] instead.
+
+Then add your own server:
+
+[source,terminal]
+----
+claude mcp add --transport http --scope user vaadin https://mcp.example.com/docs
+----
+
+Run `claude mcp list` to check the result. It lists your `vaadin` server, and no longer lists `plugin:vaadin-skills:vaadin`. Restart Claude Code to apply the change, and run `/mcp` in the new session to check that your server is connected.
+
+
+=== Codex
+
+Add your own server under the name `vaadin`. It replaces the plugin's server of the same name:
+
+[source,terminal]
+----
+codex mcp add vaadin --url https://mcp.example.com/docs
+----
+
+This saves the server in [filename]`~/.codex/config.toml`. You can also add it to that file by hand:
+
+[source,toml]
+----
+[mcp_servers.vaadin]
+url = "https://mcp.example.com/docs"
+----
+
+Run `codex mcp list` to check the result. The `vaadin` server shows your address instead of `https://mcp.vaadin.com/docs`. Restart Codex to apply the change, and run `/mcp` in the new session to check that your server is connected.
+
+Codex doesn't document that a server in [filename]`config.toml` replaces a plugin's server of the same name, so check the list again after you upgrade Codex.
+
+
+=== What Still Needs the Internet
+
+Your own server answers the documentation lookups. On a network without internet access, such as an <<mcp/self-hosting/air-gapped-operation#,air-gapped>> one, these still don't work:
+
+* *Installing and updating the plugin.* The marketplace and the plugin are fetched from GitHub. Instead, mirror https://github.com/vaadin/agent-skills[`vaadin/agent-skills`] on a Git host or a shared folder on your network, and list it in a marketplace of your own. See https://code.claude.com/docs/en/plugin-marketplaces[Create a Marketplace] for Claude Code, and https://developers.openai.com/codex/plugins/build[Build Plugins] for Codex.
+* *Creating a project with <<agent-tools#,Agent Tools>>.* Its `create-project` tool downloads the project skeleton from `start.vaadin.com`.
+
+
+== What It Doesn't Do
+
+* *It's built for Flow.* The skills target Java and Flow. Only the usage review also covers React views. The MCP server included in the plugin covers React as well, so a React project still benefits from the documentation lookup.
+* *It checks only part of the result.* The theme, visual design, and form layout skills shape what the agent writes, but they don't verify it. The browserless tests check behavior and the usage review checks the code, but neither renders the application in a browser. To catch theme mixing and misused Aura properties, add <<agent-tools#,Agent Tools>>. To make sure edits take effect in the running application, use the <<{articles}/flow/configuration/live-reload/dev-loop-cli#,Dev Loop CLI>>.
+* *It isn't committed to your project.* The plugin is installed per user, in the agent's own configuration. The Dev Loop skills, by contrast, are installed into the repository. If everyone on a team should use the same skills, have each developer install the plugin, or use the `skills` CLI to install the skill files into the repository and commit them.
+
+
+== Related Topics
+
+* <<mcp#,Vaadin MCP Server>> -- the documentation and API lookup included in the plugin.
+* <<agent-tools#,Agent Tools>> -- commands that scaffold a project and check its theme usage.
+* <<{articles}/building-apps/testing/browserless#,Browserless Testing>> -- the kind of test the browserless testing skill writes.
+* <<dev-loop-tutorial#,Give Agents Faster Turnaround with Dev Loop>> -- the full agent setup, end to end.
+* https://github.com/vaadin/agent-skills[`vaadin/agent-skills`] -- the plugin source and issue tracker.
