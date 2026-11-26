@@ -10,7 +10,7 @@ section-nav: commercial
 = [since:com.vaadin:vaadin@V25.2]#AI-Powered Grid#
 
 
-[classname]`GridAiController` populates a <<{articles}/components/grid#,[classname]`Grid`>> (Vaadin's component for displaying tabular data) with data from the application database based on natural-language requests. Backed by a <<controllers#database-provider,[classname]`DatabaseProvider`>>, the controller lets the LLM inspect the database schema and run SQL queries that drive the grid.
+[classname]`GridAiController` populates a <<{articles}/components/grid#,[classname]`Grid`>> (Vaadin's component for displaying tabular data) with data from the application database based on natural-language requests. Backed by a <<controllers#database-provider,[classname]`QueryExecutor`>>, the controller lets the LLM inspect the database schema and run SQL queries that drive the grid.
 
 :commercial-feature: AI-Powered Grid
 include::{articles}/_commercial-banner.adoc[opts=optional]
@@ -20,15 +20,15 @@ When an LLM request completes, the queued query is executed and the grid re-rend
 
 == Basic Usage
 
-Create a grid typed as [classname]`Grid<AiDataRow>`, construct a controller with the grid and a [classname]`DatabaseProvider`, and attach it to an orchestrator. [classname]`AiDataRow` is a framework-owned row type -- you never construct instances yourself.
+Create a grid typed as [classname]`Grid<AiDataRow>`, construct a controller with the grid and a [classname]`QueryExecutor`, and attach it to an orchestrator. [classname]`AiDataRow` is a framework-owned row type -- you never construct instances yourself.
 
 [source,java]
 ----
 Grid<AiDataRow> grid = new Grid<>();
 MessageInput messageInput = new MessageInput();
 
-DatabaseProvider databaseProvider = new JdbcDatabaseProvider(dataSource);
-GridAiController controller = new GridAiController(grid, databaseProvider);
+QueryExecutor queryExecutor = new JdbcQueryExecutor(dataSource);
+GridAiController controller = new GridAiController(grid, queryExecutor);
 
 AiOrchestrator.builder(provider, systemPrompt)
         .withInput(messageInput)
@@ -53,7 +53,7 @@ The controller already informs the LLM of the workflow it needs. You can focus y
 
 Before queueing an update, the controller runs a lightweight probe against the database to validate the LLM's query. If the probe fails, the query is rejected and never reaches the grid.
 
-The LLM can [since:com.vaadin:vaadin@V25.3]#learn why the query failed#, but only if your [classname]`DatabaseProvider` implementation opts in by throwing a [classname]`ToolException` from [methodname]`executeQuery()` -- its message is relayed to the LLM so it can correct the query on its next attempt. Any other exception is logged and replaced with a generic error message. See <<controllers#tool-error-handling,Tool Error Handling>>.
+The LLM can [since:com.vaadin:vaadin@V25.3]#learn why the query failed#, but only if your [classname]`QueryExecutor` implementation opts in by throwing a [classname]`ToolException` from [methodname]`executeQuery()` -- its message is relayed to the LLM so it can correct the query on its next attempt. Any other exception is logged and replaced with a generic error message. See <<controllers#tool-error-handling,Tool Error Handling>>.
 
 
 == Persisting Grid State
@@ -83,7 +83,7 @@ if (saved != null) {
 
 [source,java]
 ----
-GridAiController controller = new GridAiController(grid, databaseProvider);
+GridAiController controller = new GridAiController(grid, queryExecutor);
 orchestrator.reconnect(provider)
         .withController(controller)
         .apply();
