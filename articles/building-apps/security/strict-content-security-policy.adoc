@@ -152,7 +152,17 @@ If the varying part is itself code, such as one of several functions, declare on
 [[declare-lit-renderer-templates]]
 === Declare Lit Renderer Templates
 
-A [classname]`LitRenderer` created from a string template sends the template to the browser as a string. Declare the template as a method that returns [classname]`CompiledLitTemplate` in a [interfacename]`JsSnippets` interface. The expression is the body of a function that returns the template. The function gets `html`, the tag of a Lit template, and the values that the template renders, such as `item` and `index`. The functions added with [methodname]`withFunction()` are members of `functions`, as in `${functions.select}`:
+A [classname]`LitRenderer` created from a string template sends the template to the browser as a string, for example:
+
+[source,java]
+----
+grid.addColumn(LitRenderer.<Person> of(
+        "<span @click=${select}>${item.name}</span>")
+        .withProperty("name", Person::getName)
+        .withFunction("select", this::select));
+----
+
+Declare the template as a method that returns [classname]`CompiledLitTemplate` in a [interfacename]`JsSnippets` interface. The expression is the body of a function that returns the template. The function gets `html`, the tag of a Lit template, and the values that the template renders, such as `item` and `index`. The functions added with [methodname]`withFunction()` are members of `functions`, as in `${functions.select}`:
 
 [source,java]
 ----
@@ -180,6 +190,27 @@ grid.addColumn(LitRenderer.<Person> of(TEMPLATES.name())
 When the stack trace of a logged call leads into an add-on, check first whether a newer version of the add-on supports a strict Content Security Policy.
 
 If it doesn't, you can often declare the strings that the add-on sends in your application, in an interface annotated with [annotationname]`@JsStringFallback`. When the add-on sends a string that matches a declaration exactly, Vaadin runs the declared JavaScript from the bundle instead. The logged message contains the declaration to paste for most such calls. See <<{articles}/flow/security/protections/content-security-policy#declaring-fallbacks-for-add-ons,Declaring Fallbacks for Add-on JavaScript Strings>> for the APIs that look for a fallback, and how to declare one.
+
+For example, an add-on sends this string, which the application can't change:
+
+[source,java]
+----
+// In the add-on
+getElement().executeJs("return this.scrollTop");
+----
+
+The application declares the same string in an interface of its own. The method is never called. The build puts its JavaScript into the bundle, and Vaadin runs it when the add-on sends the matching string:
+
+[source,java]
+----
+@JsDefinition
+@JsStringFallback
+public interface AddonFallbacks extends JsInvokers {
+
+    @JsExpression("return this.scrollTop")
+    PendingJavaScriptResult scrollTop();
+}
+----
 
 A fallback doesn't help in the following cases, which only the maintainers of the add-on can fix:
 
