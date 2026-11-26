@@ -10,14 +10,14 @@ section-nav: commercial
 = [since:com.vaadin:vaadin@V25.2]#AI-Powered Chart#
 
 
-[classname]`ChartAiController` creates and updates a <<{articles}/components/charts#,[classname]`Chart`>> (Vaadin's interactive charting component) visualization based on natural-language requests. Backed by a <<controllers#database-provider,[classname]`DatabaseProvider`>>, the controller lets the LLM inspect the database schema, write SQL queries for one or more series, and update the Highcharts configuration independently of the data.
+[classname]`ChartAiController` creates and updates a <<{articles}/components/charts#,[classname]`Chart`>> (Vaadin's interactive charting component) visualization based on natural-language requests. Backed by a <<controllers#database-provider,[classname]`QueryExecutor`>>, the controller lets the LLM inspect the database schema, write SQL queries for one or more series, and update the Highcharts configuration independently of the data.
 
 :commercial-feature: AI-Powered Chart
 include::{articles}/_commercial-banner.adoc[opts=optional]
 
 Data and configuration are kept separate: series data comes from SQL queries, while visual appearance comes from the configuration. Both updates are applied together at the end of the LLM turn, so the user never sees a half-updated chart.
 
-The LLM can read the chart's current state through a state tool: the SQL queries and the configuration it has set itself. Nothing in the state comes from the query results: the series, x-axis categories, and other values the chart builds from the rows stay in the application. See <<controllers#database-provider,Database Provider>>.
+The LLM can read the chart's current state through a state tool: the SQL queries and the configuration it has set itself. Nothing in the state comes from the query results: the series, x-axis categories, and other values the chart builds from the rows stay in the application. See <<controllers#database-provider,Query Executor>>.
 
 == Basic Usage
 
@@ -28,8 +28,8 @@ Create a [classname]`Chart`, construct a controller, and wire it to the orchestr
 Chart chart = new Chart();
 MessageInput messageInput = new MessageInput();
 
-DatabaseProvider databaseProvider = new JdbcDatabaseProvider(dataSource);
-ChartAiController controller = new ChartAiController(chart, databaseProvider);
+QueryExecutor queryExecutor = new JdbcQueryExecutor(dataSource);
+ChartAiController controller = new ChartAiController(chart, queryExecutor);
 
 AiOrchestrator.builder(provider, systemPrompt)
         .withInput(messageInput)
@@ -59,7 +59,7 @@ The controller already informs the LLM of the workflow it needs. You can focus y
 
 Before queueing an update, the controller validates the LLM's work within the turn: series queries are executed against the database, and configuration JSON is parsed eagerly. Invalid updates are rejected and never reach the chart.
 
-The LLM can [since:com.vaadin:vaadin@V25.3]#learn why a rejected update failed#: configuration parse errors are relayed as-is, since the LLM authored the configuration. Query errors are relayed only if your [classname]`DatabaseProvider` implementation opts in by throwing a [classname]`ToolException` from [methodname]`executeQuery()`; any other exception is logged and replaced with a generic error message. See <<controllers#tool-error-handling,Tool Error Handling>>.
+The LLM can [since:com.vaadin:vaadin@V25.3]#learn why a rejected update failed#: configuration parse errors are relayed as-is, since the LLM authored the configuration. Query errors are relayed only if your [classname]`QueryExecutor` implementation opts in by throwing a [classname]`ToolException` from [methodname]`executeQuery()`; any other exception is logged and replaced with a generic error message. See <<controllers#tool-error-handling,Tool Error Handling>>.
 
 
 == Persisting Chart State
@@ -103,7 +103,7 @@ If you have only the queries and the configuration, for example from storage set
 
 [source,java]
 ----
-ChartAiController controller = new ChartAiController(chart, databaseProvider);
+ChartAiController controller = new ChartAiController(chart, queryExecutor);
 orchestrator.reconnect(provider)
         .withController(controller)
         .apply();
@@ -133,7 +133,7 @@ public class CurrencyDataConverter implements DataConverter {
 controller.setDataConverter(new CurrencyDataConverter());
 ----
 
-The converter receives the raw rows from [methodname]`DatabaseProvider.executeQuery()` and returns one or more [classname]`Series` instances.
+The converter receives the raw rows from [methodname]`QueryExecutor.executeQuery()` and returns one or more [classname]`Series` instances.
 
 
 == Combining with Dashboard

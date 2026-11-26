@@ -1,7 +1,7 @@
 ---
 title: Controllers
 description: Extend the AiOrchestrator with reusable, framework-agnostic tools and lifecycle hooks using the AiController interface.
-meta-description: Learn how to use AiController to add reusable tools and lifecycle hooks to the Vaadin AiOrchestrator, and how to expose a database to the LLM via DatabaseProvider.
+meta-description: Learn how to use AiController to add reusable tools and lifecycle hooks to the Vaadin AiOrchestrator, and how to expose a database to the LLM via QueryExecutor.
 order: 45
 ---
 
@@ -19,11 +19,11 @@ Vaadin provides three built-in controllers:
 * <<ai-powered-chart#,[classname]`ChartAiController`>> -- creates and updates [classname]`Chart` visualizations from a database using natural-language requests.
 * <<ai-powered-form#,[classname]`FormAiController`>> -- fills any layout containing input fields, from natural-language input or attached files.
 
-The grid and chart controllers rely on a <<#database-provider,[classname]`DatabaseProvider`>> to expose schema information and execute queries on behalf of the LLM. The form controller works directly with the form's field components.
+The grid and chart controllers rely on a <<#database-provider,[classname]`QueryExecutor`>> to expose schema information and execute queries on behalf of the LLM. The form controller works directly with the form's field components.
 
 .Built-In Controllers Are a Commercial Feature
 [NOTE]
-The built-in controllers are part of the commercial `vaadin-ai-extensions-flow` module and require a commercial Vaadin subscription. The [classname]`AiController` interface and [classname]`DatabaseProvider` belong to the open-source `vaadin-ai-core-flow` module, so building and using <<#custom-controller,custom controllers>> is free.
+The built-in controllers are part of the commercial `vaadin-ai-extensions-flow` module and require a commercial Vaadin subscription. The [classname]`AiController` interface and [classname]`QueryExecutor` belong to the open-source `vaadin-ai-core-flow` module, so building and using <<#custom-controller,custom controllers>> is free.
 
 
 == Attaching a Controller
@@ -44,24 +44,24 @@ Only one controller can be attached per orchestrator. If you need tools from sev
 
 
 [[database-provider]]
-== Database Provider
+== Query Executor
 
-[classname]`DatabaseProvider` is the bridge between the LLM and an application database. The built-in grid and chart controllers use it to let the LLM discover the schema and run SQL queries on demand. Critically, the data flow is asymmetric: the LLM sees the schema so it can write valid queries, but the query results are rendered in the [classname]`Grid` or [classname]`Chart` component -- the rows themselves are never sent back to the LLM.
+[classname]`QueryExecutor` is the bridge between the LLM and an application database. The built-in grid and chart controllers use it to let the LLM discover the schema and run SQL queries on demand. Critically, the data flow is asymmetric: the LLM sees the schema so it can write valid queries, but the query results are rendered in the [classname]`Grid` or [classname]`Chart` component -- the rows themselves are never sent back to the LLM.
 
 The interface defines two methods:
 
 * [methodname]`getSchema()` -- returns a plain-text description of the tables, columns, and SQL dialect. The LLM uses this to write valid queries.
-* [methodname]`executeQuery(String sql)` -- executes a SQL query and returns the rows as a list of column-name-to-value maps. These rows are handed to the grid or chart for rendering; they do not appear in any prompt as such.
+* [methodname]`executeQuery(String query)` -- executes a SQL query and returns the rows as a list of column-name-to-value maps. These rows are handed to the grid or chart for rendering; they do not appear in any prompt as such.
 
 The following example is a straightforward JDBC implementation:
 
 [source,java]
 ----
-public class JdbcDatabaseProvider implements DatabaseProvider {
+public class JdbcQueryExecutor implements QueryExecutor {
 
     private final DataSource readOnlyDataSource;
 
-    public JdbcDatabaseProvider(DataSource readOnlyDataSource) {
+    public JdbcQueryExecutor(DataSource readOnlyDataSource) {
         this.readOnlyDataSource = readOnlyDataSource;
     }
 
@@ -76,9 +76,9 @@ public class JdbcDatabaseProvider implements DatabaseProvider {
     }
 
     @Override
-    public List<Map<String, Object>> executeQuery(String sql) {
+    public List<Map<String, Object>> executeQuery(String query) {
         try (var conn = readOnlyDataSource.getConnection();
-                var stmt = conn.prepareStatement(sql);
+                var stmt = conn.prepareStatement(query);
                 var rs = stmt.executeQuery()) {
             var meta = rs.getMetaData();
             var rows = new ArrayList<Map<String, Object>>();
@@ -106,7 +106,7 @@ When a query fails -- for example, because it references an unknown column -- th
 
 .Read-Only Database Access
 [IMPORTANT]
-The LLM writes the SQL that gets executed. Always back a [classname]`DatabaseProvider` implementation with a database account that has read-only access to the tables and views you intend to expose. This prevents the LLM from modifying or deleting data and limits the impact of a prompt-injection attempt that tries to trick the LLM into running destructive statements.
+The LLM writes the SQL that gets executed. Always back a [classname]`QueryExecutor` implementation with a database account that has read-only access to the tables and views you intend to expose. This prevents the LLM from modifying or deleting data and limits the impact of a prompt-injection attempt that tries to trick the LLM into running destructive statements.
 
 .Query Results Stay in the Application
 [IMPORTANT]
@@ -216,9 +216,9 @@ public String execute(JsonNode arguments) {
 }
 ----
 
-[classname]`ToolException` works anywhere the framework executes tool code: a [methodname]`ToolSpec.execute()` implementation or a <<#database-provider,[classname]`DatabaseProvider`>> alike. Because the message is passed to the LLM as-is, make sure it's safe to expose: no personal data, no internal identifiers beyond what the LLM already sent, and no third-party error text you haven't vetted. A database error that points out a mistake in an LLM-written query is usually reasonable to relay, but check first what your database actually puts in its error messages. A stack trace from your infrastructure is never safe to relay.
+[classname]`ToolException` works anywhere the framework executes tool code: a [methodname]`ToolSpec.execute()` implementation or a <<#database-provider,[classname]`QueryExecutor`>> alike. Because the message is passed to the LLM as-is, make sure it's safe to expose: no personal data, no internal identifiers beyond what the LLM already sent, and no third-party error text you haven't vetted. A database error that points out a mistake in an LLM-written query is usually reasonable to relay, but check first what your database actually puts in its error messages. A stack trace from your infrastructure is never safe to relay.
 
 .Vendor-Annotated Tools Are Out of Scope
 [NOTE]
-This contract applies only to framework-agnostic [classname]`ToolSpec` tools -- those contributed by controllers and by [classname]`DatabaseProvider`-backed features. Tool objects registered via <<tool-calling#,[methodname]`withTools()`>> are executed by the vendor framework itself, whose own error handling decides what reaches the LLM: by default, both LangChain4j and Spring AI relay the raw message of any exception. Route error-sensitive tools through a controller to keep control over what the model sees.
+This contract applies only to framework-agnostic [classname]`ToolSpec` tools -- those contributed by controllers and by [classname]`QueryExecutor`-backed features. Tool objects registered via <<tool-calling#,[methodname]`withTools()`>> are executed by the vendor framework itself, whose own error handling decides what reaches the LLM: by default, both LangChain4j and Spring AI relay the raw message of any exception. Route error-sensitive tools through a controller to keep control over what the model sees.
 
