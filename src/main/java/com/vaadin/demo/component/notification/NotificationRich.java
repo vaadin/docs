@@ -15,24 +15,25 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.demo.DemoExporter; // hidden-source-line
 
-import java.util.function.Supplier;
+import java.util.List;
 
 import static com.vaadin.flow.component.button.ButtonVariant.*;
 
 @Route("notification-rich")
 public class NotificationRich extends HorizontalLayout {
     public NotificationRich() {
-        openNotification(this::createSubmitSuccess);
-        openNotification(this::createReportError);
-        openNotification(this::createMentionNotification);
-    }
+        List<Notification> notifications = List.of(createSubmitSuccess(),
+                createReportError(), createMentionNotification());
+        notifications.forEach(notification -> {
+            notification.setPosition(Notification.Position.MIDDLE);
+            notification.setDuration(0);
+            notification.open();
+        });
 
-    private void openNotification(Supplier<Notification> notificationSupplier) {
-        Notification notification = notificationSupplier.get();
-        notification.setPosition(Notification.Position.MIDDLE);
-        notification.setDuration(0);
-        notification.open();
-    };
+        // Opening a notification that is already open does nothing
+        add(new Button("Show notifications",
+                event -> notifications.forEach(Notification::open)));
+    }
 
     // tag::snippet[]
     public Notification createSubmitSuccess() {
@@ -45,7 +46,7 @@ public class NotificationRich extends HorizontalLayout {
 
         HorizontalLayout layout = new HorizontalLayout(icon,
                 new Text("Application submitted!"));
-        layout.addToEnd(viewBtn, createCloseBtn());
+        layout.addToEnd(viewBtn, new CloseButton());
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
         layout.setMinWidth("350px");
 
@@ -63,7 +64,7 @@ public class NotificationRich extends HorizontalLayout {
 
         HorizontalLayout layout = new HorizontalLayout(icon,
                 new Text("Failed to generate report!"));
-        layout.addToEnd(retryBtn, createCloseBtn());
+        layout.addToEnd(retryBtn, new CloseButton());
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
         layout.setMinWidth("350px");
 
@@ -84,7 +85,7 @@ public class NotificationRich extends HorizontalLayout {
                 new Anchor("#", "Project Q4"));
 
         HorizontalLayout layout = new HorizontalLayout(avatar, info);
-        layout.addToEnd(createCloseBtn());
+        layout.addToEnd(new CloseButton());
         layout.setAlignItems(FlexComponent.Alignment.CENTER);
         layout.setMinWidth("350px");
 
@@ -93,10 +94,12 @@ public class NotificationRich extends HorizontalLayout {
         return notification;
     }
 
-    public static Button createCloseBtn() {
-        Button closeBtn = new Button(VaadinIcon.CLOSE.create());
-
-        return closeBtn;
+    static class CloseButton extends Button {
+        CloseButton() {
+            super(new Icon("lumo", "cross"));
+            setAriaLabel("Close");
+            addClickListener(e -> findAncestor(Notification.class).close());
+        }
     }
     // end::snippet[]
 

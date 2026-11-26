@@ -20,67 +20,51 @@ The Grid component supports sorting out of the box, but it has to be enabled exp
 In this tutorial, you're using a paginated data provider, which means the actual sorting takes place in the database. This in turn means that the data provider needs to know which column to sort by, and in which direction. You do this by
 using the `setSortProperty` method on the `Grid.Column` instance.
 
-Change the constructor of `ProductCatalogView` as follows to make all columns sortable:
+`ProductCatalogGrid` sets up the columns, so that's where you make them sortable. Change the constructor of `ProductCatalogGrid` as follows:
 
-.ProductCatalogView.java
+.ProductCatalogGrid.java
 [source,java]
 ----
 package com.example.product;
 
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
 
-@Route("")
-@PageTitle("Product Catalog")
-class ProductCatalogView extends VerticalLayout {
+class ProductCatalogGrid extends Grid<ProductCatalogItem> {
 
-    ProductCatalogView(ProductCatalogItemRepository repository) {
-        // Create components
-        var grid = new Grid<ProductCatalogItem>();
-        grid.addColumn(ProductCatalogItem::name)
+    ProductCatalogGrid() {
+        addColumn(ProductCatalogItem::name)
             .setHeader("Name")
 // tag::snippet[]
             .setSortProperty("name"); // <1>
 // end::snippet[]
-        grid.addColumn(ProductCatalogItem::price)
+        addColumn(ProductCatalogItem::price)
             .setHeader("Price")
             .setTextAlign(ColumnTextAlign.END)
 // tag::snippet[]
             .setSortProperty("price");
 // end::snippet[]
-        grid.addColumn(ProductCatalogItem::description)
+        addColumn(ProductCatalogItem::description)
             .setHeader("Description")
 // tag::snippet[]
             .setSortProperty("description");
 // end::snippet[]
-        grid.addColumn(ProductCatalogItem::category)
+        addColumn(ProductCatalogItem::category)
             .setHeader("Category")
 // tag::snippet[]
             .setSortProperty("category");
 // end::snippet[]
-        grid.addColumn(ProductCatalogItem::brand)
+        addColumn(ProductCatalogItem::brand)
             .setHeader("Brand")
 // tag::snippet[]
             .setSortProperty("brand");
 // end::snippet[]
-        grid.setItemsPageable(pageable -> repository
-            .findAll(pageable)
-            .getContent()
-        );
-
-        // Layout view
-        setSizeFull();
-        grid.setSizeFull();
-        add(grid);
     }
 }
 ----
 <1> This instructs the data provider to sort by the `name` column in the database when this column is sorted in the grid.
 
-In the browser, small sorting arrows now appear in the column headers. When you click a column header, the grid fetches the data sorted by that column from the database:
+The view doesn't change, since it only creates the grid and gives it its items. In the browser, small sorting arrows now appear in the column headers. When you click a column header, the grid fetches the data sorted by that column from the database:
 
 [.device]
 image::images/product-catalog-with-sorting.png[The product catalog view with sorting]
@@ -119,61 +103,45 @@ record ProductCatalogItem(
 }
 ----
 
-Next, refactor the `ProductCatalogView` class to use these constants instead of string literals for the sort properties:
+Next, refactor the `ProductCatalogGrid` class to use these constants instead of string literals for the sort properties:
 
-.ProductCatalogView.java
+.ProductCatalogGrid.java
 [source,java]
 ----
 package com.example.product;
 
 import com.vaadin.flow.component.grid.ColumnTextAlign;
 import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.PageTitle;
-import com.vaadin.flow.router.Route;
 
-@Route("")
-@PageTitle("Product Catalog")
-class ProductCatalogView extends VerticalLayout {
+class ProductCatalogGrid extends Grid<ProductCatalogItem> {
 
-    ProductCatalogView(ProductCatalogItemRepository repository) {
-        // Create components
-        var grid = new Grid<ProductCatalogItem>();
-        grid.addColumn(ProductCatalogItem::name)
+    ProductCatalogGrid() {
+        addColumn(ProductCatalogItem::name)
             .setHeader("Name")
 // tag::snippet[]
             .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
 // end::snippet[]
-        grid.addColumn(ProductCatalogItem::price)
+        addColumn(ProductCatalogItem::price)
             .setHeader("Price")
             .setTextAlign(ColumnTextAlign.END)
 // tag::snippet[]
             .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
 // end::snippet[]
-        grid.addColumn(ProductCatalogItem::description)
+        addColumn(ProductCatalogItem::description)
             .setHeader("Description")
 // tag::snippet[]
             .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
 // end::snippet[]
-        grid.addColumn(ProductCatalogItem::category)
+        addColumn(ProductCatalogItem::category)
             .setHeader("Category")
 // tag::snippet[]
             .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
 // end::snippet[]
-        grid.addColumn(ProductCatalogItem::brand)
+        addColumn(ProductCatalogItem::brand)
             .setHeader("Brand")
 // tag::snippet[]
             .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
 // end::snippet[]
-        grid.setItemsPageable(pageable -> repository
-            .findAll(pageable)
-            .getContent()
-        );
-
-        // Layout view
-        setSizeFull();
-        grid.setSizeFull();
-        add(grid);
     }
 }
 ----
@@ -185,15 +153,13 @@ Now, if the database schema changes, you only need to update the sort property c
 
 You'll now add a search field above the grid to allow users to filter products by their name. Whenever they type something in the search field, the grid should update to show only the products whose names contain the entered text.
 
-Start by adding a `TextField` component for the search input in the constructor of the `ProductCatalogView` class:
+The search field is a `TextField` with a placeholder text and a search icon. Like the grid, it takes several calls to set up, so give it a class of its own. Unlike the grid, it's small, so it doesn't need a file of its own. Make it a static nested class of `ProductCatalogView`, the only class that uses it, and add it to the view above the grid:
 
 .ProductCatalogView.java
 [source,java]
 ----
 package com.example.product;
 
-import com.vaadin.flow.component.grid.ColumnTextAlign;
-import com.vaadin.flow.component.grid.Grid;
 // tag::snippet[]
 import com.vaadin.flow.component.icon.VaadinIcon;
 // end::snippet[]
@@ -211,28 +177,10 @@ class ProductCatalogView extends VerticalLayout {
     ProductCatalogView(ProductCatalogItemRepository repository) {
         // Create components
 // tag::snippet[]
-        var searchField = new TextField(); // <1>
-        searchField.setPlaceholder("Search"); // <2>
-        searchField.setPrefixComponent(VaadinIcon.SEARCH.create()); // <3>
+        var searchField = new SearchField();
 // end::snippet[]
 
-        var grid = new Grid<ProductCatalogItem>();
-        grid.addColumn(ProductCatalogItem::name)
-            .setHeader("Name")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
-        grid.addColumn(ProductCatalogItem::price)
-            .setHeader("Price")
-            .setTextAlign(ColumnTextAlign.END)
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
-        grid.addColumn(ProductCatalogItem::description)
-            .setHeader("Description")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
-        grid.addColumn(ProductCatalogItem::category)
-            .setHeader("Category")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
-        grid.addColumn(ProductCatalogItem::brand)
-            .setHeader("Brand")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+        var grid = new ProductCatalogGrid();
         grid.setItemsPageable(pageable -> repository
             .findAll(pageable)
             .getContent()
@@ -242,16 +190,28 @@ class ProductCatalogView extends VerticalLayout {
         setSizeFull();
         grid.setSizeFull();
 // tag::snippet[]
-        add(searchField); // <4>
+        add(searchField); // <1>
 // end::snippet[]
         add(grid);
     }
+
+// tag::snippet[]
+    static class SearchField extends TextField { // <2>
+
+        SearchField() {
+            setPlaceholder("Search"); // <3>
+            setPrefixComponent(VaadinIcon.SEARCH.create()); // <4>
+        }
+    }
+// end::snippet[]
 }
 ----
-<1> Create a new `TextField` for the search input.
-<2> Set a placeholder text to guide the user.
-<3> Add a search icon as a prefix to the text field for better UX.
-<4> Add the search field to the view layout above the grid.
+<1> Add the search field to the view layout above the grid.
+<2> The class is `static`, since it doesn't use any fields or methods of the view.
+<3> Set a placeholder text to guide the user.
+<4> Add a search icon as a prefix to the text field for better UX.
+
+A nested class keeps a small part of a view next to the code that uses it. If another class needs the search field later, you can move it to a file of its own. See <<{articles}/building-apps/ui-basics/compose#nesting-one-off-components,Nesting One-Off Components>> for more about nested components.
 
 In the browser, the view now looks like this:
 
@@ -291,7 +251,7 @@ The `findByNameContainingIgnoreCase` method uses Spring Data's query derivation 
 
 == Implement Filtering Logic
 
-Finally, you'll implement the filtering logic in the `ProductCatalogView` class. This involves two main changes:
+Finally, you'll implement the filtering logic in the `ProductCatalogView` class. The search field and the grid don't know about each other. The view contains them both, so it connects them. This involves two main changes:
 
 1. The grid needs to fetch data using the new repository method, passing in the value of the `searchField` as a parameter.
 2. The grid needs to refresh itself whenever the user types something in the `searchField`.
@@ -319,17 +279,20 @@ searchField.addValueChangeListener(e -> grid.getDataProvider().refreshAll());
 // ...
 ----
 
-Restart the application, since you changed a repository interface. If you try it now, you'll see that typing in the search field filters the products in the grid based on their names. However, the filtering only happens when you press Enter or the field loses focus. To improve the user experience, set the value change mode of the `searchField` to `LAZY`. This triggers value change events a short time after the user stops typing:
+Restart the application, since you changed a repository interface. If you try it now, you'll see that typing in the search field filters the products in the grid based on their names. However, the filtering only happens when you press Enter or the field loses focus. To improve the user experience, set the value change mode of the search field to `LAZY`. This triggers value change events a short time after the user stops typing. Since this is part of setting up the search field, it goes in the constructor of `SearchField`:
 
 [source,java]
 ----
-// Create components
-var searchField = new TextField();
-searchField.setPlaceholder("Search");
-searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
+static class SearchField extends TextField {
+
+    SearchField() {
+        setPlaceholder("Search");
+        setPrefixComponent(VaadinIcon.SEARCH.create());
 // tag::snippet[]
-searchField.setValueChangeMode(ValueChangeMode.LAZY);
+        setValueChangeMode(ValueChangeMode.LAZY);
 // end::snippet[]
+    }
+}
 ----
 
 The complete updated view now looks like this:
@@ -339,8 +302,6 @@ The complete updated view now looks like this:
 ----
 package com.example.product;
 
-import com.vaadin.flow.component.grid.ColumnTextAlign;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -356,30 +317,9 @@ class ProductCatalogView extends VerticalLayout {
 
     ProductCatalogView(ProductCatalogItemRepository repository) {
         // Create components
-// tag::snippet[]
-        var searchField = new TextField();
-        searchField.setPlaceholder("Search");
-        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
-        searchField.setValueChangeMode(ValueChangeMode.LAZY);
-// end::snippet[]
+        var searchField = new SearchField();
 
-        var grid = new Grid<ProductCatalogItem>();
-        grid.addColumn(ProductCatalogItem::name)
-            .setHeader("Name")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
-        grid.addColumn(ProductCatalogItem::price)
-            .setHeader("Price")
-            .setTextAlign(ColumnTextAlign.END)
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
-        grid.addColumn(ProductCatalogItem::description)
-            .setHeader("Description")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
-        grid.addColumn(ProductCatalogItem::category)
-            .setHeader("Category")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
-        grid.addColumn(ProductCatalogItem::brand)
-            .setHeader("Brand")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+        var grid = new ProductCatalogGrid();
 // tag::snippet[]
         grid.setItemsPageable(pageable -> repository
             .findByNameContainingIgnoreCase(searchField.getValue(),
@@ -396,10 +336,19 @@ class ProductCatalogView extends VerticalLayout {
         // Layout view
         setSizeFull();
         grid.setSizeFull();
-// tag::snippet[]
         add(searchField);
-// end::snippet[]
         add(grid);
+    }
+
+    static class SearchField extends TextField {
+
+        SearchField() {
+            setPlaceholder("Search");
+            setPrefixComponent(VaadinIcon.SEARCH.create());
+// tag::snippet[]
+            setValueChangeMode(ValueChangeMode.LAZY);
+// end::snippet[]
+        }
     }
 }
 ----
@@ -420,8 +369,6 @@ The https://github.com/vaadin/tutorial/tree/step/sort-filter[`step/sort-filter` 
 ----
 package com.example.product;
 
-import com.vaadin.flow.component.grid.ColumnTextAlign;
-import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -435,28 +382,9 @@ class ProductCatalogView extends VerticalLayout {
 
     ProductCatalogView(ProductCatalogItemRepository repository) {
         // Create components
-        var searchField = new TextField();
-        searchField.setPlaceholder("Search");
-        searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
-        searchField.setValueChangeMode(ValueChangeMode.LAZY);
+        var searchField = new SearchField();
 
-        var grid = new Grid<ProductCatalogItem>();
-        grid.addColumn(ProductCatalogItem::name)
-            .setHeader("Name")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
-        grid.addColumn(ProductCatalogItem::price)
-            .setHeader("Price")
-            .setTextAlign(ColumnTextAlign.END)
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
-        grid.addColumn(ProductCatalogItem::description)
-            .setHeader("Description")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
-        grid.addColumn(ProductCatalogItem::category)
-            .setHeader("Category")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
-        grid.addColumn(ProductCatalogItem::brand)
-            .setHeader("Brand")
-            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
+        var grid = new ProductCatalogGrid();
         grid.setItemsPageable(pageable -> repository
             .findByNameContainingIgnoreCase(searchField.getValue(),
                 pageable)
@@ -471,6 +399,49 @@ class ProductCatalogView extends VerticalLayout {
         grid.setSizeFull();
         add(searchField);
         add(grid);
+    }
+
+    static class SearchField extends TextField {
+
+        SearchField() {
+            setPlaceholder("Search");
+            setPrefixComponent(VaadinIcon.SEARCH.create());
+            setValueChangeMode(ValueChangeMode.LAZY);
+        }
+    }
+}
+----
+====
+
+.ProductCatalogGrid.java
+[%collapsible]
+====
+[source,java]
+----
+package com.example.product;
+
+import com.vaadin.flow.component.grid.ColumnTextAlign;
+import com.vaadin.flow.component.grid.Grid;
+
+class ProductCatalogGrid extends Grid<ProductCatalogItem> {
+
+    ProductCatalogGrid() {
+        addColumn(ProductCatalogItem::name)
+            .setHeader("Name")
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_NAME);
+        addColumn(ProductCatalogItem::price)
+            .setHeader("Price")
+            .setTextAlign(ColumnTextAlign.END)
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_PRICE);
+        addColumn(ProductCatalogItem::description)
+            .setHeader("Description")
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_DESCRIPTION);
+        addColumn(ProductCatalogItem::category)
+            .setHeader("Category")
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_CATEGORY);
+        addColumn(ProductCatalogItem::brand)
+            .setHeader("Brand")
+            .setSortProperty(ProductCatalogItem.SORT_PROPERTY_BRAND);
     }
 }
 ----

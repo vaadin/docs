@@ -9,14 +9,14 @@ The documentation has three types. Each serves a distinct purpose; do not mix
 them on one page. The full description is in
 [Types of Documentation](../articles/contributing/docs/types.adoc).
 
-### How-To Guides (articles/building-apps)
+### How-To Guides (articles/building-apps, articles/agentic-development)
 
 - **Purpose**: Show how to achieve specific goals
 - **Tone**: Practical, opinionated, production-ready
 - **Focus**: Common use cases, best practices, pitfalls to avoid
 - **Code**: Copy-paste ready snippets at the top when applicable
 
-### Reference Manuals (articles/flow, articles/components, articles/tools)
+### Reference Manuals (articles/flow, articles/components, articles/tools, articles/agentic-development)
 
 - **Purpose**: Document features, APIs, and capabilities
 - **Tone**: Neutral, factual, complete
@@ -42,15 +42,21 @@ Action-oriented, opinionated how-to guides for building business applications. F
 
 Also contains deep dive articles that explore concepts, reasoning behind practices, and alternative approaches.
 
+### articles/components
+
+Component documentation covering capabilities, usage, and styling for each Vaadin component. See [Component Pages](component-pages.md).
+
+### articles/agentic-development
+
+Setting up AI coding agents to build Vaadin applications: the Vaadin MCP server and the Directory MCP server, the agent skills and tools, and the Dev Loop tutorial.
+
+Holds both how-to guides and reference pages. The setup guide for each AI tool, the Directory MCP server setup, and the Dev Loop tutorial are how-to guides. The page that lists every configuration setting of the self-hosted MCP server is reference. Put a new page about setting up or using AI coding agents with Vaadin here, not in Building Apps.
+
 ### articles/flow
 
 The Reference Guide: reference documentation of the Vaadin framework, for both Flow views and React views. Technical, code-centric, unopinionated API documentation describing features and usage. Forms the foundation for Building Apps articles.
 
 **Note:** Legacy content exists here from when this contained all framework docs. Old tutorials and how-to content should be migrated to Building Apps.
-
-### articles/components
-
-Component documentation covering capabilities, usage, and styling for each Vaadin component. See [Component Pages](component-pages.md).
 
 ### articles/styling
 

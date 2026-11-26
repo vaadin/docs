@@ -1,7 +1,7 @@
 ---
 title: Tool Calling & Programmatic Prompts
 description: Register tool objects for LLM invocation and send prompts programmatically without a Message Input component.
-meta-description: Learn how to register tools for LLM function calling in a Vaadin application, and how to send programmatic prompts from your code with the AIOrchestrator.
+meta-description: Learn how to register tools for LLM function calling in a Vaadin application, and how to send programmatic prompts from your code with the AiOrchestrator.
 order: 40
 ---
 
@@ -32,12 +32,12 @@ public class WeatherTools {
 ChatClient chatClient = ChatClient.builder(chatModel)
         .defaultTools(new WeatherTools())
         .build();
-SpringAILLMProvider provider = new SpringAILLMProvider(chatClient);
+SpringAiLlmProvider provider = new SpringAiLlmProvider(chatClient);
 ----
 
 For LangChain4j, use [annotationname]`@dev.langchain4j.agent.tool.Tool`, whose description is the annotation's value.
 
-Add the tool objects in [since:com.vaadin:vaadin@V25.4]#a customizer of the provider#. [classname]`LangChain4JLLMProvider` takes the customizer as an optional second constructor argument, and passes it the builder of the LangChain4j AI service that it runs each turn through:
+Add the tool objects in [since:com.vaadin:vaadin@V25.4]#a customizer of the provider#. [classname]`LangChain4jLlmProvider` takes the customizer as an optional second constructor argument, and passes it the builder of the LangChain4j AI service that it runs each turn through:
 
 [source,java]
 ----
@@ -49,7 +49,7 @@ public class WeatherTools {
     }
 }
 
-LangChain4JLLMProvider provider = new LangChain4JLLMProvider(chatModel,
+LangChain4jLlmProvider provider = new LangChain4jLlmProvider(chatModel,
         service -> service.tools(new WeatherTools()));
 ----
 
@@ -63,7 +63,7 @@ With a streaming provider or <<llm-providers#background-execution,background exe
 
 .Framework-Agnostic Tools via Controllers
 [TIP]
-For a reusable set of tools that does not depend on a specific LLM framework's annotations, or when a lifecycle hook is needed after each LLM request cycle, implement <<controllers#,[classname]`AIController`>> instead. [classname]`GridAIController`, [classname]`ChartAIController`, and [classname]`FormAIController` are built-in examples. A controller can be combined with tool objects registered with the AI framework.
+For a reusable set of tools that does not depend on a specific LLM framework's annotations, or when a lifecycle hook is needed after each LLM request cycle, implement <<controllers#,[classname]`AiController`>> instead. [classname]`GridAiController`, [classname]`ChartAiController`, and [classname]`FormAiController` are built-in examples. A controller can be combined with tool objects registered with the AI framework.
 
 .Tool Errors
 [NOTE]
@@ -83,7 +83,7 @@ You can also define the tool through a controller instead, and throw a [classnam
 
 A turn that uses tools is a loop: the model asks for tool calls, the provider runs them and calls the model again with the results, until the model answers. Both built-in providers bound that loop per turn. By default, the model may call any single tool at most 40 times and all tools together at most 150 times in one turn. Without a bound, a request the model can't satisfy keeps calling the model and the tools until the application is stopped. The limits count every tool the model can call, whether it comes from a tool object, a <<controllers#,controller>>, or an <<llm-providers#framework-features,MCP server>>.
 
-When a limit is exceeded, the turn fails with a [classname]`ToolCallLimitExceededException`, whichever provider runs it. The Message List shows its generic error message, and the exception reaches the <<listeners#,response listener>> and [methodname]`AIController.onResponse()` as the error of the turn. Its message names the limit that was exceeded and, for a per-tool limit, the tool:
+When a limit is exceeded, the turn fails with a [classname]`ToolCallLimitExceededException`, whichever provider runs it. The Message List shows its generic error message, and the exception reaches the <<listeners#,response listener>> and [methodname]`AiController.onResponse()` as the error of the turn. Its message names the limit that was exceeded and, for a per-tool limit, the tool:
 
 [source,java]
 ----
@@ -97,11 +97,11 @@ When a limit is exceeded, the turn fails with a [classname]`ToolCallLimitExceede
 
 === LangChain4j
 
-[classname]`LangChain4JLLMProvider` runs the loop itself and enforces the limits. Change them with [methodname]`setMaxCallsPerTool()` and [methodname]`setMaxTotalToolCalls()`. A value of `0` removes that limit, and a negative value throws an [classname]`IllegalArgumentException`. The values are read when a turn starts, so a change applies from the next prompt.
+[classname]`LangChain4jLlmProvider` runs the loop itself and enforces the limits. Change them with [methodname]`setMaxCallsPerTool()` and [methodname]`setMaxTotalToolCalls()`. A value of `0` removes that limit, and a negative value throws an [classname]`IllegalArgumentException`. The values are read when a turn starts, so a change applies from the next prompt.
 
 [source,java]
 ----
-LangChain4JLLMProvider provider = new LangChain4JLLMProvider(chatModel);
+LangChain4jLlmProvider provider = new LangChain4jLlmProvider(chatModel);
 provider.setMaxCallsPerTool(10);
 provider.setMaxTotalToolCalls(0); // No limit across all tools
 ----
@@ -110,13 +110,13 @@ The provider checks the limits before running the tool calls of a response. When
 
 === Spring AI
 
-[classname]`SpringAILLMProvider` adds no limit of its own. Spring AI bounds the loop with the same defaults, 40 calls per tool and 150 in total per turn, with either constructor of the provider. When Spring AI stops the loop, the provider fails the turn with the [classname]`ToolCallLimitExceededException` described above, carrying Spring AI's own message about the limit. The finish reason `toolCallLimitExceeded` that Spring AI puts on that reply is still published in the <<listeners#response-metadata,response metadata>>, and the reply may remain in the chat memory, with either constructor: the provider doesn't rewrite what Spring AI's advisors stored.
+[classname]`SpringAiLlmProvider` adds no limit of its own. Spring AI bounds the loop with the same defaults, 40 calls per tool and 150 in total per turn, with either constructor of the provider. When Spring AI stops the loop, the provider fails the turn with the [classname]`ToolCallLimitExceededException` described above, carrying Spring AI's own message about the limit. The finish reason `toolCallLimitExceeded` that Spring AI puts on that reply is still published in the <<listeners#response-metadata,response metadata>>, and the reply may remain in the chat memory, with either constructor: the provider doesn't rewrite what Spring AI's advisors stored.
 
 The limits belong to the [classname]`ChatClient`, so tune or remove them there and pass the client to the [classname]`ChatClient` constructor of the provider; the [classname]`ChatModel` constructor builds a client with Spring AI's defaults. In a Spring Boot application, the `spring.ai.tools.limits` properties configure them on the auto-configured [classname]`ChatClient.Builder`. How to configure them is described under https://docs.spring.io/spring-ai/reference/api/tools.html#tool-call-limits[Tool Call Limits] in the Spring AI documentation.
 
 .Custom Providers
 [NOTE]
-A <<llm-providers#custom-llm-providers,custom LLM provider>> that runs its own tool-calling loop decides itself whether and how to bound it. The [classname]`ToolCallLimitExceededException` constructor is public, so such a provider can end a turn with the same exception, and a [classname]`ResponseListener` or [classname]`AIController` can be unit-tested against it.
+A <<llm-providers#custom-llm-providers,custom LLM provider>> that runs its own tool-calling loop decides itself whether and how to bound it. The [classname]`ToolCallLimitExceededException` constructor is public, so such a provider can end a turn with the same exception, and a [classname]`ResponseListener` or [classname]`AiController` can be unit-tested against it.
 
 
 == Programmatic Prompts
@@ -133,7 +133,7 @@ include::{root}/frontend/demo/flow/aicomponents/ai-orchestrator-programmatic-pro
 ifdef::flow[]
 [source,java]
 ----
-include::{root}/src/main/java/com/vaadin/demo/flow/aicomponents/AIOrchestratorProgrammaticPrompt.java[render,tags=snippet,indent=0,group=Flow]
+include::{root}/src/main/java/com/vaadin/demo/flow/aicomponents/AiOrchestratorProgrammaticPrompt.java[render,tags=snippet,indent=0,group=Flow]
 ----
 endif::[]
 --

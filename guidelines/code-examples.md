@@ -114,6 +114,20 @@ the same thing and looks the same, in both the light and the dark theme. A Flow
 variant of a Charts example, for example, uses styled mode like the client-side
 ones.
 
+Structure an example that builds a view, or a part of one, the way an
+application should, as [Build a Component](../articles/building-apps/components/build-component.adoc)
+and [Compose with Components](../articles/building-apps/ui-basics/compose.adoc)
+describe:
+
+- A built-in component that takes several calls to set up becomes a subclass
+  named after what it's for, such as `EmployeeGrid extends Grid<Employee>`,
+  rather than a `createGrid()` method.
+- A part that only one class uses becomes a static nested class of that class.
+- State lives in the component that uses it, not in the view.
+
+Keep an example that shows one API of a component flat, so that the API stays
+in view.
+
 Explain non-obvious arguments in the example itself. A call such as
 `new HierarchicalQuery<>(null, null)` needs a comment saying which `null` is the
 filter and which is the parent.
