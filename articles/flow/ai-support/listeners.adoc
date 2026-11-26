@@ -114,7 +114,11 @@ When Spring AI stops the tool-calling loop at its limit, [methodname]`event.getR
 
 === Failed Turns
 
-The built-in providers publish metadata as the turn progresses, and each publication replaces the previous one. A turn that fails or times out midway therefore still reports what was observed before the failure: [methodname]`event.getError()` carries the cause and the metadata describes the turn as far as it got. How far that is depends on how much of the <<tool-calling#,tool-calling>> loop the provider sees. [classname]`LangChain4jLlmProvider` observes every model response of the loop and publishes after every round trip. A turn that fails after a tool call therefore still reports the token usage of the round trips that did complete. Spring AI runs the loop inside the framework and hands [classname]`SpringAiLlmProvider` only the final response, so the round trips before it are never published: a turn that fails before the final response reports nothing, in synchronous and streaming mode alike. In streaming mode, the chunks of the final response that arrived before the failure are still reported.
+If a turn fails or times out, [methodname]`event.getError()` carries the cause. [methodname]`event.getMetadata()` contains the latest metadata the provider published, or is empty if the provider published none.
+
+[classname]`LangChain4jLlmProvider` observes every model response in the <<tool-calling#,tool-calling>> loop. It publishes an update when a response supplies a finish reason, token usage, or both. Each update keeps the latest reported finish reason and adds any reported token usage to the running total.
+
+[classname]`SpringAiLlmProvider` sees only the final response from Spring AI's tool-calling loop. A failure before that response leaves the listener without metadata. In streaming mode, the listener receives any metadata from chunks of the final response that arrived before the failure.
 
 Both built-in providers log a warning when a turn ends without a finish reason. [classname]`SpringAiLlmProvider` also warns when a turn ends with tool calls still pending, which happens when Spring AI's tool-calling loop stops before the model answers.
 
