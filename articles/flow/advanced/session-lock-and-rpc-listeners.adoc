@@ -138,6 +138,10 @@ The session is an empty [classname]`Optional` when it isn't known.
 This happens when the lock is taken for a new HTTP session before the Vaadin session has been created in it.
 It can also happen after the Vaadin session has been removed from the HTTP session, since the lock keeps the session only through a weak reference.
 
+[classname]`SessionLockReleasedEvent` listeners run on the thread that released the lock, after the release, so they don't hold the session lock and [methodname]`UI.getCurrent()` returns `null`; a listener that needs a UI keeps its own reference to it instead of reading the current instance.
+Any session access such a listener makes -- [methodname]`UI.access()`, [methodname]`VaadinSession.access()`, or changing a signal that one of the UI's effects depends on, since the effect then runs through [methodname]`UI.access()` -- takes the lock again and fires these events again, on the same thread if the lock is free or on whichever thread holds it otherwise.
+A listener that accesses the session on every release must recognize the release its own access caused and skip it, or it never stops.
+
 [classname]`SessionLockAcquiredEvent.getWaitTime()` gives how long the thread waited for the lock, from the moment it was requested until it was acquired, including time other threads spent holding it.
 [classname]`SessionLockReleasedEvent.getHoldTime()` gives how long the thread then held the lock, from acquisition until release.
 Flow measures both itself, so no listener has to time anything on its own; it only measures them while a listener is registered to receive the value, so an application that listens to neither pays nothing for the timing.
