@@ -97,7 +97,7 @@ Whatever the customizer configures, the provider keeps doing what the orchestrat
 * It reports the <<listeners#response-metadata,response metadata>>.
 * It enforces the <<tool-calling#tool-call-limits,tool call limits>>. The customizer's tools count against them too, but those requested in the response that exceeds a limit still run.
 * It calls the model passed to the constructor, so a model set in the customizer isn't used.
-* It sends the system prompt of the orchestrator in place of a [methodname]`systemMessage()` set in the customizer.
+* It sends the system prompt of the orchestrator in place of a [methodname]`systemMessage()` set in the customizer, unless that prompt is `null` or blank.
 
 The provider sets the following on the builder before the customizer runs, so the customizer can replace each of them:
 
@@ -117,7 +117,7 @@ The provider sets the following on the builder before the customizer runs, so th
 
 The following applies to what the customizer configures:
 
-* **Chat memory:** A memory set with [methodname]`chatMemory()` or [methodname]`chatMemoryProvider()` replaces the provider's own, and LangChain4j fills it as it does for any AI service. It also receives the tool calls and their results, including those of a turn that failed or was cancelled. With output guardrails, it keeps the answer as the model gave it, not as the guardrails returned it. [methodname]`withHistory()` and [methodname]`reconnect()` restore the conversation into that memory and replace what it held. A [methodname]`chatMemoryProvider()` creates its memory on the first turn, so a conversation restored before that isn't written to it, and the provider logs a warning. Have the memory provider return a memory that already holds the conversation instead.
+* **Chat memory:** A memory set with [methodname]`chatMemory()` or [methodname]`chatMemoryProvider()` replaces the provider's own, and LangChain4j fills it as it does for any AI service. It also receives the tool calls and their results, including those of a turn that failed or was cancelled. With output guardrails, it keeps the answer as the model gave it, not as the guardrails returned it. The application owns that memory. The provider skips it during [methodname]`withHistory()` and [methodname]`reconnect()`, so load the saved conversation into it before the next prompt.
 * **Retrieval and input guardrails:** Retrieval works on the text of the user message, which ends with the session context of the turn. Input guardrails check the message after retrieval, so they also see the retrieved content and the attachments. Both run before the model is called, on the thread that sends the prompt, also with a streaming model. Enable <<#background-execution,background execution>> so that they don't block the UI.
 * **Output guardrails:** The response is the text that the output guardrails returned. LangChain4j runs them on the final answer only, so text that the model sends next to its tool calls isn't passed on. With a streaming model, the answer arrives in one piece once the guardrails have checked it. The provider's own chat memory keeps the answer as the guardrails returned it, so later turns continue from what the user received. When a guardrail fails the turn, the answer it rejected stays in the chat memory, unless the guardrail asks LangChain4j to remove it with [methodname]`fatalWithMessageRemoval()` or [methodname]`failureWithMessageRemoval()`.
 * **Moderation:** A moderation model set in the customizer isn't used, because LangChain4j applies it only to service methods annotated with [annotationname]`@Moderate`. Use an input guardrail to check the user message instead.
@@ -169,9 +169,9 @@ The framework's own reference documentation is where to look for the details:
 * https://docs.spring.io/spring-ai/reference/[Spring AI reference documentation]
 * https://docs.langchain4j.dev/[LangChain4j documentation]
 
-.The System Prompt Comes From the Orchestrator
+.System Prompt Precedence
 [TIP]
-The orchestrator sends its own system prompt on every turn. It replaces any [methodname]`defaultSystem()` text configured on a Spring AI client and any [methodname]`systemMessage()` set in a LangChain4j customizer. Put instructions for the model, including when to reach for the framework's tools, in the system prompt passed to [methodname]`AiOrchestrator.builder()`, not in the framework's defaults.
+Pass a system prompt to [methodname]`AiOrchestrator.builder()` to override the framework default on every turn. If the prompt is `null` or blank, the provider uses any [methodname]`defaultSystem()` text on the Spring AI client or [methodname]`systemMessage()` set in the LangChain4j customizer.
 
 
 .Tool Call Limits
