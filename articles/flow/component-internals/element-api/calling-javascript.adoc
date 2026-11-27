@@ -25,7 +25,7 @@ An interface annotated with [annotationname]`@JsDefinition` declares JavaScript 
 
 Call the declared JavaScript of a [interfacename]`JsInvokers` interface through [methodname]`Element.executeJs(Class)`, which hands out an implementation of the interface; calling a method of it schedules the JavaScript that the method declares.
 
-Each method of the interface is annotated with [annotationname]`@JsExpression`, whose value is the JavaScript expression to run. The arguments of the call are available inside the expression as `$0`, `$1`, and so on, and the element the implementation was obtained from is `this`.
+Each method of the interface declares the JavaScript it runs, either with [annotationname]`@JsExpression`, whose value is the JavaScript expression to run, or by leaving the annotation out to call the method of the same name on the element instead, with the arguments of the call. The arguments of an expression are available inside it as `$0`, `$1`, and so on, and the element the implementation was obtained from is `this`.
 
 The arguments must be a type supported by the communication mechanism. The supported types are `String`, `Boolean`, `Integer`, `Double`, `JsonNode`, `Element`, `Component`, and `JsFunction`.
 
@@ -76,6 +76,30 @@ public void greet(String message) {
 ----
 ====
 
+A method of an interface that extends [interfacename]`JsInvokers` can leave out [annotationname]`@JsExpression` to call the method of the same name on the element, with the arguments of the call, instead of declaring its own expression. The last argument of a variadic method is spread into the call, the same as it would be in an explicit expression.
+
+.Calling an element method without an expression
+[example]
+====
+[source,java]
+----
+@JsDefinition
+public interface PopoverJs extends JsInvokers {
+
+    void showPopover();
+}
+----
+
+[source,java]
+----
+public void openPopover() {
+    getElement().executeJs(PopoverJs.class).showPopover();
+}
+----
+====
+
+What counts is the interface that declares the method, not the interface the call goes through: a method inherited from an interface that doesn't extend [interfacename]`JsInvokers` still needs [annotationname]`@JsExpression`.
+
 A method returns `void`, [classname]`PendingJavaScriptResult`, or [classname]`JavaScriptResult` with a type argument, to retrieve a return value the same way an expression does (see <<#return-values,Return Values>>). Declaring [classname]`JavaScriptResult` with a type argument hands the value to its handlers already converted to that type, with no type token needed at the call site.
 
 .Declaring JavaScript that returns a value
@@ -104,9 +128,9 @@ public void updateTooltip() {
 Nothing about the JavaScript is decided at the call site: the build generates one function per declared expression into the bundle, and the client runs that function after looking it up by an identifier of the JavaScript. The expression itself is never sent to the browser, and a production bundle carries the generated functions only -- the Java names stay on the server.
 
 [NOTE]
-The interface is checked when [methodname]`executeJs(Class)` hands out the implementation. It must extend [interfacename]`JsInvokers` and be annotated with [annotationname]`@JsDefinition`. Every method must be annotated with [annotationname]`@JsExpression` and return `void`, [classname]`PendingJavaScriptResult`, or [classname]`JavaScriptResult` with a type argument that's known from the interface (see <<#typed-results,Typed Results>>); a method that returns a snippet type is refused with the method named. A `default` or `static` method is refused, since it's implemented in Java rather than declaring JavaScript to run in the browser.
+The interface is checked when [methodname]`executeJs(Class)` hands out the implementation. It must extend [interfacename]`JsInvokers` and be annotated with [annotationname]`@JsDefinition`. Every method must declare JavaScript -- with [annotationname]`@JsExpression`, or by leaving it out in an interface that extends [interfacename]`JsInvokers` -- and return `void`, [classname]`PendingJavaScriptResult`, or [classname]`JavaScriptResult` with a type argument that's known from the interface (see <<#typed-results,Typed Results>>); a method that returns a snippet type is refused with the method named. A `default` or `static` method is refused, since it's implemented in Java rather than declaring JavaScript to run in the browser.
 
-When the JavaScript isn't about a particular element, declare it the same way and run it through [methodname]`Page.executeJs(Class)`, which works with global browser APIs instead of with an element (see <</flow/advanced/browser-access#declaring-javascript-in-java,Accessing the Browser Page>>).
+When the JavaScript isn't about a particular element, declare it the same way and run it through [methodname]`Page.executeJs(Class)`, which works with global browser APIs instead of with an element (see <</flow/advanced/browser-access#declaring-javascript-in-java,Accessing the Browser Page>>). A method without [annotationname]`@JsExpression` is refused there instead of being accepted as a call on an element, since a call through the page runs on no element to call it on.
 
 [[declaring-snippets]]
 === Declaring Snippets
