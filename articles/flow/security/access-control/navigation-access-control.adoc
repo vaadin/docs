@@ -139,6 +139,44 @@ public AccessCheckResult check(NavigationContext context) {
 ----
 
 
+[role="since:com.vaadin:vaadin@V25.4"]
+=== Public Route Check Phase
+
+A checker is called for different reasons. [methodname]`NavigationContext.getPhase()` tells which one, as a value of the [classname]`NavigationContext.Phase` enum:
+
+[cols="1,2"]
+|===
+| Phase | Reason for the Check
+
+| `NAVIGATION`
+| The current user navigates to the target view.
+
+| `EVALUATION`
+| The access of the current user to the target view is checked outside of a navigation, for example to populate the menu.
+
+| `PUBLIC_ROUTE_CHECK`
+| The target view is checked for anonymous access, to find out if its route is public.
+|===
+
+The check during error handling, described in the earlier section, has the `NAVIGATION` phase. Use [methodname]`isErrorHandling()` to tell it apart from a regular navigation.
+
+In a Spring application, the request matcher for public routes runs the public route check. This matcher is part of [methodname]`defaultPermitMatcher()`, described in <<../spring/security-configuration#request-matchers,Request Matchers>>. Spring Security calls it for a request to a route path before the request reaches Vaadin. The matcher permits the request without authentication only if the final decision is `ALLOW`. Navigation access control still checks the access of the actual user when the view is opened.
+
+In this phase, the context has no user: [methodname]`getPrincipal()` returns `null`, and [methodname]`hasRole()` returns `false` for every role. The request that triggers the check can come from a signed-in user. The result mustn't depend on who sent it. Therefore, a checker shouldn't look up the user anywhere else, such as in the security context of the request. A checker whose decision depends on the user can return a `NEUTRAL` result, and leave it to the other checkers to decide whether the view is public.
+
+.Neutral Result on Public Route Check
+[source,java]
+----
+@Override
+public AccessCheckResult check(NavigationContext context) {
+    if (context.getPhase() == NavigationContext.Phase.PUBLIC_ROUTE_CHECK) {
+        return AccessCheckResult.neutral();
+    }
+    ....
+}
+----
+
+
 === Custom Decision Resolver
 
 If the default implementation doesn't fit the requirements of the project, you can implement your own [interfacename]`AccessCheckDecisionResolver`. The interface defines a single method that takes as input the results computed by the navigation access checker and the current navigation context. Its output is an [classname]`AccessCheckResult`.
