@@ -42,6 +42,7 @@ The event carries:
 The listener runs on the UI thread under the session lock: components can be updated directly, and long-running work should be offloaded to a worker thread.
 
 
+[[response-listener]]
 == Response Listener
 
 The response listener is called when the turn ends -- normally when the assistant's response has completed, successfully or with an error, but also when the turn fails before a response ever starts. It fires at most once per prompt, and not at all for a prompt rejected by the interceptor, for a postponed prompt abandoned because its UI was detached, or for history restored via [methodname]`withHistory()`.
@@ -56,7 +57,7 @@ A typical use is persisting the conversation after each exchange -- see <<conver
 
 .UI Updates from ResponseListener
 [IMPORTANT]
-The listener is called from whichever thread ends the turn. With a streaming provider, or when <<llm-providers#background-execution,background execution>> is enabled, that's a background thread, where blocking I/O (such as database writes) is safe. With a synchronous provider in the default execution mode, the whole turn -- this listener included -- runs in the request that triggered the prompt. To update Vaadin UI components from this callback, wrap the update in `ui.access()`.
+When the UI is attached, the orchestrator calls the listener under the session lock, even with streaming or <<llm-providers#background-execution,background execution>>. If a controller is registered, its [methodname]`onResponse()` runs first. The listener can update UI components directly. Run blocking work such as database writes on a separate thread to keep the session responsive. If the UI detaches before the callback runs, the orchestrator skips the controller hook and calls the listener without a session.
 
 
 [[response-metadata]]

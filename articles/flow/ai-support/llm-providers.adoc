@@ -197,9 +197,11 @@ Everything that the orchestrator does before it hands the prompt to the provider
 * The request listener
 * The session context supplier
 
-The model calls, every tool execution, and the [classname]`ResponseListener` run on a background thread, as do the retrieval and the input guardrails of a LangChain4j customizer. There, [methodname]`UI.getCurrent()` and other Vaadin thread locals return `null` and components must not be touched directly. Thread-bound framework state, such as Spring Security's [classname]`SecurityContext`, is absent there for the same reason.
+The model calls and every tool execution run on a background thread, as do the retrieval and the input guardrails of a LangChain4j customizer. There, [methodname]`UI.getCurrent()` and other Vaadin thread locals return `null` and components must not be touched directly. Thread-bound framework state, such as Spring Security's [classname]`SecurityContext`, is absent there for the same reason.
 
-Wrap component access in `ui.access()`, or capture what a tool needs in [methodname]`AiController.onRequest()` while the request thread is still current -- see <<tool-calling#,Tool Calling & Programmatic Prompts>> and <<controllers#,Controllers>>. The built-in controllers already handle this. [methodname]`AiController.onResponse()` is the exception: the orchestrator calls it through `ui.access()`, so it can update components directly.
+Wrap component access in `ui.access()`, or capture what a tool needs in [methodname]`AiController.onRequest()` while the request thread is still current -- see <<tool-calling#,Tool Calling & Programmatic Prompts>> and <<controllers#,Controllers>>. The built-in controllers already handle this.
+
+While the UI is attached, the orchestrator calls [methodname]`AiController.onResponse()` and then the <<listeners#response-listener,response listener>> under the session lock. Both can update components directly. Move blocking work to a worker thread to keep the session responsive.
 
 .One Prompt at a Time
 [NOTE]

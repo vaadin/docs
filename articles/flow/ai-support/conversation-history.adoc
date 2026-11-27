@@ -15,11 +15,11 @@ The orchestrator tracks conversation history internally. Use [methodname]`getHis
 
 == Persisting History
 
-Use [classname]`ResponseListener` to persist conversation state after each exchange:
+Store the orchestrator in a field of the view. Use a [classname]`ResponseListener` to capture the history after each successful exchange and queue the snapshot for a background writer.
 
 [source,java]
 ----
-var orchestrator = AiOrchestrator
+this.orchestrator = AiOrchestrator
         .builder(provider, systemPrompt)
         .withMessageList(messageList)
         .withInput(messageInput)
@@ -27,19 +27,19 @@ var orchestrator = AiOrchestrator
             if (event.getError().isPresent()) {
                 return;
             }
-            var history = orchestrator.getHistory();
-            saveToDatabase(sessionId, history);
+            var history = this.orchestrator.getHistory();
+            historyWriter().execute(() -> saveToDatabase(sessionId, history));
         })
         .build();
 ----
 
-[methodname]`saveToDatabase` is a placeholder for application code. Write the [classname]`ChatMessage` list to whichever storage the application uses, so the history can be loaded again later.
+In this example, [methodname]`historyWriter()` returns a background executor that the application manages. Make sure that it runs the writes of a conversation in the order they were submitted, as a single-threaded executor does. Otherwise, an older snapshot can overwrite a newer one. Implement [methodname]`saveToDatabase()` to store the snapshot.
 
 The listener fires once per turn for both successful and failed exchanges -- check [methodname]`event.getError()` to tell them apart. It is not called when history is restored via [methodname]`withHistory()`, and empty responses (turns where the model emitted only tool calls or no visible content) are not appended to history. The event also carries the [since:com.vaadin:vaadin@V25.3]#finish reason and token usage# of the turn -- see <<listeners#response-metadata,Response Metadata>>.
 
 .UI Updates from ResponseListener
 [IMPORTANT]
-With a streaming provider, or when <<llm-providers#background-execution,background execution>> is enabled, the listener runs on a background thread, where blocking I/O (such as database writes) is safe. With a synchronous provider in the default execution mode, the whole turn -- this listener included -- runs in the request that triggered the prompt, so blocking work extends that request. To update Vaadin UI components from this callback, wrap the update in `ui.access()`.
+While the UI is attached, the <<listeners#response-listener,response listener>> holds the session lock, so it can update UI components directly. Capture the snapshot in the listener and write it to storage on a background thread. If the UI detaches before the callback runs, the listener can still save the history.
 
 
 == Restoring History
