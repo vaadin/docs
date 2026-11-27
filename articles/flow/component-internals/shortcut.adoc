@@ -113,6 +113,49 @@ public class Scope extends Div {
 ====
 
 
+[[listen-on-element-locator]]
+[role="since:com.vaadin:vaadin@V25.4"]
+=== Listening on an Element That Exists Only in the Browser
+
+This section is for authors of UI components.
+Some UI components receive keyboard input in an element that exists only in the browser, such as an overlay.
+The keyboard events from that element don't reach the element of the UI component.
+A shortcut that uses such a UI component as its `listenOn` component then doesn't trigger for keys pressed in that element.
+
+Use [methodname]`Shortcuts.setShortcutListenOnElementLocator()` with the locator and the UI component to tell Vaadin which element to listen on instead.
+Vaadin then relays the matching keyboard events from that element to the UI component.
+The locator is a [classname]`JsFunction` that returns the element.
+It's called without arguments, with the element of the UI component as `this`.
+Set the locator for each instance of the UI component, for example in its constructor.
+
+Declare the function as a snippet of a [annotationname]`@JsDefinition` interface and get it through [methodname]`JsSnippets.of()`, as described in <<{articles}/flow/component-internals/element-api/calling-javascript#declaring-snippets,Declaring Snippets>>.
+The build then adds the function to the frontend bundle, so the browser doesn't compile it with `eval()`.
+The locator therefore needs no entry in the <<{articles}/flow/security/protections/content-security-policy#function-execution-eval-calls,content security policy overrides>>.
+
+.Relaying keyboard events from an overlay
+[example]
+====
+[source,java]
+----
+@JsDefinition
+public interface OverlayJs extends Serializable {
+
+    @JsExpression("return this.$.overlay;")
+    JsFunction locateOverlay();
+}
+----
+
+[source,java]
+----
+Shortcuts.setShortcutListenOnElementLocator(
+        JsSnippets.of(OverlayJs.class).locateOverlay(), this);
+----
+====
+
+An application developer can then use the UI component as the `listenOn` component as usual, for example with `button.addClickShortcut(Key.ENTER).listenOn(dialog)`.
+To remove the locator, pass `null`. You can also use the [classname]`Registration` that the method returns, which removes the locator only if it hasn't been replaced since. Removing the locator affects only shortcuts set up afterwards. Shortcuts that already relay events keep doing so.
+
+
 === Removing Shortcuts
 
 Remove a registered shortcut using the [methodname]`ShortcutRegistration.remove()` method.
