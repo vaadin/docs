@@ -1,5 +1,6 @@
 package com.vaadin.demo.component.masterdetaillayout;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -10,6 +11,7 @@ import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.masterdetaillayout.MasterDetailLayout;
 import com.vaadin.flow.component.textfield.EmailField;
@@ -100,8 +102,10 @@ public class MasterDetailLayoutNested extends Div {
         formLayout.getStyle().set("padding-inline", "var(--vaadin-gap-m)");
         formLayout.add(firstNameField, lastNameField, emailField, closeButton);
 
+        GridListDataView<Person> personDataView = personGrid
+                .setItems(new ArrayList<>());
         Signal.effect(personGrid, () -> {
-            personGrid.setItems(people.get());
+            personDataView.setItems(people.get());
             selectedPerson.set(null);
         });
 
