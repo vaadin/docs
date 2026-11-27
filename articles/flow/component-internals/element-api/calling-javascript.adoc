@@ -108,6 +108,36 @@ The interface is checked when [methodname]`executeJs(Class)` hands out the imple
 
 When the JavaScript isn't about a particular element, declare it the same way and run it through [methodname]`Page.executeJs(Class)`, which works with global browser APIs instead of with an element (see <</flow/advanced/browser-access#declaring-javascript-in-java,Accessing the Browser Page>>).
 
+[[importing-module-exports]]
+=== Importing Module Exports
+
+[annotationname]`@JsDefinitionImport`, placed next to [annotationname]`@JsDefinition` on an interface that extends [interfacename]`JsInvokers`, gives an expression names from a JavaScript module to call, without the module publishing them on `window`:
+
+.Importing a module's namespace and calling it from an expression
+[example]
+====
+[source,java]
+----
+@JsDefinition
+@JsDefinitionImport(from = "./gridConnector.js", namespace = "connector")
+public interface GridConnectorJs extends JsInvokers {
+
+    @JsExpression("connector.initLazy(this)")
+    void initLazy();
+}
+----
+====
+
+The attributes name what is imported, the same way the parts of a JavaScript `import` statement do: [methodname]`defaultExport()` names the default export, [methodname]`namespace()` imports the whole module under one name, and [methodname]`exports()` lists named exports, each kept under its own name. `@JsDefinitionImport(from = "./my.js", defaultExport = "a", namespace = "b", exports = {"c", "d"})` gives the expression what `import a, { c, d }, * as b from "./my.js"` would. At least one of the three has to be given; a module that's only loaded for its side effects is declared with [annotationname]`@JsModule` instead.
+
+[methodname]`from()` is resolved the same way as [methodname]`JsModule.value()`: a path starting with `./` names a file in the project's frontend folder or in a jar's `META-INF/frontend`, and any other path names an npm package. The annotation can be repeated, and several annotations that name the same module share one `import()`. The imports belong to the interface that declares them: a method inherited from another interface sees the imports of the interface that declares the method, not those of the interface it's called through.
+
+The module is loaded the first time a method of the declaring interface is called, not when the application starts, so a module that only some views need doesn't slow the others down; later calls reuse the loaded module. Because the call waits for its modules, even ones already loaded, its JavaScript runs after the JavaScript of the calls that follow it in the same round trip, rather than in call order, and two calls that import different modules may run in either order. When a later call depends on what this one does, make it from the result of this one, for example by returning [classname]`PendingJavaScriptResult` and making the next call in its handler.
+
+The imported names are given to the expression as parameters, so each one has to be a JavaScript identifier that isn't a reserved word, and not `$0`, `$1`, &hellip;, or `$executionContext`. A name can be declared only once by the imports of an interface, though the expression itself can declare a `let`, `const`, or `class` with the same name, which then hides the import instead of causing a conflict. Because the expression runs in a function of its own, `arguments` inside it holds the imported values rather than the arguments of the call.
+
+[annotationname]`@JsDefinitionImport` is refused on an interface that declares no method of its own, since the imports only reach the methods the annotated interface declares itself, and on a [interfacename]`JsSnippets` interface, since its functions aren't asynchronous and can't wait for a module to load. On a class, the annotation is ignored and logged as a build error instead of failing the build.
+
 [[declaring-snippets]]
 === Declaring Snippets
 
