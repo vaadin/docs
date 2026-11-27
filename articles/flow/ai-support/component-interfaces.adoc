@@ -15,11 +15,27 @@ The orchestrator's builder accepts both standard Vaadin components and custom im
 
 == AI Input
 
-[classname]`AiInput` defines the contract for text input components. It has a single method:
+[classname]`AiInput` defines the contract for text input components. It has one method to implement:
 
 * [methodname]`addSubmitListener(SerializableConsumer<String>)` -- registers a listener that receives the submitted text.
 
 The builder accepts either a <<{articles}/components/message-input#,[classname]`MessageInput`>> directly or any [classname]`AiInput` implementation.
+
+
+[[disabling-submit]]
+[role="since:com.vaadin:vaadin@V25.4"]
+=== Disabling Submit
+
+The orchestrator handles one prompt at a time, so it disables submitting on the input while it processes a prompt. It does the same while a file is <<file-attachments#uploads-in-progress,uploading>> to an [classname]`Upload` or [classname]`UploadManager` set as the file receiver. With a [classname]`MessageInput`, the user can keep typing and the typed text stays in the field -- see <<{articles}/components/message-input#disabling-submit,Disabling Submit>>. A prompt whose turn completes within the request that started it needs no disabling. That's the case with a synchronous provider without <<llm-providers#background-execution,background execution>>.
+
+The orchestrator enables submitting again when the turn has ended and no file is uploading, but only if it disabled submitting itself. Submitting that the application had already disabled stays disabled. Disabling it while the orchestrator has it disabled, for example in a response listener, doesn't last: the orchestrator enables it again at the end. To keep the user from sending more messages, disable the input component itself, for example with [methodname]`setEnabled(false)`, or reject the prompts in a <<request-interception#,request interceptor>>.
+
+A custom [classname]`AiInput` supports this by overriding the following `default` methods:
+
+* [methodname]`setSubmitDisabled(boolean)` -- sets whether submitting is disabled. The default implementation does nothing.
+* [methodname]`isSubmitDisabled()` -- returns whether submitting is disabled. The default implementation returns `false`.
+
+An implementation that doesn't override them keeps working, but submitting isn't disabled on it. The orchestrator ignores a message submitted in the meantime and logs a warning.
 
 
 == AI Message List
@@ -44,9 +60,13 @@ The builder accepts either a <<{articles}/components/message-list#,[classname]`M
 
 == AI File Receiver
 
-[classname]`AiFileReceiver` defines the contract for file upload components. It has a single method:
+[classname]`AiFileReceiver` defines the contract for file upload components. It has one method to implement:
 
 * [methodname]`takeAttachments()` -- returns all pending attachments and clears the internal state. The orchestrator calls this when the user submits a message.
+
+A receiver can also override the following `default` method:
+
+* [methodname]`isUploading()` -- returns whether a file is still being uploaded to the receiver. While it returns `true`, the orchestrator ignores the prompts that would take their attachments from the receiver -- see <<file-attachments#uploads-in-progress,Uploads in Progress>>. The default implementation returns `false`.
 
 The builder accepts <<{articles}/components/upload#,[classname]`UploadManager`>>, <<{articles}/components/upload#,[classname]`Upload`>>, or any [classname]`AiFileReceiver` implementation.
 

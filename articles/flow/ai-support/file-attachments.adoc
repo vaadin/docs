@@ -38,6 +38,16 @@ The following MIME type categories are supported: images (`image/*`), text (`tex
 Uploading a file whose name matches one that is still pending, that is, uploaded but not yet sent with a prompt, throws an [classname]`IllegalArgumentException`. Removing the earlier file from the upload list frees the name, and once a prompt has consumed the pending files, the name can be used again.
 
 
+[[uploads-in-progress]]
+== Uploads in Progress
+
+A prompt sent while a file is still uploading would reach the LLM without the file. While a file is uploading to the file receiver, the orchestrator therefore ignores a message submitted from the input and a [methodname]`prompt(message)` call, and logs a warning. The file stays in the upload list and goes with the next prompt.
+
+With an [classname]`Upload` or [classname]`UploadManager`, the orchestrator also <<component-interfaces#disabling-submit,disables submitting>> on the input during the upload, so the user can't send the message in the first place. The change reaches the browser only when server push or polling is enabled -- see <<index#server-push,Server Push>>. A custom [classname]`AiFileReceiver` reports an upload in progress through [methodname]`isUploading()`, but the orchestrator doesn't disable submitting for it.
+
+A [methodname]`prompt(message, attachments)` call still goes through, because it doesn't take attachments from the file receiver.
+
+
 == Persisting Attachments
 
 The orchestrator passes attachments to the LLM with each request but does not store them afterward. To save attachments to your own storage and look them up later -- for example when the user clicks one in the message list -- use [methodname]`withRequestListener()` (see <<listeners#,Request & Response Listeners>>) and [methodname]`withAttachmentClickListener()`:
