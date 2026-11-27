@@ -61,7 +61,9 @@ include::{root}/src/main/java/com/vaadin/demo/flow/aicomponents/AiOrchestratorHi
 endif::[]
 --
 
-This replays messages into the LLM provider's memory, populates the Message List UI, and rebuilds internal mappings for attachment click handling. A provider whose memory the application owns, such as a [classname]`SpringAiLlmProvider` created from a [classname]`ChatClient` that has a chat memory advisor, ignores the provider part of the restore; see <<llm-providers#,LLM Providers>>.
+The orchestrator restores its history, populates the Message List, and rebuilds the mappings for attachment clicks. A built-in LLM provider also replays the messages into its own memory.
+
+If the application owns the chat memory, load the saved conversation into that memory as well. This applies to a [classname]`SpringAiLlmProvider` whose [classname]`ChatClient` uses a chat memory advisor or can't be inspected. It also applies to a [classname]`LangChain4jLlmProvider` whose <<llm-providers#langchain4j-customizer,customizer>> sets [methodname]`chatMemory()` or [methodname]`chatMemoryProvider()`.
 
 [NOTE]
 [methodname]`getHistory()` returns a point-in-time snapshot. If called while a streaming response is in progress, the snapshot may include the user message without its corresponding assistant response. Use [classname]`ResponseListener` to capture history at the right time.
@@ -85,7 +87,7 @@ File attachments are represented as [classname]`AiAttachment` records with [meth
 
 === Reconnecting after Deserialization
 
-After the session is restored, call [methodname]`reconnect(LlmProvider)` to supply a new provider and optionally restore the controller and file attachments. The [methodname]`apply()` call replays the existing conversation history onto the new provider so that it has full context for subsequent prompts. The UI is not modified -- the message list, input, and file receiver components retain their state automatically.
+After the session is restored, call [methodname]`reconnect()` to supply a new provider and optionally restore the controller and file attachments. Call [methodname]`apply()` to replay the saved conversation into provider-owned memory. If the application owns the memory, load the conversation into it before the next prompt. The message list, input, and file receiver retain their state across session restoration.
 
 [source,java]
 ----

@@ -14,7 +14,7 @@ An AI framework -- such as Spring AI or LangChain4j -- is a Java library that ha
 
 .Memory Window Limit
 [IMPORTANT]
-Both built-in providers maintain a 30-message memory window of their own. The exception is a [classname]`SpringAiLlmProvider` whose [classname]`ChatClient` has a chat memory advisor or can't be inspected, where the application owns the memory. Older messages are evicted from the provider's working memory. The orchestrator's [methodname]`getHistory()` retains the full conversation, but the LLM only sees the most recent 30 messages.
+Both built-in providers maintain a 30-message memory window of their own. The exceptions are a [classname]`SpringAiLlmProvider` whose [classname]`ChatClient` has a chat memory advisor or can't be inspected, and a [classname]`LangChain4jLlmProvider` whose <<#langchain4j-customizer,customizer>> sets a chat memory. There, the application owns the memory. Older messages are evicted from the provider's working memory. The orchestrator's [methodname]`getHistory()` retains the full conversation, but the LLM only sees the most recent 30 messages.
 
 
 == Spring AI
@@ -67,19 +67,66 @@ ChatModel chatModel = OpenAiChatModel.builder()
 LangChain4jLlmProvider provider = new LangChain4jLlmProvider(chatModel);
 ----
 
-The provider manages its own conversation memory using a 30-message window.
+The provider manages its own conversation memory using a 30-message window, unless a <<#langchain4j-customizer,customizer>> replaces it.
 
 Synchronous mode blocks the UI for the duration of each exchange; see <<#background-execution,Background Execution>>.
 
-The provider runs the tool-calling loop itself and bounds the number of tool calls per turn; see <<tool-calling#tool-call-limits,Tool Call Limits>>.
+
+[[langchain4j-customizer]]
+[role="since:com.vaadin:vaadin@V25.4"]
+=== AI Service Customizer
+
+The provider runs each turn through a LangChain4j AI service, which it builds with [classname]`AiServices`. Both constructors also accept a customizer as a second argument. The customizer receives the [classname]`AiServices` builder before the provider builds the service. Use it to add LangChain4j features with LangChain4j's own API, such as retrieval-augmented generation, MCP tool providers, tool objects, guardrails, and listeners:
+
+[source,java]
+----
+LangChain4jLlmProvider provider = new LangChain4jLlmProvider(
+        streamingChatModel,
+        service -> service
+                // Retrieval from the application's embedding store
+                .contentRetriever(contentRetriever)
+                .inputGuardrails(promptInjectionGuardrail));
+----
+
+Whatever the customizer configures, the provider keeps doing what the orchestrator needs from it:
+
+* It supplies the tools of each turn next to the customizer's tools.
+* It adds the <<session-context#,session context>> and the attachments to the user message.
+* It reports the <<listeners#response-metadata,response metadata>>.
+* It calls the model passed to the constructor, so a model set in the customizer isn't used.
+* It sends the system prompt of the orchestrator in place of a [methodname]`systemMessage()` set in the customizer, unless that prompt is `null` or blank.
+
+The provider sets the following on the builder before the customizer runs, so the customizer can replace each of them:
+
+[cols="1,2"]
+|===
+|Builder method |Set by the provider
+
+|[methodname]`chatMemory()`
+|The provider's own conversation memory.
+
+|[methodname]`hallucinatedToolNameStrategy()`
+|A tool result that tells the model that the tool it called doesn't exist.
+|===
+
+The following applies to what the customizer configures:
+
+* **Chat memory:** A memory set with [methodname]`chatMemory()` or [methodname]`chatMemoryProvider()` replaces the provider's own, and LangChain4j fills it as it does for any AI service. It also receives the tool calls and their results, including those of a turn that failed or was cancelled. With output guardrails, it keeps the answer as the model gave it, not as the guardrails returned it. The application owns that memory. The provider skips it during [methodname]`withHistory()` and [methodname]`reconnect()`, so load the saved conversation into it before the next prompt.
+* **Retrieval and input guardrails:** Retrieval works on the text of the user message, which ends with the session context of the turn. Input guardrails check the message after retrieval, so they also see the retrieved content and the attachments. Both run before the model is called, on the thread that sends the prompt, also with a streaming model. Enable <<#background-execution,background execution>> so that they don't block the UI.
+* **Output guardrails:** The response is the text that the output guardrails returned. LangChain4j runs them on the final answer only, so text that the model sends next to its tool calls isn't passed on. With a streaming model, the answer arrives in one piece once the guardrails have checked it. The provider's own chat memory keeps the answer as the guardrails returned it, so later turns continue from what the user received. When a guardrail fails the turn, the answer it rejected stays in the chat memory, unless the guardrail asks LangChain4j to remove it with [methodname]`fatalWithMessageRemoval()` or [methodname]`failureWithMessageRemoval()`.
+* **Moderation:** A moderation model set in the customizer isn't used, because LangChain4j applies it only to service methods annotated with [annotationname]`@Moderate`. Use an input guardrail to check the user message instead.
+* **Tool names:** Give the tools you add in the customizer names that no [methodname]`withTools()` tool or controller uses. LangChain4j rejects two tools of the same name, and every turn that has both then fails.
+* **Tool errors:** LangChain4j handles the errors of tools added in the customizer, with the tool error handlers set there or with its defaults. Unless the customizer sets both [methodname]`toolArgumentsErrorHandler()` and [methodname]`toolExecutionErrorHandler()`, LangChain4j logs a notice that asks for them, once, also when the customizer adds no tools. The notice doesn't concern the tools of the orchestrator, whose errors never reach these handlers. Setting both handlers chooses how the tools you add fail, and LangChain4j then logs no notice.
 
 
 [[framework-features]]
 == Framework Features
 
-An LLM provider is a thin adapter: it hands each prompt to the framework's own client and streams back what that client produces. Everything else the model needs is set up on the client, in the framework, before the provider is created. The orchestrator works with whatever the client has been configured with and adds no framework features of its own.
+An LLM provider is a thin adapter: it hands each prompt to the framework and streams back what the framework produces. Everything else the model needs is set up in the framework, with the framework's own API. The orchestrator works with whatever has been configured there and adds no framework features of its own.
 
-Model Context Protocol (MCP) servers are the most common example. Neither the orchestrator nor the provider is an MCP client. Configure Spring AI's MCP client -- its transport, its credentials, and which of the server's tools the model may see -- register the resulting tool callbacks on a [classname]`ChatClient`, and wrap that client in a provider:
+Where the setup goes depends on the framework. With Spring AI, configure a [classname]`ChatClient` and wrap it in a provider. With LangChain4j, set the model's own options on the model, and configure the AI service in a <<#langchain4j-customizer,customizer>>.
+
+Model Context Protocol (MCP) servers are the most common example. Neither the orchestrator nor the provider is an MCP client. Configure the framework's MCP client: its transport, its credentials, and which of the server's tools the model may see. Then hand its tools to the provider. With Spring AI, register the tool callbacks on a [classname]`ChatClient`:
 
 [source,java]
 ----
@@ -90,25 +137,37 @@ ChatClient chatClient = ChatClient.builder(chatModel)
 SpringAiLlmProvider provider = new SpringAiLlmProvider(chatClient);
 ----
 
+With LangChain4j, add a [classname]`McpToolProvider` in the customizer:
+
+[source,java]
+----
+// Tool provider for LangChain4j's MCP client
+McpToolProvider mcpToolProvider = McpToolProvider.builder()
+        .mcpClients(mcpClient)
+        .build();
+LangChain4jLlmProvider provider = new LangChain4jLlmProvider(chatModel,
+        service -> service.toolProvider(mcpToolProvider));
+----
+
 The MCP tools then reach the model on every turn, next to any <<tool-calling#,tool objects>> registered with the framework and the tools of a <<controllers#,controller>>. The model calls all of them the same way, so tool names have to be unique across every source and match `^[a-zA-Z0-9_-]{1,64}$` -- validated when a controller is registered, but not for names that come from an MCP server.
 
-Retrieval-augmented generation against a vector store, guardrails and moderation, observability, model options such as temperature and token limits, and structured output with schema validation all work the same way: configure them on the framework's client, then wrap it in a provider. The framework's own reference documentation is where to look for the details:
+Other framework features work the same way: configure them in the framework, then create the provider. This covers the following:
+
+* Retrieval-augmented generation against a vector store
+* Guardrails, including content moderation
+* Observability
+* Model options such as temperature and token limits
+* Structured output with schema validation
+* Limits on the tool-calling loop of a turn
+
+The framework's own reference documentation is where to look for the details:
 
 * https://docs.spring.io/spring-ai/reference/[Spring AI reference documentation]
 * https://docs.langchain4j.dev/[LangChain4j documentation]
 
-.The System Prompt Comes From the Orchestrator
+.System Prompt Precedence
 [TIP]
-The orchestrator sends its own system prompt on every turn, which replaces any [methodname]`defaultSystem()` text configured on the client. Put instructions for the model -- including when to reach for the client's tools -- in the system prompt passed to [methodname]`AiOrchestrator.builder()`, not in the client's defaults.
-
-.MCP With LangChain4j
-[NOTE]
-[classname]`LangChain4jLlmProvider` is built from a [classname]`ChatModel` or [classname]`StreamingChatModel` and runs the tool-calling loop itself, so LangChain4j's [classname]`McpToolProvider` -- which attaches to an AI service built with [classname]`AiServices` -- has nowhere to plug in. With LangChain4j, MCP tools currently require a <<#custom-llm-providers,custom LLM provider>> built around an AI service, which then gets the tool provider, memory, and tool loop from LangChain4j. With Spring AI, the [classname]`ChatClient` setup above is all that's needed.
-
-
-.Tool Call Limits
-[NOTE]
-Both built-in providers bound the tool-calling loop of a turn: by default, at most 40 calls per tool and 150 in total. [classname]`LangChain4jLlmProvider` enforces the limits itself and has setters for them, while [classname]`SpringAiLlmProvider` leaves them to the [classname]`ChatClient`. See <<tool-calling#tool-call-limits,Tool Call Limits>>.
+Pass a system prompt to [methodname]`AiOrchestrator.builder()` to override the framework default on every turn. If the prompt is `null` or blank, the provider uses any [methodname]`defaultSystem()` text on the Spring AI client or [methodname]`systemMessage()` set in the LangChain4j customizer.
 
 
 [[background-execution]]
@@ -124,11 +183,21 @@ Background execution moves the exchange to a background thread instead. Enable i
 provider.setBackgroundExecution(true);
 ----
 
-The user's message then appears immediately and the Message List shows a <<{articles}/components/message-list#typing-indicator,typing indicator>> while the model works, the UI stays responsive, and the response replaces the indicator when the model finishes. The setting is off by default. It's read for each prompt, so it can be changed at any time; the next prompt uses the new mode. It has no effect with a streaming model, whose response already arrives on the LLM client's own threads.
+The user's message then appears immediately and the Message List shows a <<{articles}/components/message-list#typing-indicator,typing indicator>> while the model works, the UI stays responsive, and the response replaces the indicator when the model finishes. The setting is off by default. It's read for each prompt, so it can be changed at any time; the next prompt uses the new mode.
+
+With a streaming model, the response already arrives on the LLM client's own threads, so the setting has no effect on a [classname]`SpringAiLlmProvider` in streaming mode. A [classname]`LangChain4jLlmProvider` with a streaming model still starts each turn on the thread that sends the prompt. The retrieval and the input guardrails of a <<#langchain4j-customizer,customizer>> run there, before the model is called. Background execution moves that start to a background thread as well.
 
 The response is now produced outside any request, so it reaches the browser through server push or polling. Enable push by annotating the application shell with [annotationname]`@Push` (see <<index#server-push,Server Push>>), or enable polling with [methodname]`UI.setPollInterval()`. Without either, the response only shows up with the next request the browser happens to make -- the page looks stuck even though the turn completed on the server. The provider logs a warning, once per provider instance, when neither is active; the same warning applies in streaming mode, whose response also arrives outside a request. Manual push mode is not enough on its own, because nothing in the framework calls `ui.push()` for the application.
 
-Everything that happens before the model is called still runs in the request thread: the <<request-interception#,request interceptor>>, adding the user's message to the Message List and showing the typing indicator, [methodname]`AiController.onRequest()`, the request listener, and the session context supplier. The model calls, every tool execution, and the [classname]`ResponseListener` run on the background thread, where [methodname]`UI.getCurrent()` and other Vaadin thread locals return `null` and components must not be touched directly. Thread-bound framework state, such as Spring Security's [classname]`SecurityContext`, is absent there for the same reason.
+Everything that the orchestrator does before it hands the prompt to the provider still runs in the request thread:
+
+* The <<request-interception#,request interceptor>>
+* Adding the user's message to the Message List and showing the typing indicator
+* [methodname]`AiController.onRequest()`
+* The request listener
+* The session context supplier
+
+The model calls, every tool execution, and the [classname]`ResponseListener` run on a background thread, as do the retrieval and the input guardrails of a LangChain4j customizer. There, [methodname]`UI.getCurrent()` and other Vaadin thread locals return `null` and components must not be touched directly. Thread-bound framework state, such as Spring Security's [classname]`SecurityContext`, is absent there for the same reason.
 
 Wrap component access in `ui.access()`, or capture what a tool needs in [methodname]`AiController.onRequest()` while the request thread is still current -- see <<tool-calling#,Tool Calling & Programmatic Prompts>> and <<controllers#,Controllers>>. The built-in controllers already handle this. [methodname]`AiController.onResponse()` is the exception: the orchestrator calls it through `ui.access()`, so it can update components directly.
 
