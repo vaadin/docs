@@ -30,6 +30,8 @@ public class ReportsView extends Div {
 }
 ----
 
+The parent must be a registered route. A router layout that isn't itself a route can't be a parent: building a link to it fails, for example when a breadcrumb trail is rendered for the annotated route.
+
 The parent inherits the [classname]`RouteParameters` of the annotated route, narrowed to the names that the parent's own route template declares. A parent with fewer or no parameters therefore still resolves to a working link.
 
 
@@ -59,7 +61,7 @@ public class OrgParentResolver implements RouteParentResolver {
 
 A [classname]`RouteReference` carries both the parent navigation target class and the [classname]`RouteParameters` it should be resolved with. The parameters are part of the reference because a parent route typically declares only a subset of the child parameters, and that subset is needed both to build a link to the parent and to resolve its parent in turn.
 
-Returning an empty [classname]`Optional` marks the top of the hierarchy. When a resolver is set, the static `value` of the annotation is ignored.
+The returned reference must also point to a registered route. Returning an empty [classname]`Optional` marks the top of the hierarchy. When a resolver is set, the static `value` of the annotation is ignored.
 
 Resolver implementations must be stateless and cheap to create: they're instantiated through the application [interfacename]`Instantiator` — so dependency injection is available — every time a parent is resolved. The route itself is never instantiated.
 
@@ -69,6 +71,28 @@ Resolver implementations must be stateless and cheap to create: they're instanti
 Routes without a [annotationname]`@RouteParent` annotation get their logical parent derived from the route URL: the path is walked upwards until a registered route serving the nearest ancestor path is found. For example, the parent of a route serving `users/:userId/orders` is the route serving `users/:userId`, if one is registered.
 
 This means that route hierarchies that follow the URL structure work without any annotations; [annotationname]`@RouteParent` is only needed when the logical hierarchy differs from the URL paths.
+
+The walk ends at the route mapped to the empty path (`""`), if one is registered. Unless a route on the way up declares [annotationname]`@RouteParent`, the hierarchy of every route therefore starts at that route. For example, with routes mapped to `""` and `calendar`, the hierarchy of the `calendar` route starts at the `""` route.
+
+To make a route the root of its own hierarchy instead, give it a resolver that returns an empty [classname]`Optional`:
+
+[source,java]
+----
+public class TopLevel implements RouteParentResolver {
+    @Override
+    public Optional<RouteReference> resolveParent(
+            RouteParentContext context) {
+        return Optional.empty();
+    }
+}
+
+@Route("calendar")
+@RouteParent(resolver = TopLevel.class)
+public class CalendarView extends Div {
+}
+----
+
+The router layouts that a route is rendered in aren't part of its hierarchy. Only registered routes are.
 
 
 == Resolving the Hierarchy
