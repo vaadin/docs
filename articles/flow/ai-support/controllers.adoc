@@ -55,10 +55,10 @@ The interface defines two methods to implement:
 
 [since:com.vaadin:vaadin@V25.4]#Two more methods have default implementations.# The grid uses them to load rows lazily:
 
-* [methodname]`executeQuery(String sql, QueryPage page)` -- returns one page of the query's rows: at most `limit` rows from `offset`, sorted by the page's sort orders.
-* [methodname]`count(String sql)` -- returns the number of rows the query produces.
+* [methodname]`executeQuery(String query, QueryPage page)` -- returns one page of the query's rows: at most `limit` rows from `offset`, sorted by the page's sort orders.
+* [methodname]`count(String query)` -- returns the number of rows the query produces.
 
-The defaults extend the query's SQL with `ORDER BY`, `LIMIT`, and `OFFSET`, or with `COUNT(*)`, and run the result through [methodname]`executeQuery(String sql)`. Override them when your database pages or counts differently, or when it can do so more efficiently.
+The defaults extend the query's SQL with `ORDER BY`, `LIMIT`, and `OFFSET`, or with `COUNT(*)`, and run the result through [methodname]`executeQuery(String query)`. Override them when your database pages or counts differently, or when it can do so more efficiently.
 
 The grid validates a query by loading one unsorted row. An exception thrown later, when the grid counts the rows or loads a sorted or a later page, isn't reported to the LLM.
 
@@ -113,7 +113,7 @@ The example returns a hardcoded string for clarity, but [methodname]`getSchema()
 
 When a query fails -- for example, because it references an unknown column -- the exception type determines what the LLM learns about the failure. The example above [since:com.vaadin:vaadin@V25.3]#throws a `ToolException`#, whose message is relayed to the LLM so it can correct the query on its next attempt; any other exception is replaced with a generic error message. See <<#tool-error-handling,Tool Error Handling>>.
 
-The controllers call the provider on more than one thread. They validate a query during the tool call that proposes it, which runs on a background thread with a streaming LLM provider or <<llm-providers#background-execution,background execution>>. [methodname]`VaadinSession.getCurrent()` and [methodname]`UI.getCurrent()` return `null` there, and Spring Security's [classname]`SecurityContextHolder` has no authentication by default. The grid loads its rows on the UI thread, which can happen while the next query is validated. The provider can therefore be called concurrently.
+The controllers call the query executor on more than one thread. They validate a query during the tool call that proposes it, which runs on a background thread with a streaming LLM provider or <<llm-providers#background-execution,background execution>>. [methodname]`VaadinSession.getCurrent()` and [methodname]`UI.getCurrent()` return `null` there, and Spring Security's [classname]`SecurityContextHolder` has no authentication by default. The grid loads its rows on the UI thread, which can happen while the next query is validated. The query executor can therefore be called concurrently.
 
 .Read-Only Database Access
 [IMPORTANT]
