@@ -1,0 +1,56 @@
+---
+title: AI-Powered Grid
+page-title: AI-Powered Grid | Vaadin components
+description: Let users populate a grid from your application database using natural language.
+meta-description: Use GridAiController to let an LLM populate a Vaadin Grid with data from your application database through natural-language prompts.
+order: 70
+section-nav: commercial badge-flow badge-preview
+---
+
+
+= [since:com.vaadin:vaadin@V25.2]#AI-Powered Grid# [badge-flow]#Flow#
+
+AI-Powered Grid lets your users fill a Vaadin Grid with data by typing in natural language. The [classname]`GridAiController` from the <<{articles}/flow/ai-support#, AI Support>> module wires an [classname]`AiOrchestrator` to a [classname]`Grid` and a <<{articles}/flow/ai-support/controllers#database-provider, [classname]`QueryExecutor`>>, so an LLM can inspect the database schema and run SQL queries that drive the grid. The grid then renders the result with generated columns and lazy loading.
+
+:commercial-feature: AI-Powered Grid
+include::{articles}/_commercial-banner.adoc[opts=optional]
+
+:preview-feature: AI integration features
+:feature-flag: com.vaadin.experimental.aiComponents
+include::{articles}/_preview-banner.adoc[opts=optional]
+
+Enable the <<{articles}/flow/configuration/feature-flags#, feature flag>> before you use the controller:
+
+[source,properties]
+----
+# Add this line to src/main/resources/vaadin-featureflags.properties
+com.vaadin.experimental.aiComponents=true
+----
+
+The grid is typed as [classname]`Grid<AiDataRow>`. [classname]`AiDataRow` is a framework-owned row type that the controller fills -- you never construct instances yourself.
+
+The [classname]`JdbcQueryExecutor` in the example is not a Vaadin class. It's an implementation of the <<{articles}/flow/ai-support/controllers#database-provider, [classname]`QueryExecutor`>> interface that you write for your application. Back it with a database account that has read-only access, since the LLM writes the SQL that it runs.
+
+[source,java]
+----
+Grid<AiDataRow> grid = new Grid<>();
+MessageInput messageInput = new MessageInput();
+
+QueryExecutor queryExecutor = new JdbcQueryExecutor(dataSource);
+GridAiController controller = new GridAiController(grid, queryExecutor);
+
+AiOrchestrator.builder(provider, systemPrompt)
+        .withInput(messageInput)
+        .withController(controller)
+        .build();
+
+add(messageInput, grid);
+----
+
+Example prompts:
+
+* "Show product name and category grouped under Product, and monthly revenue."
+* "List the top 10 highest-paid employees with name, salary, and hire date."
+* "List all employees in the Sales department."
+
+For the full guide -- including query validation, state persistence, and reconnecting after deserialization -- see <<{articles}/flow/ai-support/ai-powered-grid#, AI-Powered Grid>> in the AI Support section. The same approach is available for charts via <<{articles}/flow/ai-support/ai-powered-chart#, AI-Powered Chart>>.
