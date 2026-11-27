@@ -115,7 +115,7 @@ The following applies to what the customizer configures:
 * **Retrieval and input guardrails:** Retrieval works on the text of the user message, which ends with the session context of the turn. Input guardrails check the message after retrieval, so they also see the retrieved content and the attachments. Both run before the model is called, on the thread that sends the prompt, also with a streaming model. Enable <<#background-execution,background execution>> so that they don't block the UI.
 * **Output guardrails:** The response is the text that the output guardrails returned. LangChain4j runs them on the final answer only, so text that the model sends next to its tool calls isn't passed on. With a streaming model, the answer arrives in one piece once the guardrails have checked it. The provider's own chat memory keeps the answer as the guardrails returned it, so later turns continue from what the user received. When a guardrail fails the turn, the answer it rejected stays in the chat memory, unless the guardrail asks LangChain4j to remove it with [methodname]`fatalWithMessageRemoval()` or [methodname]`failureWithMessageRemoval()`.
 * **Moderation:** A moderation model set in the customizer isn't used, because LangChain4j applies it only to service methods annotated with [annotationname]`@Moderate`. Use an input guardrail to check the user message instead.
-* **Tool names:** Give the tools you add in the customizer names that no [methodname]`withTools()` tool or controller uses. LangChain4j rejects two tools of the same name, and every turn that has both then fails.
+* **Tool names:** Give the tools you add in the customizer names that the tools of a <<controllers#,controller>> don't use. LangChain4j rejects two tools of the same name, and every turn that has both then fails.
 * **Tool errors:** LangChain4j handles the errors of tools added in the customizer, with the tool error handlers set there or with its defaults. Unless the customizer sets both [methodname]`toolArgumentsErrorHandler()` and [methodname]`toolExecutionErrorHandler()`, LangChain4j logs a notice that asks for them, once, also when the customizer adds no tools. The notice doesn't concern the tools of the orchestrator, whose errors never reach these handlers. Setting both handlers chooses how the tools you add fail, and LangChain4j then logs no notice.
 
 
@@ -149,7 +149,7 @@ LangChain4jLlmProvider provider = new LangChain4jLlmProvider(chatModel,
         service -> service.toolProvider(mcpToolProvider));
 ----
 
-The MCP tools then reach the model on every turn, next to any tools registered on the orchestrator through <<tool-calling#,[methodname]`withTools()`>> or a <<controllers#,controller>>. The model calls all of them the same way, so tool names have to be unique across every source and match `^[a-zA-Z0-9_-]{1,64}$` -- validated when a controller is registered, but not for names that come from an MCP server.
+The MCP tools then reach the model on every turn, next to any <<tool-calling#,tool objects>> registered with the framework and the tools of a <<controllers#,controller>>. The model calls all of them the same way, so tool names have to be unique across every source and match `^[a-zA-Z0-9_-]{1,64}$` -- validated when a controller is registered, but not for names that come from an MCP server.
 
 Other framework features work the same way: configure them in the framework, then create the provider. This covers the following:
 
@@ -223,7 +223,6 @@ public class MyLlmProvider implements LlmProvider {
         // request.userMessage()    -- the user's prompt
         // request.attachments()    -- any file attachments
         // request.systemPrompt()   -- the system prompt
-        // request.tools()          -- tool objects registered via withTools()
         // request.explicitTools()  -- ToolSpec tools contributed by the controller
         // request.sessionContext() -- per-turn session context, or null
         // request.metadataSink()   -- consumer for response metadata
@@ -237,7 +236,7 @@ public class MyLlmProvider implements LlmProvider {
 }
 ----
 
-A provider is responsible for its own conversation memory, for the tool-calling loop over both the vendor-annotated tool objects and the framework-agnostic [classname]`ToolSpec` tools (see <<controllers#,Controllers>>), and for appending the <<session-context#,session context>> to the user message when one is given.
+A provider is responsible for its own conversation memory, for the tool-calling loop over the framework-agnostic [classname]`ToolSpec` tools (see <<controllers#,Controllers>>), and for appending the <<session-context#,session context>> to the user message when one is given. Register <<tool-calling#,tool objects>> that have the annotations of an AI framework with the framework that the provider wraps, as with the built-in providers.
 
 The response stream carries text only. The provider can also [since:com.vaadin:vaadin@V25.3]#publish the finish reason and token usage# of the turn through the [methodname]`metadataSink()` consumer on the request. Each call carries everything observed so far and replaces the value of any earlier call, so publish whenever the provider learns more -- a turn that fails midway has then still reported what was observed. Pass `null` for any value the framework doesn't report; a provider that observes no metadata never calls the consumer. See <<listeners#response-metadata,Response Metadata>> for how applications read it.
 

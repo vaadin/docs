@@ -90,7 +90,7 @@ public class SupportChat extends VerticalLayout {
                 .withMessageList(messageList)
                 .withInput(messageInput)
                 .withFileReceiver(upload)
-                .withTools(new OrderTools(selectedOrder))
+                .withController(new OrderController(selectedOrder))
                 .withResponseListener(event -> event.getError()
                         .ifPresent(error -> Notification
                                 .show("The assistant is not available.")))
@@ -101,30 +101,62 @@ public class SupportChat extends VerticalLayout {
 }
 ----
 
-The view uses Spring AI, so the tool has the Spring AI [annotationname]`@Tool` annotation.
-A streaming provider calls the tool on a background thread, so the tool gets the [classname]`UI` when the component is attached, while the session is locked:
+The chat gets its provider from outside, so it adds the tool through a <<{articles}/flow/ai-support/controllers#,controller>>, which works with any provider.
+A streaming provider calls the tool on a background thread, so the controller gets the [classname]`UI` when the component is attached, while the session is locked:
 
-.`OrderTools.java`
+.`OrderController.java`
 [source,java]
 ----
-import org.springframework.ai.tool.annotation.Tool;
+import java.util.List;
 import com.vaadin.flow.component.UI;
+import com.vaadin.flow.component.ai.orchestrator.AiController;
+import com.vaadin.flow.component.ai.provider.LlmProvider;
 import com.vaadin.flow.component.html.Span;
+import tools.jackson.databind.JsonNode;
 
-public class OrderTools {
+public class OrderController implements AiController {
 
     private final Span selectedOrder;
     private volatile UI ui;
 
-    OrderTools(Span selectedOrder) {
+    OrderController(Span selectedOrder) {
         this.selectedOrder = selectedOrder;
         selectedOrder.addAttachListener(event -> ui = event.getUI());
     }
 
-    @Tool(description = "Shows the order with the given number to the user")
-    public String showOrder(String orderNumber) {
-        ui.access(() -> selectedOrder.setText("Order " + orderNumber));
-        return "The order is now shown to the user.";
+    @Override
+    public List<LlmProvider.ToolSpec> getTools() {
+        return List.of(new LlmProvider.ToolSpec() {
+            @Override
+            public String getName() {
+                return "show_order";
+            }
+
+            @Override
+            public String getDescription() {
+                return "Shows the order with the given number to the user";
+            }
+
+            @Override
+            public String getParametersSchema() {
+                return """
+                        {
+                          "type": "object",
+                          "properties": {
+                            "orderNumber": { "type": "string" }
+                          },
+                          "required": ["orderNumber"]
+                        }""";
+            }
+
+            @Override
+            public String execute(JsonNode arguments) {
+                var orderNumber = arguments.get("orderNumber").asString();
+                ui.access(() -> selectedOrder
+                        .setText("Order " + orderNumber));
+                return "The order is now shown to the user.";
+            }
+        });
     }
 }
 ----
@@ -235,6 +267,7 @@ import org.junit.jupiter.api.io.TempDir;
 import com.vaadin.browserless.BrowserlessUIContext;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
+import tools.jackson.databind.node.JsonNodeFactory;
 
 class SupportChatTest {
 
@@ -340,7 +373,8 @@ The Message List shows a generic error message in place of the response, and the
 == Simulate a Tool Call
 
 The scripted provider can't decide to call a tool, so the reply calls it, as the model would.
-The tool objects that the chat passes to [methodname]`withTools()` are in the request:
+The tools of the chat's controller are in the request.
+Call [methodname]`execute()` on a tool with the arguments the model would pass:
 
 [source,java]
 ----
@@ -348,8 +382,9 @@ The tool objects that the chat passes to [methodname]`withTools()` are in the re
 void modelCallsTool_orderIsShown() {
     provider.replyWith(request -> {
         // Call the tool, as the model would
-        var tools = (OrderTools) request.tools()[0];
-        tools.showOrder("1001");
+        var showOrder = request.explicitTools().getFirst();
+        showOrder.execute(JsonNodeFactory.instance.objectNode()
+                .put("orderNumber", "1001"));
         return Flux.just("Here is order 1001.");
     });
 
@@ -361,8 +396,9 @@ void modelCallsTool_orderIsShown() {
 ----
 
 The tool updates the UI with [methodname]`UI.access()`, and the query that reads the result runs the update.
-Tools that a <<{articles}/flow/ai-support/controllers#,controller>> contributes are in [methodname]`request.explicitTools()` instead.
-Call [methodname]`execute()` on such a tool with the arguments the model would pass.
+
+<<{articles}/flow/ai-support/tool-calling#,Tool objects>> that a view registers with the AI framework aren't in the request, because the framework calls them itself.
+To test such a tool, call its method on the tool object.
 
 
 == Attach a File
