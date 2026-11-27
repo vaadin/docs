@@ -1,24 +1,24 @@
 package com.vaadin.demo.flow.aicomponents;
 
 import com.vaadin.demo.DemoExporter; // hidden-source-line
-import com.vaadin.flow.component.ai.orchestrator.AIOrchestrator;
-import com.vaadin.flow.component.ai.provider.LLMProvider;
+import com.vaadin.flow.component.ai.orchestrator.AiOrchestrator;
+import com.vaadin.flow.component.ai.provider.LlmProvider;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.messages.MessageList;
 import com.vaadin.flow.router.Route;
 
 @Route("ai-components-programmatic-prompt")
-public class AIOrchestratorProgrammaticPrompt extends Div {
+public class AiOrchestratorProgrammaticPrompt extends Div {
 
-    public AIOrchestratorProgrammaticPrompt() {
+    public AiOrchestratorProgrammaticPrompt() {
         // tag::snippet[]
         MessageList messageList = new MessageList();
         messageList.setMarkdown(true);
 
-        LLMProvider provider = getLLMProvider();
+        LlmProvider provider = getLlmProvider();
 
-        AIOrchestrator orchestrator = AIOrchestrator
+        AiOrchestrator orchestrator = AiOrchestrator
                 .builder(provider, "You are a helpful assistant.")
                 .withMessageList(messageList).build();
 
@@ -31,11 +31,11 @@ public class AIOrchestratorProgrammaticPrompt extends Div {
         com.vaadin.demo.component.messages.LLMClient.initPolling(messageList); // hidden-source-line
     }
 
-    private LLMProvider getLLMProvider() {
-        return new MockLLMProvider();
+    private LlmProvider getLlmProvider() {
+        return new MockLlmProvider();
     }
 
     public static class Exporter // hidden-source-line
-            extends DemoExporter<AIOrchestratorProgrammaticPrompt> { // hidden-source-line
+            extends DemoExporter<AiOrchestratorProgrammaticPrompt> { // hidden-source-line
     } // hidden-source-line
 }
