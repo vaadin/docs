@@ -47,4 +47,19 @@ public class TextContentTest {
         // end::gettext[]
     }
 
+    @Test
+    public void demonstrate_getText_and_getTextRecursively_innerHtml() {
+        // tag::gettext-innerhtml[]
+        // <span><span>Hi <b>there</b></span></span>
+        Element element = new Element("span");
+        element.setProperty("innerHTML", "<span>Hi <b>there</b></span>");
+
+        // Only the top-level text of the innerHTML content
+        assertEquals("Hi ", element.getText());
+
+        // The full text of the innerHTML content, recursively
+        assertEquals("Hi there", element.getTextRecursively());
+        // end::gettext-innerhtml[]
+    }
+
 }
