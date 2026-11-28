@@ -76,6 +76,32 @@ Re-synchronization is initiated by the client when it can't find a message with 
 This process ensures UI consistency, even in the presence of errors or unexpected behavior. The application remains robust against transient network problems or client-side interruptions. Additionally, the user experience is preserved without requiring a full page reload, as Vaadin rebuilds the UI without reloading the entire bundle from the server.
 
 
+== Watching Requests from Page Scripts
+
+`window.Vaadin.Flow.clients[appId].events` is an `EventTarget` that announces every request the client sends to the server, so a page script can follow one, for example to measure it. The client only dispatches on it and never listens to it, so nothing a page script dispatches on it changes what the client does.
+
+A `vaadin-request` event is dispatched when the first invocation for a request is queued, or right before the first send for a request that has no invocations, such as a resynchronization. Its `detail` is the request, which then dispatches events of its own as its delivery proceeds:
+
+`sent`:: An attempt to deliver the request goes out. The request's `attempt` property counts attempts, starting at `0` while it's still queued.
+`error`:: The attempt failed. The request's `failure` property gives the reason: `network`, `timeout`, `http` with the response's `status`, or `invalid-response` for a reply that couldn't be parsed.
+`response`:: A reply to the attempt arrived and was identified.
+`end`:: The delivery has settled. The request's `outcome` property says how: `acknowledged` for a reply from the server, `rejected` if the server couldn't process the request or the session has expired, or `discarded` if the client gave up without a confirming reply. `end` is dispatched exactly once, as the last event.
+
+The request is the same object across every attempt to deliver it. A resend after a lost connection, a resend from the resend timer, or a resend over a reconnected push channel all fire `sent` again on the same object, with `attempt` incremented.
+
+[source,javascript]
+----
+client.events.addEventListener('vaadin-request', ({ detail: request }) => {
+  let sentAt;
+  request.addEventListener('sent', () => (sentAt = performance.now()));
+  request.addEventListener('response', () => console.log(`round trip ${performance.now() - sentAt} ms`));
+  request.addEventListener('end', () => console.log(`request ${request.outcome}`));
+});
+----
+
+`events` is a full `EventTarget`, so a page script can also dispatch events on it, such as a synthetic `vaadin-request`, to unit test its own listeners without a real request. The request's properties are read-only, and dispatching an event on a request from outside the client reaches only its listeners -- it changes nothing about the request or the client.
+
+
 [role="since:com.vaadin:vaadin@V25.2"]
 == Triggering a Server-Side Task After a Delay
 
